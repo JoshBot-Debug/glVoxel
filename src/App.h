@@ -6,7 +6,7 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 
 #include "EngineControlPanel.h"
-#include "Renderer/Renderer.h"
+#include "World/World.h"
 
 class App : Window
 {
@@ -15,7 +15,7 @@ private:
   PerspectiveCamera camera;
 
   EngineControlPanel controlPanel;
-  Renderer renderer;
+  World world;
   
 public:
   App();

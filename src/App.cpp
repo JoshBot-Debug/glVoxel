@@ -35,8 +35,8 @@ App::App() : Window(opts)
   Shader &shader = resource.getShader();
   shader.create({
       .name = "default",
-      .vertex = "src/Shaders/default.vs",
-      .fragment = "src/Shaders/default.fs",
+      .vertex = "src/Shaders/voxel.vs",
+      .fragment = "src/Shaders/voxel.fs",
   });
 
   /**
@@ -44,18 +44,10 @@ App::App() : Window(opts)
    */
   Model *model = resource.loadModel("assets/model/cube.obj");
 
-  Texture2D diffuse("assets/materials/brick-wall/sloppy-brick-wall_albedo.png");
-  Texture2D specular("assets/materials/brick-wall/sloppy-brick-wall_metallic.png");
-
-  diffuse.bind(0);
-  specular.bind(1);
-
-  renderer.setModel(model);
-  renderer.addInstance(model->createInstance());
+  world.setModel(model);
 
   controlPanel.addModel(model);
 
-  // Begins the onDraw loop
   open();
 }
 
@@ -66,8 +58,8 @@ void App::onUpdate()
   camera.setViewportSize(size);
   camera.update();
 
-  for (Model *model : resource.getModels())
-    renderer.update(model->getInstances());
+  // for (Model *model : resource.getModels())
+  //   world.update(model->getInstances());
 
   controlPanel.update();
 }
@@ -84,8 +76,8 @@ void App::onDraw()
 
   shader.setUniform3f("u_CameraPosition", camera.position);
 
-  shader.setUniform1i("u_Material.diffuse", 0);
-  shader.setUniform1i("u_Material.specular", 1);
+  shader.setUniform3f("u_Material.diffuse", 1.0f, 1.0f, 1.0f);
+  shader.setUniform3f("u_Material.specular", 1.0f, 1.0f, 1.0f);
   shader.setUniform1f("u_Material.shininess", 0.4f * 128.0f);
 
   shader.setUniform3f("u_Light.position", 5.0f, 5.0f, 5.0f);
@@ -93,7 +85,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  glDrawElementsInstanced(GL_TRIANGLES, 72, GL_UNSIGNED_INT, (const void *)0, 1);
+  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void *)0, 1);
 
   controlPanel.draw();
 }
