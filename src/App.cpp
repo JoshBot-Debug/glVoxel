@@ -43,7 +43,6 @@ App::App() : Window(opts)
    * Load the model foo
    */
   Model *model = resource.loadModel("assets/model/cube.obj");
-  model->createInstance();
 
   Texture2D diffuse("assets/materials/brick-wall/sloppy-brick-wall_albedo.png");
   Texture2D specular("assets/materials/brick-wall/sloppy-brick-wall_metallic.png");
@@ -51,16 +50,10 @@ App::App() : Window(opts)
   diffuse.bind(0);
   specular.bind(1);
 
-  /**
-   * Add the model to the draw class
-   */
-  DrawElementsIndirect *draw = new DrawElementsIndirect();
-  draw->bind();
-  draw->addModel(model);
-  draw->update();
+  renderer.setModel(model);
+  renderer.addInstance(model->createInstance());
 
-  drawChunks.push_back(draw);
-  drawChunks.push_back(new DrawElementsIndirect());
+  controlPanel.addModel(model);
 
   // Begins the onDraw loop
   open();
@@ -73,9 +66,8 @@ void App::onUpdate()
   camera.setViewportSize(size);
   camera.update();
 
-  const std::vector<Model *> &models = resource.getModels();
   for (Model *model : resource.getModels())
-    drawChunks[0]->update(model->getID(), 0, model->getInstances());
+    renderer.update(model->getInstances());
 
   controlPanel.update();
 }
@@ -90,28 +82,22 @@ void App::onDraw()
   shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
   shader.setUniformMatrix4fv("u_Projection", camera.getProjectionMatrix());
 
-  glm::vec3 lightPosition = {5.0f, 5.0f, 5.0f};
-  lightPosition.x = 1.0f + sin(glfwGetTime()) * 5.0f;
-  lightPosition.y = sin(glfwGetTime() / 2.0f) * 5.0f;
-
   shader.setUniform3f("u_CameraPosition", camera.position);
 
   shader.setUniform1i("u_Material.diffuse", 0);
   shader.setUniform1i("u_Material.specular", 1);
   shader.setUniform1f("u_Material.shininess", 0.4f * 128.0f);
 
-  shader.setUniform3f("u_Light.position", lightPosition);
+  shader.setUniform3f("u_Light.position", 5.0f, 5.0f, 5.0f);
   shader.setUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  Renderer::Draw(drawChunks[0]->getCommands());
+  glDrawElementsInstanced(GL_TRIANGLES, 72, GL_UNSIGNED_INT, (const void *)0, 1);
 
   controlPanel.draw();
 }
 
 void App::onCleanUp()
 {
-  for (const auto draw : drawChunks)
-    delete draw;
 }

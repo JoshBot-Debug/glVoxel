@@ -29,7 +29,7 @@
       "args": [
         "--leak-check=full",
         "--track-origins=yes",
-        "${workspaceFolder}/build/glPlay"
+        "${workspaceFolder}/build/glVoxel"
       ],
       "group": {
         "kind": "build",
@@ -53,7 +53,7 @@
         "capture",
         "--working-dir",
         "${workspaceFolder}",
-        "${workspaceFolder}/build/glPlay"
+        "${workspaceFolder}/build/glVoxel"
       ],
       "group": {
         "kind": "build",

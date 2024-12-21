@@ -5,11 +5,8 @@
 #include "Engine/ResourceManager.h"
 #include "Engine/Camera/PerspectiveCamera.h"
 
-#include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/MultiModelInstanceBuffer.h"
-
 #include "EngineControlPanel.h"
-#include "Engine/Renderer/DrawElementsIndirect.h"
+#include "Renderer/Renderer.h"
 
 class App : Window
 {
@@ -17,10 +14,9 @@ private:
   ResourceManager resource;
   PerspectiveCamera camera;
 
-  std::vector<DrawElementsIndirect *> drawChunks;
-
   EngineControlPanel controlPanel;
-
+  Renderer renderer;
+  
 public:
   App();
   ~App() = default;

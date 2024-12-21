@@ -5,7 +5,7 @@
       "name": "Debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/glPlay",
+      "program": "${workspaceFolder}/build/glVoxel",
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "externalConsole": false,

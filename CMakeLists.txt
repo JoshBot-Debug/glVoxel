@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(glPlay)
+project(glVoxel)
 
 # Find packages
 find_package(OpenGL REQUIRED)
@@ -13,11 +13,11 @@ file(GLOB_RECURSE SOURCES_FILES
 )
 
 # Include all source files (.cpp files)
-add_executable(glPlay ${SOURCES_FILES})
+add_executable(glVoxel ${SOURCES_FILES})
 
 
 # Specify include directories. (header files)
-target_include_directories(glPlay PRIVATE 
+target_include_directories(glVoxel PRIVATE 
   ${CMAKE_SOURCE_DIR}/src
   ${CMAKE_SOURCE_DIR}/include/imgui
 )
@@ -25,13 +25,13 @@ target_include_directories(glPlay PRIVATE
 # Avoid shared libs, use static linking instead
 # Collect all bin files (.o files)
 file(GLOB_RECURSE SHARED_LIB ${CMAKE_SOURCE_DIR}/bin/*.o)
-target_sources(glPlay PRIVATE ${SHARED_LIB})
+target_sources(glVoxel PRIVATE ${SHARED_LIB})
 
 # Collect all bin files (.a files)
 file(GLOB_RECURSE STATIC_LIB ${CMAKE_SOURCE_DIR}/bin/*.a)
 
 # Link libraries
-target_link_libraries(glPlay PRIVATE
+target_link_libraries(glVoxel PRIVATE
   OpenGL
   GLEW
   glfw
@@ -40,7 +40,7 @@ target_link_libraries(glPlay PRIVATE
 )
 
 # Specify C++ standard
-set_target_properties(glPlay PROPERTIES
+set_target_properties(glVoxel PROPERTIES
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
