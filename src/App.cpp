@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Engine/Types.h"
+#include "Debug.h"
 
 const WindowOptions opts = {.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true};
 
@@ -46,10 +47,12 @@ App::App() : Window(opts)
   Model *model = resource.loadModel("assets/model/cube.obj");
 
   world.setModel(model);
-  world.createSphere(glm::ivec3(10, 10, 10));
-  world.generateInstances();
 
   controlPanel.addModel(model);
+
+  BENCHMARK("generateInstances()", [this]()
+          { this->world.generateInstances(); }, 1);
+
   open();
 }
 

@@ -53,6 +53,9 @@ int Buffer::getBufferSize() const
 
 void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offset)
 {
+  if (partitions.size() <= partition)
+    addPartition(partition);
+
   int currentSize;
   glBindBuffer(GL_COPY_READ_BUFFER, buffer);
   glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &currentSize);

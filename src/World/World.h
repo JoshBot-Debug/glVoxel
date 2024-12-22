@@ -7,6 +7,7 @@
 #include "Engine/Model.h"
 #include "World/Voxel.h"
 #include "World/OctreeNode.h"
+#include "World/UniformGrid3D.h"
 
 class World
 {
@@ -17,9 +18,7 @@ private:
 
   Buffer ccc; // Center center chunk
 
-  OctreeNode<Voxel> root;
-  glm::ivec3 size;
-  std::vector<unsigned int> grid;
+  UniformGrid3D<glm::ivec3(10)> grid;
 
 private:
   void setVertexAttribPointer()
@@ -42,8 +41,12 @@ public:
     ebo.generate();
 
     ccc.generate();
+    ccc.resize(0, grid.getCount() * sizeof(Voxel));
 
     vao.bind();
+
+    // fillCube();
+    fillSphere();
   }
 
   void setModel(Model *model)
@@ -56,91 +59,68 @@ public:
     vao.set(2, 2, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, texCoord));
   };
 
-  void createSphere(glm::ivec3 size)
-  {
-    this->size = size;
-
-    unsigned int totalSize = size.x * size.y * size.z;
-
-    grid.resize(totalSize, 0);
-
-    float centerX = static_cast<float>(size.x) / 2.0f;
-    float centerY = static_cast<float>(size.y) / 2.0f;
-    float centerZ = static_cast<float>(size.z) / 2.0f;
-
-    float radius = std::min({centerX, centerY, centerZ}) - 1.0f;
-
-    for (unsigned int x = 0; x < size.x; ++x)
-    {
-      for (unsigned int y = 0; y < size.y; ++y)
-      {
-        for (unsigned int z = 0; z < size.z; ++z)
-        {
-          float dx = x - centerX;
-          float dy = y - centerY;
-          float dz = z - centerZ;
-          float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-          if (distance <= radius)
-            grid[x + size.x * (y + size.y * z)] = 1;
-        }
-      }
-    }
-  }
-
-  void createGrid(glm::ivec3 size)
-  {
-    this->size = size;
-
-    grid.resize(size.x * size.y * size.z, 0);
-
-    for (unsigned int x = 0; x < size.x; ++x)
-      for (unsigned int y = 0; y < size.y; ++y)
-        for (unsigned int z = 0; z < size.z; ++z)
-          grid[x + size.x * (y + size.y * z)] = 1;
-  }
-
   void generateInstances()
   {
-    std::cout << "Generating voxels" << std::endl;
-
-    ccc.addPartition(0);
-    ccc.resize(0, grid.size() * sizeof(Voxel));
-
-    std::cout << "Resized buffer: " << grid.size() * sizeof(Voxel) << std::endl;
-
-    int cx = size.x / 2;
-    int cy = size.y / 2;
-    int cz = size.z / 2;
+    ccc.bind();
 
     float gap = 1.5f;
 
-    for (int z = -cz; z < cz; ++z)
-    {
-      for (int y = -cy; y < cy; ++y)
-      {
-        for (int x = -cx; x < cx; ++x)
-        {
-          Voxel voxel;
-          int index = (x + cx) + size.x * ((y + cy) + size.y * (z + cz));
+    std::unordered_map<int, Voxel> voxels;
 
-          if (grid[index])
-          {
-            voxel.type = 1;
-            voxel.setPosition(glm::vec3{x * gap, y * gap, z * gap});
-            ccc.upsert(sizeof(Voxel), index, sizeof(Voxel), (const void *)&voxel);
-          }
-        }
+    for (size_t i = 0; i < grid.getCount(); i++)
+    {
+      glm::vec3 position = grid.getPosition(i);
+
+      if (grid.getValue(i))
+      {
+        voxels[i].type = 1;
+        voxels[i].setPosition(glm::vec3{position.x * gap, position.y * gap, position.z * gap});
       }
     }
 
+    for (const auto &voxel : voxels)
+      ccc.upsert(sizeof(Voxel), voxel.first, sizeof(Voxel), (const void *)&voxel.second);
+
+    std::cout << "Voxels: " << voxels.size() << std::endl;
+
     setVertexAttribPointer();
   }
-
-  void addVoxel(const Voxel &voxel)
+  
+  void fillCube()
   {
-    ccc.set(sizeof(Voxel), 1, (const void *)&voxel);
-    setVertexAttribPointer();
+    const glm::ivec3 size = grid.getSize();
+
+    for (unsigned int x = 0; x < size.x; ++x)
+      for (unsigned int y = 0; y < size.y; ++y)
+        for (unsigned int z = 0; z < size.z; ++z)
+          grid.setValue(x + size.x * (y + size.y * z), 1);
+  }
+
+  void fillSphere()
+  {
+    const glm::ivec3 size = grid.getSize();
+    float cx = static_cast<float>(size.x) / 2.0f;
+    float cy = static_cast<float>(size.y) / 2.0f;
+    float cz = static_cast<float>(size.z) / 2.0f;
+
+    float radius = std::min({cx, cy, cz}) - 1.0f;
+
+    for (unsigned int x = 0; x < size.x; ++x)
+    {
+      for (unsigned int y = 0; y < size.y; ++y)
+      {
+        for (unsigned int z = 0; z < size.z; ++z)
+        {
+          float dx = x - cx;
+          float dy = y - cy;
+          float dz = z - cz;
+          float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+          if (distance <= radius)
+            grid.setValue(x + size.x * (y + size.y * z), 1);
+        }
+      }
+    }
   }
 
   void update(std::vector<Voxel> voxels)
@@ -150,6 +130,6 @@ public:
 
   const unsigned int getInstancesCount()
   {
-    return grid.size();
+    return grid.getCount();
   }
 };
