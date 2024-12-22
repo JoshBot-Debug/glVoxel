@@ -5,7 +5,7 @@
 
 struct Voxel
 {
-  unsigned int type = 1;
+  unsigned int type = 0;
   glm::mat4 identity = glm::mat4(1.0f);
 
   void setPosition(glm::vec3 position)

@@ -29,7 +29,7 @@ public:
     for (const OctreeNode &child : children)
     {
       std::vector<OctreeNode> cNodes = child.traverse();
-      nodes.insert(nodes.end(), cNodes.begin(), cNodes.end())
+      nodes.insert(nodes.end(), cNodes.begin(), cNodes.end());
     }
 
     return nodes;

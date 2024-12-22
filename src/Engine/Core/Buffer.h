@@ -257,20 +257,13 @@ public:
   };
 
   /**
-   * Resizes the buffer and copies the existing data to the new buffer.
-   *
-   * @param size The new size for the buffer (in bytes).
-   */
-  void resize(unsigned int size);
-
-  /**
    * Expands a partition by resizing the buffer
    *
    * @param partition The partition that needs to be expanded
    * @param size The size (in bytes) by which you want to expand this partition
    * @param offset The offset (in bytes) by from where in the partition you want to resize
    */
-  void resize(unsigned int partition, unsigned int size, unsigned int offset);
+  void resize(unsigned int partition, unsigned int size, unsigned int offset = 0);
 
   /**
    * Creates a new partition. This function will resize the buffer

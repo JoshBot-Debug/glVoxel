@@ -16,7 +16,7 @@ uniform mat4 u_View;
 uniform mat4 u_Projection;
 
 void main()
-{
+{  
   f_Color=vec3(1.,1.,1.);
   f_Normal=in_Normal;
   f_Position=vec3(in_iModel*vec4(in_Position,1.));

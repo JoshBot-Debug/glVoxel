@@ -51,24 +51,6 @@ int Buffer::getBufferSize() const
   return size;
 }
 
-void Buffer::resize(unsigned int size)
-{
-  int currentSize;
-  glBindBuffer(GL_COPY_READ_BUFFER, buffer);
-  glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &currentSize);
-
-  unsigned int next;
-  glGenBuffers(1, &next);
-  glBindBuffer((unsigned int)target, next);
-  glBufferData((unsigned int)target, size, nullptr, (unsigned int)draw);
-
-  glBindBuffer(GL_COPY_WRITE_BUFFER, next);
-  glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, currentSize);
-  glDeleteBuffers(1, &buffer);
-
-  buffer = next;
-}
-
 void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offset)
 {
   int currentSize;

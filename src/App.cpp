@@ -28,6 +28,7 @@ App::App() : Window(opts)
    * Specify the type, and other properties.
    */
   camera.setPosition(0.0f, 0.0f, 20.0f);
+  camera.setProjection(45, 0.01f, 10000.0f);
 
   /**
    * Setup the shader
@@ -45,9 +46,10 @@ App::App() : Window(opts)
   Model *model = resource.loadModel("assets/model/cube.obj");
 
   world.setModel(model);
+  world.createSphere(glm::ivec3(10, 10, 10));
+  world.generateInstances();
 
   controlPanel.addModel(model);
-
   open();
 }
 
@@ -85,7 +87,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void *)0, 1);
+  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void *)0, world.getInstancesCount());
 
   controlPanel.draw();
 }
