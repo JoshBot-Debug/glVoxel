@@ -13,6 +13,8 @@
 #include "Engine/Types.h"
 #include "Debug.h"
 
+#include <thread>
+
 const WindowOptions opts = {.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true};
 
 /**
@@ -50,9 +52,15 @@ App::App() : Window(opts)
 
   controlPanel.addModel(model);
 
-  BENCHMARK("generateInstances()", [this]()
-          { this->world.generateInstances(); }, 1);
+  std::thread generationThread([this]()
+  {
+    // BENCHMARK("generateInstances()", [this]() { this->world.generateInstances(); }, 1000);
+    // BENCHMARK("generateInstances2()", [this]() { this->world.generateInstances2(); }, 1000);
+    BENCHMARK("generateInstances3()", [this]() { this->world.generateInstances3(); }, 1);
+  });
 
+  generationThread.detach();
+  
   open();
 }
 
@@ -63,8 +71,7 @@ void App::onUpdate()
   camera.setViewportSize(size);
   camera.update();
 
-  // for (Model *model : resource.getModels())
-  //   world.update(model->getInstances());
+  world.update();
 
   controlPanel.update();
 }
