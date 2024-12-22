@@ -1,67 +1,72 @@
 #pragma once
 
-#include <bit>
 #include <bitset>
 #include <glm/glm.hpp>
 
-template <const glm::ivec3 size>
+template <glm::ivec3 GRID_SIZE>
 class UniformGrid3D
 {
 private:
-  glm::ivec3 center = {size.x / 2, size.y / 2, size.z / 2};
-  std::vector<std::vector<std::bitset<size.z>>> grid;
+  glm::ivec3 center = {GRID_SIZE.x / 2, GRID_SIZE.y / 2, GRID_SIZE.z / 2};
+  unsigned int grid[GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z] = {};
 
 public:
-  UniformGrid3D()
-  {
-    grid.resize(size.x);
-    for (size_t x = 0; x < size.x; ++x)
-      grid[x].resize(size.y);
-  }
-
   unsigned int getIndex(int x, int y, int z) const
   {
-    return (x + center.x) + (size.x * ((y + center.y) + (size.y * (z + center.z))));
+    return (x + center.x) + (GRID_SIZE.x * ((y + center.y) + (GRID_SIZE.y * (z + center.z))));
   }
 
-  glm::vec3 getPosition(int index)
+  unsigned int getIndex(glm::ivec3 position) const
   {
-    int x = index % size.x;
-    int y = (index / size.x) % size.y;
-    int z = (index / (size.x * size.y)) % size.z;
+    return getIndex(position.x, position.y, position.z);
+  }
 
+  glm::ivec3 getPosition(int index)
+  {
+    int x = index % GRID_SIZE.x;
+    int y = (index / GRID_SIZE.x) % GRID_SIZE.y;
+    int z = (index / (GRID_SIZE.x * GRID_SIZE.y)) % GRID_SIZE.z;
     return {x - center.x, y - center.y, z - center.z};
   }
 
   unsigned int getValue(unsigned int index)
   {
-    unsigned int x = index % size.x;
-    unsigned int y = (index / size.x) % size.y;
-    unsigned int z = (index / (size.x * size.y)) % size.z;
-    return grid[x][y].test(z);
+    return grid[index];
   }
 
   void setValue(unsigned int index, unsigned int value)
   {
-    unsigned int x = index % size.x;
-    unsigned int y = (index / size.x) % size.y;
-    unsigned int z = (index / (size.x * size.y)) % size.z;
-    grid[x][y][z] = value;
+    grid[index] = value;
   }
 
   unsigned int getValue(int x, int y, int z)
   {
-    return grid[x + center.x][y + center.y].test(z + center.z);
+    return grid[getIndex(x, y, z)];
   }
 
   void setValue(int x, int y, int z, unsigned int value)
   {
-    return grid[x + center.x][y + center.y][z + center.z] = value;
+    return grid[getIndex(x, y, z)] = value;
   }
 
-  const glm::ivec3 &getSize() const
+  unsigned int getValue(glm::ivec3 position)
   {
-    return size;
+    return grid[getIndex(position.x, position.y, position.z)];
+  }
+
+  void setValue(glm::ivec3 position, unsigned int value)
+  {
+    return grid[getIndex(position.x, position.y, position.z)] = value;
+  }
+
+  const glm::ivec3 size() const
+  {
+    return GRID_SIZE;
+  }
+
+  const unsigned int count() const
+  {
+    return GRID_SIZE.x * GRID_SIZE.y * GRID_SIZE.z;
   }
 
   const glm::ivec3 &getCenter() const
@@ -69,27 +74,13 @@ public:
     return center;
   }
 
-  const unsigned int getCount() const
+  std::bitset<GRID_SIZE.y> getColumn(glm::ivec3 position)
   {
-    return size.x * size.y * size.z;
-  }
+    std::bitset<GRID_SIZE.y> bits(0);
 
-  const std::vector<std::vector<std::bitset<size.z>>> &getGrid()
-  {
-    return grid;
-  };
+    for (size_t i = position.y + center.y; i < bits.size(); i++)
+      bits[i] = grid[getIndex(position.x, i, position.z)];
 
-  const std::bitset<size.z> &getRow(int x, int y)
-  {
-    return grid[x + center.x][y + center.y];
-  }
-
-  int leading1s(int x, int y)
-  {
-    const auto &bitset = grid[x][y];
-    unsigned long long value = bitset.to_ullong();         // Convert bitset to an integer
-    unsigned long long mask = (1ULL << bitset.size()) - 1; // Create a mask of all 1s (e.g., 1111111111111111)
-    value ^= mask;                                         // Flip all bits (1 -> 0, 0 -> 1)
-    return std::countl_zero(value) - (sizeof(value) * 8 - bitset.size());
+    return bits;
   }
 };

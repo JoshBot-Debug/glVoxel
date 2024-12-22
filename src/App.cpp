@@ -54,9 +54,8 @@ App::App() : Window(opts)
 
   std::thread generationThread([this]()
   {
-    // BENCHMARK("generateInstances()", [this]() { this->world.generateInstances(); }, 1000);
-    // BENCHMARK("generateInstances2()", [this]() { this->world.generateInstances2(); }, 1000);
-    BENCHMARK("generateInstances3()", [this]() { this->world.generateInstances3(); }, 1);
+    // BENCHMARK("generateVoxelsWithoutOptimization()", [this]() { this->world.generateVoxelsWithoutOptimization(); }, 1);
+    BENCHMARK("generateVoxels()", [this]() { this->world.generateVoxels(); }, 1);
   });
 
   generationThread.detach();
