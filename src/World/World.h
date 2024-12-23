@@ -22,7 +22,7 @@ private:
   Buffer ccc; // Center center chunk
 
   std::unordered_map<int, Voxel> voxels;
-  UniformGrid3D<glm::ivec3(2)> grid;
+  UniformGrid3D<glm::ivec3(2, 5, 1)> grid;
 
 private:
   void setVertexAttribPointer()
@@ -67,20 +67,23 @@ public:
   {
     float gap = 1.5f;
 
+    grid.getColumn();
+
     for (size_t i = 0; i < grid.count(); i++)
     {
       glm::vec3 position = grid.getPosition(i);
       // std::cout << position.x << " " << position.y << " " << position.z << std::endl;
 
+      // grid.getColumn(position);
       // https://www.youtube.com/watch?v=4xs66m1Of4A
-      std::cout << grid.getColumn(position) << std::endl;
+      // std::cout << grid.getColumn(position) << std::endl;
 
       if (grid.getValue(i))
       {
         voxels[i].type = 1;
         voxels[i].setPosition(glm::vec3{position.x * gap, position.y * gap, position.z * gap});
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
     }
 
@@ -115,7 +118,7 @@ public:
 
   void fillSphere()
   {
-    const glm::ivec3 center = grid.getCenter();
+    const glm::ivec3 center = grid.size() / 2;
 
     float radius = std::min({center.x, center.y, center.z}) - 1.0f;
 
@@ -123,7 +126,11 @@ public:
     {
       glm::ivec3 position = grid.getPosition(i);
 
-      float distance = std::sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
+      float dx = position.x - center.x;
+      float dy = position.y - center.y;
+      float dz = position.z - center.z;
+
+      float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
       if (distance <= radius)
         grid.setValue(i, 1);
