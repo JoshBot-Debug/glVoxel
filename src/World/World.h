@@ -22,7 +22,7 @@ private:
   Buffer ccc; // Center center chunk
 
   std::unordered_map<int, Voxel> voxels;
-  UniformGrid3D<glm::ivec3(2, 5, 1)> grid;
+  UniformGrid3D grid;
 
 private:
   void setVertexAttribPointer()
@@ -67,12 +67,23 @@ public:
   {
     float gap = 1.5f;
 
-    grid.getColumn();
+    const glm::ivec3 &size = grid.size();
+
+    for (unsigned int x = 0; x < size.x; x++)
+    {
+      for (unsigned int z = 0; z < size.z; z++)
+      {
+        unsigned long long &col = grid.getColumn(x, z);
+        // TODO need to take this col, and compair it with the next col and create a mesh
+        std::cout << col << std::endl;
+      }
+    }
+
+    std::cout << std::bitset<sizeof(unsigned long long) * 8>(grid.getColumn(0, 0)) << std::endl;
 
     for (size_t i = 0; i < grid.count(); i++)
     {
       glm::vec3 position = grid.getPosition(i);
-      // std::cout << position.x << " " << position.y << " " << position.z << std::endl;
 
       // grid.getColumn(position);
       // https://www.youtube.com/watch?v=4xs66m1Of4A
@@ -83,7 +94,7 @@ public:
         voxels[i].type = 1;
         voxels[i].setPosition(glm::vec3{position.x * gap, position.y * gap, position.z * gap});
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
     }
 
