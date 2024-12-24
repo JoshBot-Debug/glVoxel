@@ -69,20 +69,31 @@ public:
 
     const glm::ivec3 &size = grid.size();
 
-    for (unsigned int x = 0; x < size.x; x++)
+    for (unsigned int z = 0; z < size.z; z++)
     {
-      for (unsigned int z = 0; z < size.z; z++)
+      uint64_t previous;
+
+      for (unsigned int x = 0; x < size.x; x++)
       {
-        unsigned long long &col = grid.getColumn(x, z);
+        uint64_t &current = grid.getColumn(x, z);
+
+        if (x == 0)
+        {
+          previous = current;
+          continue;
+        }
+
+        previous = current;
+
         // TODO need to take this col, and compair it with the next col and create a mesh
         // Take this first column and invert it
         // count the trailing 0 bits
         // create a new mask
-        std::cout << col << std::endl;
+        std::cout << current << std::endl;
       }
     }
 
-    std::cout << std::bitset<sizeof(unsigned long long) * 8>(grid.getColumn(0, 0)) << std::endl;
+    std::cout << std::bitset<sizeof(uint64_t) * 8>(grid.getColumn(0, 0)) << std::endl;
 
     for (size_t i = 0; i < grid.count(); i++)
     {

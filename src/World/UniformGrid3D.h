@@ -7,19 +7,19 @@
 class UniformGrid3D
 {
 private:
-  static constexpr unsigned int SIZE = 64;
+  static constexpr uint32_t SIZE = 64;
 
-  static constexpr unsigned int BITS = sizeof(unsigned long long) * 8;
+  static constexpr uint32_t BITS = sizeof(uint64_t) * 8;
 
-  unsigned long long grid[(SIZE * SIZE * SIZE) / BITS] = {};
+  uint64_t grid[(SIZE * SIZE * SIZE) / BITS] = {};
 
 public:
-  unsigned int getIndex(int x, int y, int z) const
+  uint32_t getIndex(int x, int y, int z) const
   {
     return y + (SIZE * (x + (SIZE * z)));
   }
 
-  unsigned int getIndex(glm::ivec3 position) const
+  uint32_t getIndex(glm::ivec3 position) const
   {
     return getIndex(position.x, position.y, position.z);
   }
@@ -29,12 +29,12 @@ public:
     return {(index / SIZE) % SIZE, index % SIZE, index / (SIZE * SIZE)};
   }
 
-  unsigned int getValue(unsigned int index)
+  uint32_t getValue(uint32_t index)
   {
     return (grid[index / BITS] >> index % BITS) & 1;
   }
 
-  void setValue(unsigned int index, unsigned int value)
+  void setValue(uint32_t index, uint32_t value)
   {
     assert(value == 0 || value == 1);
     if (value == 1)
@@ -43,22 +43,22 @@ public:
       grid[index / BITS] &= ~(1ULL << (index % BITS));
   }
 
-  unsigned int getValue(int x, int y, int z)
+  uint32_t getValue(int x, int y, int z)
   {
     return getValue(getIndex(x, y, z));
   }
 
-  void setValue(int x, int y, int z, unsigned int value)
+  void setValue(int x, int y, int z, uint32_t value)
   {
     setValue(getIndex(x, y, z), value);
   }
 
-  unsigned int getValue(glm::ivec3 position)
+  uint32_t getValue(glm::ivec3 position)
   {
     return getValue(getIndex(position));
   }
 
-  void setValue(glm::ivec3 position, unsigned int value)
+  void setValue(glm::ivec3 position, uint32_t value)
   {
     setValue(getIndex(position), value);
   }
@@ -68,14 +68,14 @@ public:
     return {SIZE, SIZE, SIZE};
   }
 
-  const unsigned int count() const
+  const uint32_t count() const
   {
     return SIZE * SIZE * SIZE;
   }
 
-  unsigned long long &getColumn(unsigned int x, unsigned int z)
+  uint64_t &getColumn(uint32_t x, uint32_t z)
   {
-    const unsigned int columnIndex = getIndex(x, 0, z);
+    const uint32_t columnIndex = getIndex(x, 0, z);
 
     return grid[columnIndex / BITS];
   }
