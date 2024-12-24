@@ -69,6 +69,10 @@ void App::onDraw()
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  glFrontFace(GL_CCW);
+  glCullFace(GL_BACK);
+  glEnable(GL_CULL_FACE);
+
   Shader &shader = resource.getShader();
   shader.bind("default");
   shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
@@ -86,8 +90,8 @@ void App::onDraw()
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
   // glDrawArrays(GL_TRIANGLES, 0, 32768);
-  // glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
-  glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
+  // glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
 
   // glDrawArrays(GL_TRIANGLES, 0, 8);
   // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
