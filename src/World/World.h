@@ -30,20 +30,19 @@ public:
     vbo.generate();
     ebo.generate();
 
-    // grid.setValue({0, 0, 0}, 1);
-    // grid.setValue({0, 1, 0}, 1);
-    // grid.setValue({0, 2, 0}, 1);
-    // grid.setValue({0, 3, 0}, 1);
-    // grid.setValue({0, 4, 0}, 1);
-    // grid.setValue({0, 5, 0}, 1);
-    fill();
+    grid.setValue({0, 0, 0}, 1);
+    grid.setValue({0, 1, 0}, 1);
+    grid.setValue({0, 2, 0}, 1);
+    grid.setValue({0, 3, 0}, 1);
+    grid.setValue({0, 4, 0}, 1);
+    grid.setValue({0, 5, 0}, 1);
+    // fill();
     // fillSphere();
   }
 
   void generateMesh()
   {
     std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
 
     const glm::ivec3 &size = grid.size();
 
@@ -54,7 +53,7 @@ public:
         uint64_t &column = grid.getColumn(x, z);
         unsigned int height = __builtin_ctzll(~column);
 
-        if (!height)
+        if (height == 0ULL)
           continue;
 
         std::cout << "Height: " << height << std::endl;
@@ -62,66 +61,59 @@ public:
         // Calculate base position for the current block
         glm::vec3 position(x, 0.0f, z);
 
-        // Add the vertices for the current block (each block has 8 vertices)
-        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});   // 0
-        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});   // 1
-        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)}); // 2
-        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)}); // 3
-        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});   // 4
-        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});   // 5
-        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)}); // 6
-        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)}); // 7
+        // Front face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
 
-        // Indices for the 6 faces of the cube
-        unsigned int baseIndex = vertices.size() - 8;
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
 
-        // Front face (0, 1, 2, 2, 3, 0)
-        indices.push_back(baseIndex + 0);
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 3);
-        indices.push_back(baseIndex + 0);
+        // Back face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
 
-        // Back face (4, 5, 6, 6, 7, 4)
-        indices.push_back(baseIndex + 4);
-        indices.push_back(baseIndex + 5);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 7);
-        indices.push_back(baseIndex + 4);
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
 
-        // Left face (0, 3, 7, 7, 4, 0)
-        indices.push_back(baseIndex + 0);
-        indices.push_back(baseIndex + 3);
-        indices.push_back(baseIndex + 7);
-        indices.push_back(baseIndex + 7);
-        indices.push_back(baseIndex + 4);
-        indices.push_back(baseIndex + 0);
+        // Left face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
 
-        // Right face (1, 5, 6, 6, 2, 1)
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex + 5);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 1);
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
 
-        // Top face (3, 2, 6, 6, 7, 3)
-        indices.push_back(baseIndex + 3);
-        indices.push_back(baseIndex + 2);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 6);
-        indices.push_back(baseIndex + 7);
-        indices.push_back(baseIndex + 3);
+        // // Right face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
 
-        // Bottom face (0, 1, 5, 5, 4, 0)
-        indices.push_back(baseIndex + 0);
-        indices.push_back(baseIndex + 1);
-        indices.push_back(baseIndex + 5);
-        indices.push_back(baseIndex + 5);
-        indices.push_back(baseIndex + 4);
-        indices.push_back(baseIndex + 0);
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+
+        // // Top face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+
+        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+
+        // Bottom face (2 triangles, CCW)
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
       }
     }
 
@@ -129,11 +121,11 @@ public:
 
     vao.bind();
     vbo.set(vertices);
-    ebo.set(indices);
+    // ebo.set(indices);
     vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, position));
 
     std::cout << "Vertices: " << vertices.size() << std::endl;
-    std::cout << "Indices: " << indices.size() << std::endl;
+    // std::cout << "Indices: " << indices.size() << std::endl;
   }
 
   void fill()

@@ -90,8 +90,10 @@ void App::onDraw()
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
   // glDrawArrays(GL_TRIANGLES, 0, 32768);
-  glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
+  // glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
   // glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
+
+  glDrawArrays(GL_TRIANGLES, 0, 36);
 
   // glDrawArrays(GL_TRIANGLES, 0, 8);
   // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
