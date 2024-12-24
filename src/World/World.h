@@ -11,6 +11,7 @@
 
 #include <thread> // For std::this_thread
 #include <chrono> // For std::chrono
+#include <iostream>
 
 class World
 {
@@ -19,120 +20,120 @@ private:
   Buffer vbo;
   Buffer ebo;
 
-  Buffer ccc; // Center center chunk
-
-  std::unordered_map<int, Voxel> voxels;
   UniformGrid3D grid;
-
-private:
-  void setVertexAttribPointer()
-  {
-    vao.bind();
-    vao.set(3, 1, VertexType::UNSIGNED_INT, false, sizeof(Voxel), (void *)offsetof(Voxel, type), 1);
-    vao.set(4, 4, VertexType::FLOAT, false, sizeof(Voxel), (void *)offsetof(Voxel, identity), 1);
-    vao.set(5, 4, VertexType::FLOAT, false, sizeof(Voxel), (void *)(offsetof(Voxel, identity) + (sizeof(float) * 4)), 1);
-    vao.set(6, 4, VertexType::FLOAT, false, sizeof(Voxel), (void *)(offsetof(Voxel, identity) + (sizeof(float) * 8)), 1);
-    vao.set(7, 4, VertexType::FLOAT, false, sizeof(Voxel), (void *)(offsetof(Voxel, identity) + (sizeof(float) * 12)), 1);
-  }
 
 public:
   World() : vbo(BufferTarget::ARRAY_BUFFER),
-            ebo(BufferTarget::ELEMENT_ARRAY_BUFFER),
-            ccc(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
+            ebo(BufferTarget::ELEMENT_ARRAY_BUFFER)
   {
     vao.generate();
     vbo.generate();
     ebo.generate();
 
-    ccc.generate();
-    ccc.resize(0, grid.count() * sizeof(Voxel));
-
-    vao.bind();
-
+    // grid.setValue({0, 0, 0}, 1);
+    // grid.setValue({0, 1, 0}, 1);
+    // grid.setValue({0, 2, 0}, 1);
+    // grid.setValue({0, 3, 0}, 1);
+    // grid.setValue({0, 4, 0}, 1);
+    // grid.setValue({0, 5, 0}, 1);
     fill();
     // fillSphere();
   }
 
-  void setModel(Model *model)
+  void generateMesh()
   {
-    ebo.set(model->getIndices());
-    vbo.set(model->getVertices());
-
-    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, position));
-    vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, normal));
-    vao.set(2, 2, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, texCoord));
-  };
-
-  void generateVoxels()
-  {
-    float gap = 1.5f;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
     const glm::ivec3 &size = grid.size();
 
     for (unsigned int z = 0; z < size.z; z++)
     {
-      uint64_t previous;
-
       for (unsigned int x = 0; x < size.x; x++)
       {
-        uint64_t &current = grid.getColumn(x, z);
+        uint64_t &column = grid.getColumn(x, z);
+        unsigned int height = __builtin_ctzll(~column);
 
-        if (x == 0)
-        {
-          previous = current;
+        if (!height)
           continue;
-        }
 
-        previous = current;
+        std::cout << "Height: " << height << std::endl;
 
-        // TODO need to take this col, and compair it with the next col and create a mesh
-        // Take this first column and invert it
-        // count the trailing 0 bits
-        // create a new mask
-        std::cout << current << std::endl;
+        // Calculate base position for the current block
+        glm::vec3 position(x, 0.0f, z);
+
+        // Add the vertices for the current block (each block has 8 vertices)
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});   // 0
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});   // 1
+        vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)}); // 2
+        vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)}); // 3
+        vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});   // 4
+        vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});   // 5
+        vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)}); // 6
+        vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)}); // 7
+
+        // Indices for the 6 faces of the cube
+        unsigned int baseIndex = vertices.size() - 8;
+
+        // Front face (0, 1, 2, 2, 3, 0)
+        indices.push_back(baseIndex + 0);
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 0);
+
+        // Back face (4, 5, 6, 6, 7, 4)
+        indices.push_back(baseIndex + 4);
+        indices.push_back(baseIndex + 5);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 7);
+        indices.push_back(baseIndex + 4);
+
+        // Left face (0, 3, 7, 7, 4, 0)
+        indices.push_back(baseIndex + 0);
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 7);
+        indices.push_back(baseIndex + 7);
+        indices.push_back(baseIndex + 4);
+        indices.push_back(baseIndex + 0);
+
+        // Right face (1, 5, 6, 6, 2, 1)
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex + 5);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 1);
+
+        // Top face (3, 2, 6, 6, 7, 3)
+        indices.push_back(baseIndex + 3);
+        indices.push_back(baseIndex + 2);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 6);
+        indices.push_back(baseIndex + 7);
+        indices.push_back(baseIndex + 3);
+
+        // Bottom face (0, 1, 5, 5, 4, 0)
+        indices.push_back(baseIndex + 0);
+        indices.push_back(baseIndex + 1);
+        indices.push_back(baseIndex + 5);
+        indices.push_back(baseIndex + 5);
+        indices.push_back(baseIndex + 4);
+        indices.push_back(baseIndex + 0);
       }
     }
 
-    std::cout << std::bitset<sizeof(uint64_t) * 8>(grid.getColumn(0, 0)) << std::endl;
+    // https://www.youtube.com/watch?v=4xs66m1Of4A
 
-    for (size_t i = 0; i < grid.count(); i++)
-    {
-      glm::vec3 position = grid.getPosition(i);
+    vao.bind();
+    vbo.set(vertices);
+    ebo.set(indices);
+    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, position));
 
-      // grid.getColumn(position);
-      // https://www.youtube.com/watch?v=4xs66m1Of4A
-      // std::cout << grid.getColumn(position) << std::endl;
-
-      if (grid.getValue(i))
-      {
-        voxels[i].type = 1;
-        voxels[i].setPosition(glm::vec3{position.x * gap, position.y * gap, position.z * gap});
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-      }
-    }
-
-    std::cout << "Voxels: " << voxels.size() << std::endl;
-  }
-
-  void generateVoxelsWithoutOptimization()
-  {
-    float gap = 1.5f;
-
-    for (size_t i = 0; i < grid.count(); i++)
-    {
-      glm::vec3 position = grid.getPosition(i);
-
-      if (grid.getValue(i))
-      {
-        voxels[i].type = 1;
-        voxels[i].setPosition(glm::vec3{position.x * gap, position.y * gap, position.z * gap});
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-      }
-    }
-
-    std::cout << "Voxels: " << voxels.size() << std::endl;
+    std::cout << "Vertices: " << vertices.size() << std::endl;
+    std::cout << "Indices: " << indices.size() << std::endl;
   }
 
   void fill()
@@ -160,18 +161,5 @@ public:
       if (distance <= radius)
         grid.setValue(i, 1);
     }
-  }
-
-  void update()
-  {
-    ccc.bind();
-    for (const auto &voxel : voxels)
-      ccc.upsert(sizeof(Voxel), voxel.first, sizeof(Voxel), (const void *)&voxel.second);
-    setVertexAttribPointer();
-  }
-
-  const unsigned int getInstancesCount()
-  {
-    return grid.count();
   }
 };

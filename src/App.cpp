@@ -43,23 +43,14 @@ App::App() : Window(opts)
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  /**
-   * Load the model foo
-   */
-  Model *model = resource.loadModel("assets/model/cube.obj");
+  // std::thread t([this]()
+  //               { BENCHMARK("generateVertexBuffer()", [this]()
+  //                           { this->world.generateMesh(); }, 1); });
 
-  world.setModel(model);
+  // t.detach();
 
-  controlPanel.addModel(model);
+  this->world.generateMesh();
 
-  std::thread generationThread([this]()
-  {
-    // BENCHMARK("generateVoxelsWithoutOptimization()", [this]() { this->world.generateVoxelsWithoutOptimization(); }, 1);
-    BENCHMARK("generateVoxels()", [this]() { this->world.generateVoxels(); }, 1);
-  });
-
-  generationThread.detach();
-  
   open();
 }
 
@@ -69,8 +60,6 @@ void App::onUpdate()
 
   camera.setViewportSize(size);
   camera.update();
-
-  world.update();
 
   controlPanel.update();
 }
@@ -96,7 +85,12 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void *)0, world.getInstancesCount());
+  // glDrawArrays(GL_TRIANGLES, 0, 32768);
+  // glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
+
+  // glDrawArrays(GL_TRIANGLES, 0, 8);
+  // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
   controlPanel.draw();
 }
