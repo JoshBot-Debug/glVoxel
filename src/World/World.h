@@ -75,6 +75,9 @@ public:
       {
         unsigned long long &col = grid.getColumn(x, z);
         // TODO need to take this col, and compair it with the next col and create a mesh
+        // Take this first column and invert it
+        // count the trailing 0 bits
+        // create a new mask
         std::cout << col << std::endl;
       }
     }
