@@ -75,6 +75,15 @@ public:
     grid.setValue(0, 1, 1, 1);
     grid.setValue(1, 1, 1, 1);
 
+    grid.setValue(0, 6, 0, 1);
+    grid.setValue(1, 6, 0, 1);
+
+    grid.setValue(0, 7, 0, 1);
+    grid.setValue(1, 7, 0, 1);
+
+    grid.setValue(0, 6, 1, 1);
+    grid.setValue(1, 6, 1, 1);
+
     // fill();
     // fillSphere();
   }
@@ -92,55 +101,38 @@ public:
     {
       for (unsigned int x = 0; x < size.x; x++)
       {
-        // if(z > 2) continue;
-        // if(x > 2) continue;
-
         uint64_t column = grid.getColumn(x, 0, z);
 
-        int yb = -1, yt = -2;
+        glm::vec3 position(x, -1, z);
 
         while (column != 0)
         {
-          if (yb == -1)
-          {
-            yb = __builtin_ctzll(column);
-            yt = -1;
-          }
-          if (yt == -1)
-            yt = __builtin_ctzll(column);
+          ++position.y;
 
-          // unsigned int y = __builtin_ctzll(column);
-          // std::cout << "Creating face: " << y << " " << std::bitset<64>(column) << std::endl;
+          unsigned int height = __builtin_ctzll(~column);
 
-          column &= column - 1;
+          column = column >> (height + 1);
 
-          // std::cout << "Creating face: " << height << std::endl;
+          if (!height)
+            continue;
 
-          glm::vec3 position(x, 0.0f, z);
+          vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
 
-          // // Top face (2 triangles, CCW)
-          if (yt > -1)
-          {
-            vertices.push_back({position + glm::vec3(0.0f, yt, 0.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yt, 1.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yt, 0.0f)});
+          vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+          vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
 
-            vertices.push_back({position + glm::vec3(0.0f, yt, 0.0f)});
-            vertices.push_back({position + glm::vec3(0.0f, yt, 1.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yt, 1.0f)});
-          }
+          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
 
-          // Bottom face (2 triangles, CCW)
-          if (yb > -1)
-          {
-            vertices.push_back({position + glm::vec3(0.0f, yb, 0.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yb, 0.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yb, 1.0f)});
+          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
+          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
 
-            vertices.push_back({position + glm::vec3(0.0f, yb, 0.0f)});
-            vertices.push_back({position + glm::vec3(1.0f, yb, 1.0f)});
-            vertices.push_back({position + glm::vec3(0.0f, yb, 1.0f)});
-          }
+          position.y += height;
         }
       }
     }
