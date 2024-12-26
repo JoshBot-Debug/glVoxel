@@ -49,6 +49,32 @@ App::App() : Window(opts)
 
   // t.detach();
 
+  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
+  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111110");
+  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
+  // std::bitset<64> bits("0111111111111111111111111111111111111111111111111111111111111111");
+  // std::bitset<64> bits("0000000000000000000000000000000000000000000000000000011110001100");
+  // uint64_t originalColumn = bits.to_ullong();
+  // uint64_t column = originalColumn;
+
+  // int ffs = __builtin_ffsll(column);
+
+  // if (ffs)
+  //   column = column >> ffs - 1;
+
+  // int height = __builtin_ctzll(~column);
+
+  // // int x = (height + ffs - 1);
+  // int x = 64;
+  // std::cout << std::bitset<64>(((1ULL << x) - 1)) << std::endl;
+
+  // originalColumn &= ~((1ULL << x) - 1);
+
+
+  // std::cout << std::bitset<64>(originalColumn) << std::endl;
+  // std::cout << std::bitset<64>(column) << std::endl;
+  // std::cout << ffs << " " << (height + ffs - 1) << std::endl;
+
   this->world.generateMesh();
 
   open();
@@ -90,6 +116,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
   glDrawArrays(GL_LINES, 0, 147456);
+  // glDrawArrays(GL_TRIANGLES, 0, 147456);
   // glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
   // glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
 

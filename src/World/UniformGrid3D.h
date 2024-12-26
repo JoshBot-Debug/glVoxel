@@ -28,7 +28,7 @@ public:
 
     unsigned int btIndex = y + (SIZE * (x + (SIZE * z)));
     unsigned int lrIndex = x + (SIZE * (y + (SIZE * z)));
-    unsigned int fbIndex = z + (SIZE * (x + (SIZE * y)));
+    unsigned int fbIndex = z + (SIZE * (y + (SIZE * x)));
 
     if (value == 1)
     {
@@ -65,15 +65,30 @@ public:
     return gridBT[(SIZE * (x + (SIZE * z))) / BITS];
   }
 
+  void setColumn(uint32_t x, uint32_t y, uint32_t z, uint64_t value)
+  {
+    gridBT[(SIZE * (x + (SIZE * z))) / BITS] = value;
+  }
+
   uint64_t &getRow(uint32_t x, uint32_t y, uint32_t z)
   {
     // x - the bits offset
     return gridLR[(SIZE * (y + (SIZE * z))) / BITS];
   }
 
+  void setRow(uint32_t x, uint32_t y, uint32_t z, uint64_t value)
+  {
+    gridLR[(SIZE * (y + (SIZE * z))) / BITS] = value;
+  }
+
   uint64_t &getDepth(uint32_t x, uint32_t y, uint32_t z)
   {
     // z - the bits offset
-    return gridFB[(SIZE * (x + (SIZE * y))) / BITS];
+    return gridFB[(SIZE * (y + (SIZE * x))) / BITS];
+  }
+
+  void setDepth(uint32_t x, uint32_t y, uint32_t z, uint64_t value)
+  {
+    gridFB[(SIZE * (y + (SIZE * x))) / BITS] = value;
   }
 };

@@ -15,39 +15,69 @@
 
 // // Front face (2 triangles, CCW)
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 0.0f)});
 // vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
 
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-// vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
+// vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 0.0f)});
 
 // // Back face (2 triangles, CCW)
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
 // vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
 
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
-// vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
+// vertices.push_back({position + glm::vec3(0.0f, column.size, 1.0f)});
 
 // // Left face (2 triangles, CCW)
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
-// vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
+// vertices.push_back({position + glm::vec3(0.0f, column.size, 1.0f)});
 
 // vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-// vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
-// vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
+// vertices.push_back({position + glm::vec3(0.0f, column.size, 1.0f)});
+// vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
 
 // // // Right face (2 triangles, CCW)
 // vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
 // vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
 
 // vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
-// vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 0.0f)});
+// vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
+
+inline uint64_t createMask(unsigned int x)
+{
+  if (x == 64)
+    return 0ULL;
+  return ~((1ULL << x) - 1);
+}
+
+struct Info
+{
+  int size;
+  int offset;
+};
+
+inline Info getInfo(uint64_t &data)
+{
+  uint64_t _data = data;
+
+  int offset = __builtin_ffsll(_data);
+
+  if (offset)
+    _data = _data >> offset - 1;
+
+  int size = __builtin_ctzll(~_data);
+
+  return {
+      size,
+      offset,
+  };
+}
 
 class World
 {
@@ -68,21 +98,23 @@ public:
 
     grid.setValue(0, 1, 0, 1);
     grid.setValue(1, 1, 0, 1);
-
     grid.setValue(0, 2, 0, 1);
-    grid.setValue(1, 2, 0, 1);
-
     grid.setValue(0, 1, 1, 1);
-    grid.setValue(1, 1, 1, 1);
 
-    grid.setValue(0, 6, 0, 1);
-    grid.setValue(1, 6, 0, 1);
+    grid.setValue(0, 1, 5, 1);
+    grid.setValue(1, 1, 5, 1);
+    grid.setValue(0, 2, 5, 1);
+    grid.setValue(0, 1, 6, 1);
 
-    grid.setValue(0, 7, 0, 1);
-    grid.setValue(1, 7, 0, 1);
+    grid.setValue(5, 1, 0, 1);
+    grid.setValue(6, 1, 0, 1);
+    grid.setValue(5, 2, 0, 1);
+    grid.setValue(5, 1, 1, 1);
 
-    grid.setValue(0, 6, 1, 1);
-    grid.setValue(1, 6, 1, 1);
+    grid.setValue(5, 1, 5, 1);
+    grid.setValue(6, 1, 5, 1);
+    grid.setValue(5, 2, 5, 1);
+    grid.setValue(5, 1, 6, 1);
 
     // fill();
     // fillSphere();
@@ -95,44 +127,57 @@ public:
     // Get all the cubes on each axis and create faces are relevant places
     // Do this for the x, y & z axis, thereby creating one mesh with minimal vertices and no extra faces
 
-    const glm::ivec3 &size = grid.size();
+    UniformGrid3D voxels = grid;
 
-    for (unsigned int z = 0; z < size.z; z++)
+    const glm::ivec3 &size = voxels.size();
+
+    for (unsigned int x = 0; x < size.x; x++)
     {
-      for (unsigned int x = 0; x < size.x; x++)
+      uint64_t &c = voxels.getColumn(x, 0, 0);
+
+      Info column = getInfo(c);
+
+      if (!column.size)
+        continue;
+
+      uint64_t &tr = voxels.getRow(0, column.size - 1, 0);
+      uint64_t &td = voxels.getDepth(x, column.size - 1, 0);
+
+      while (c)
       {
-        uint64_t column = grid.getColumn(x, 0, z);
+        c &= createMask(column.size + column.offset - 1);
 
-        glm::vec3 position(x, -1, z);
-
-        while (column != 0)
+        while (tr || td)
         {
-          ++position.y;
+          Info row = getInfo(tr);
+          Info depth = getInfo(td);
 
-          unsigned int height = __builtin_ctzll(~column);
+          std::cout << row.size << " " << depth.size << std::endl;
+          // if (!row.size || !depth.size)
+          //   continue;
 
-          column = column >> (height + 1);
+          std::cout << std::bitset<64>(td) << std::endl;
 
-          if (!height)
-            continue;
+          tr &= createMask(row.size + row.offset - 1);
+          td &= createMask(depth.size + depth.offset - 1);
 
-          vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, height, 0.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
+          glm::vec3 position(x, -1, 0);
 
-          vertices.push_back({position + glm::vec3(0.0f, height, 0.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, height, 1.0f)});
-          vertices.push_back({position + glm::vec3(0.0f, height, 1.0f)});
+          vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+          vertices.push_back({position + glm::vec3(row.size - x, column.size, 0.0f)});
+          vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
+
+          vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+          vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
+          vertices.push_back({position + glm::vec3(0.0f, column.size, depth.size)});
 
           vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
+          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
+          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, 0.0f)});
 
           vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
-          vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
-
-          position.y += height;
+          vertices.push_back({position + glm::vec3(0.0f, 0.0f, depth.size)});
+          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
         }
       }
     }
@@ -145,6 +190,65 @@ public:
 
     std::cout << "Vertices: " << vertices.size() << std::endl;
   }
+
+  // void generateMesh()
+  // {
+  //   std::vector<Vertex> vertices;
+
+  //   // Get all the cubes on each axis and create faces are relevant places
+  //   // Do this for the x, y & z axis, thereby creating one mesh with minimal vertices and no extra faces
+
+  //   const glm::ivec3 &size = grid.size();
+
+  //   for (unsigned int z = 0; z < size.z; z++)
+  //   {
+  //     for (unsigned int x = 0; x < size.x; x++)
+  //     {
+  //       uint64_t column = grid.getColumn(x, 0, z);
+
+  //       glm::vec3 position(x, -1, z);
+
+  //       while (column != 0)
+  //       {
+  //         ++position.y;
+
+  //         unsigned int height = __builtin_ctzll(~column);
+
+  //         column = column >> (height + 1);
+
+  //         if (!height)
+  //           continue;
+
+  //         // Create column
+  //         vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, column.size, 0.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
+
+  //         vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, column.size, 1.0f)});
+  //         vertices.push_back({position + glm::vec3(0.0f, column.size, 1.0f)});
+
+  //         vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, 0.0f, 0.0f)});
+
+  //         vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+  //         vertices.push_back({position + glm::vec3(0.0f, 0.0f, 1.0f)});
+  //         vertices.push_back({position + glm::vec3(1.0f, 0.0f, 1.0f)});
+
+  //         position.y += height;
+  //       }
+  //     }
+  //   }
+
+  //   // https://www.youtube.com/watch?v=4xs66m1Of4A
+
+  //   vao.bind();
+  //   vbo.set(vertices);
+  //   vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, position));
+
+  //   std::cout << "Vertices: " << vertices.size() << std::endl;
+  // }
 
   void fill()
   {
