@@ -53,27 +53,25 @@ App::App() : Window(opts)
   // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111110");
   // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
   // std::bitset<64> bits("0111111111111111111111111111111111111111111111111111111111111111");
-  // std::bitset<64> bits("0000000000000000000000000000000000000000000000000000011110001100");
+  // std::bitset<64> bits("0000000000000000000000000000000000000000000000000000000000000011");
   // uint64_t originalColumn = bits.to_ullong();
   // uint64_t column = originalColumn;
 
-  // int ffs = __builtin_ffsll(column);
+  // int offset = __builtin_ffsll(column);
 
-  // if (ffs)
-  //   column = column >> ffs - 1;
+  // if (offset)
+  //   column = column >> offset - 1;
 
   // int height = __builtin_ctzll(~column);
 
-  // // int x = (height + ffs - 1);
-  // int x = 64;
-  // std::cout << std::bitset<64>(((1ULL << x) - 1)) << std::endl;
+  // std::bitset<64> mask("1111111111111111111111111111111111111111111111111111111111111100");
 
-  // originalColumn &= ~((1ULL << x) - 1);
-
+  // std::cout << "MASK: " << mask << std::endl;
 
   // std::cout << std::bitset<64>(originalColumn) << std::endl;
-  // std::cout << std::bitset<64>(column) << std::endl;
-  // std::cout << ffs << " " << (height + ffs - 1) << std::endl;
+  // originalColumn &= mask.to_ullong();
+  // std::cout << std::bitset<64>(originalColumn) << std::endl;
+
 
   this->world.generateMesh();
 

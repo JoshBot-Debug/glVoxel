@@ -96,25 +96,8 @@ public:
     vbo.generate();
     ebo.generate();
 
-    grid.setValue(0, 1, 0, 1);
-    grid.setValue(1, 1, 0, 1);
-    grid.setValue(0, 2, 0, 1);
-    grid.setValue(0, 1, 1, 1);
-
-    grid.setValue(0, 1, 5, 1);
-    grid.setValue(1, 1, 5, 1);
-    grid.setValue(0, 2, 5, 1);
-    grid.setValue(0, 1, 6, 1);
-
-    grid.setValue(5, 1, 0, 1);
-    grid.setValue(6, 1, 0, 1);
-    grid.setValue(5, 2, 0, 1);
-    grid.setValue(5, 1, 1, 1);
-
-    grid.setValue(5, 1, 5, 1);
-    grid.setValue(6, 1, 5, 1);
-    grid.setValue(5, 2, 5, 1);
-    grid.setValue(5, 1, 6, 1);
+    grid.setValue(0, 0, 0, 1);
+    grid.setValue(1, 0, 0, 1);
 
     // fill();
     // fillSphere();
@@ -131,53 +114,66 @@ public:
 
     const glm::ivec3 &size = voxels.size();
 
-    for (unsigned int x = 0; x < size.x; x++)
+    for (size_t z = 0; z < size.z; z++)
     {
-      uint64_t &c = voxels.getColumn(x, 0, 0);
-
-      Info column = getInfo(c);
-
-      if (!column.size)
-        continue;
-
-      uint64_t &tr = voxels.getRow(0, column.size - 1, 0);
-      uint64_t &td = voxels.getDepth(x, column.size - 1, 0);
-
-      while (c)
+      for (unsigned int x = 0; x < size.x; x++)
       {
-        c &= createMask(column.size + column.offset - 1);
+        uint64_t &c = voxels.getColumn(x, 0, z);
 
-        while (tr || td)
+        while (c)
         {
+          Info column = getInfo(c);
+
+          uint64_t &tr = voxels.getRow(0, column.size - 1, z);
+          uint64_t &td = voxels.getDepth(x, column.size - 1, 0);
           Info row = getInfo(tr);
           Info depth = getInfo(td);
 
-          std::cout << row.size << " " << depth.size << std::endl;
-          // if (!row.size || !depth.size)
-          //   continue;
+          uint64_t rMask = createMask(row.size + row.offset - 1);
+          uint64_t dMask = createMask(depth.size + depth.offset - 1);
+          uint64_t cMask = createMask(column.size + column.offset - 1);
 
-          std::cout << std::bitset<64>(td) << std::endl;
+          std::cout << "x: " << x << " z:" << z << std::endl;
+          std::cout << "Column: " << std::bitset<64>(c) << std::endl;
+          std::cout << "Row: " << std::bitset<64>(tr) << std::endl;
+          std::cout << "Depth: " << std::bitset<64>(td) << std::endl;
+          
+          std::cout << "Column Mask: " << std::bitset<64>(cMask) << std::endl;
+          std::cout << "Row Mask: " << std::bitset<64>(rMask) << std::endl;
+          std::cout << "Depth Mask: " << std::bitset<64>(dMask) << std::endl;
+          std::cout << "H: " << column.size << " Wx: " << row.size << " Wz: " << depth.size << std::endl;
 
+          c &= createMask(column.size + column.offset - 1);
           tr &= createMask(row.size + row.offset - 1);
           td &= createMask(depth.size + depth.offset - 1);
 
-          glm::vec3 position(x, -1, 0);
+          std::cout << "Column After Mask: " << std::bitset<64>(c) << std::endl;
+          std::cout << "Row After Mask: " << std::bitset<64>(tr) << std::endl;
+          std::cout << "Depth After Mask: " << std::bitset<64>(td) << std::endl;
 
-          vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
-          vertices.push_back({position + glm::vec3(row.size - x, column.size, 0.0f)});
-          vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
+          // while (tr || td)
+          // {
+          //   if (!row.size || !depth.size)
+          //     break;
 
-          vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
-          vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
-          vertices.push_back({position + glm::vec3(0.0f, column.size, depth.size)});
+          //   glm::vec3 position(x, -1, z);
 
-          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
-          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, column.size, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
 
-          vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-          vertices.push_back({position + glm::vec3(0.0f, 0.0f, depth.size)});
-          vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
+          //   vertices.push_back({position + glm::vec3(0.0f, column.size, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, column.size, depth.size)});
+          //   vertices.push_back({position + glm::vec3(0.0f, column.size, depth.size)});
+
+          //   vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, 0.0f, 0.0f)});
+
+          //   vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
+          //   vertices.push_back({position + glm::vec3(0.0f, 0.0f, depth.size)});
+          //   vertices.push_back({position + glm::vec3(row.size - x, 0.0f, depth.size)});
+          // }
         }
       }
     }
