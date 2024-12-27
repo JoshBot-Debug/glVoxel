@@ -28,7 +28,7 @@ public:
 
     unsigned int btIndex = y + (SIZE * (x + (SIZE * z)));
     unsigned int lrIndex = x + (SIZE * (y + (SIZE * z)));
-    unsigned int fbIndex = z + (SIZE * (y + (SIZE * x)));
+    unsigned int fbIndex = z + (SIZE * (x + (SIZE * y)));
 
     if (value == 1)
     {
@@ -84,11 +84,11 @@ public:
   uint64_t &getDepth(uint32_t x, uint32_t y, uint32_t z)
   {
     // z - the bits offset
-    return gridFB[(SIZE * (y + (SIZE * x))) / BITS];
+    return gridFB[(SIZE * (x + (SIZE * y))) / BITS];
   }
 
   void setDepth(uint32_t x, uint32_t y, uint32_t z, uint64_t value)
   {
-    gridFB[(SIZE * (y + (SIZE * x))) / BITS] = value;
+    gridFB[(SIZE * (x + (SIZE * y))) / BITS] = value;
   }
 };

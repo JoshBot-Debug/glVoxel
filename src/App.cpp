@@ -53,24 +53,17 @@ App::App() : Window(opts)
   // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111110");
   // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
   // std::bitset<64> bits("0111111111111111111111111111111111111111111111111111111111111111");
-  // std::bitset<64> bits("0000000000000000000000000000000000000000000000000000000000000011");
-  // uint64_t originalColumn = bits.to_ullong();
-  // uint64_t column = originalColumn;
+  std::bitset<64> bits("1111111111111111111111111111111100000000000000000000000000000000");
+  int offset = __builtin_ffsll(bits.to_ullong());
 
-  // int offset = __builtin_ffsll(column);
+  if (offset)
+    bits = bits >> offset - 1;
 
-  // if (offset)
-  //   column = column >> offset - 1;
+  int size = __builtin_ctzll(~bits.to_ullong());
 
-  // int height = __builtin_ctzll(~column);
 
-  // std::bitset<64> mask("1111111111111111111111111111111111111111111111111111111111111100");
-
-  // std::cout << "MASK: " << mask << std::endl;
-
-  // std::cout << std::bitset<64>(originalColumn) << std::endl;
-  // originalColumn &= mask.to_ullong();
-  // std::cout << std::bitset<64>(originalColumn) << std::endl;
+  std::cout << offset << std::endl;
+  std::cout << size << std::endl;
 
 
   this->world.generateMesh();
@@ -113,8 +106,8 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  glDrawArrays(GL_LINES, 0, 147456);
-  // glDrawArrays(GL_TRIANGLES, 0, 147456);
+  // glDrawArrays(GL_LINES, 0, 147456);
+  glDrawArrays(GL_TRIANGLES, 0, 147456);
   // glDrawElements(GL_TRIANGLES, 147456, GL_UNSIGNED_INT, 0);
   // glDrawElements(GL_LINES, 147456, GL_UNSIGNED_INT, 0);
 
