@@ -86,7 +86,7 @@ void App::onDraw()
   shader.setUniform3f("u_Material.specular", 0.5f, 0.5f, 0.5f);
   shader.setUniform1f("u_Material.shininess", 32.0f);
 
-  shader.setUniform3f("u_Light.position", 5.0f, 5.0f, 0.0f);
+  shader.setUniform3f("u_Light.position", 0.5f, 0.5f, 2.5f);
   shader.setUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
   shader.setUniform3f("u_Light.ambient", 0.1f, 0.1f, 0.1f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);

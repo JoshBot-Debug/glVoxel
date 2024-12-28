@@ -72,40 +72,40 @@ inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm:
     vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
     break;
   case FaceDirection::FRONT:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
     break;
   case FaceDirection::BACK:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, 1.0f}});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 0.0f, 1.0f}});
     break;
   case FaceDirection::LEFT:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {-1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 0.0f, 0.0f}});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {-1.0f, 0.0f, 0.0f}});
     break;
   case FaceDirection::RIGHT:
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {1.0f, 0.0f, 0.0f}});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {1.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 0.0f, 0.0f}});
     break;
   default:
     break;
