@@ -54,58 +54,58 @@ inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm:
   switch (direction)
   {
   case FaceDirection::TOP:
-    vertices.push_back({position + glm::vec3(0.0f, size.y, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, 0.0f)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
 
-    vertices.push_back({position + glm::vec3(0.0f, size.y, 0.0f)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 1.0f, 0.0f}});
     break;
   case FaceDirection::BOTTOM:
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
 
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, size.z)});
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
     break;
   case FaceDirection::FRONT:
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, 0.0f)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
 
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, 0.0f)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, 1.0f}});
     break;
   case FaceDirection::BACK:
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, -1.0f}});
 
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 0.0f, -1.0f}});
     break;
   case FaceDirection::LEFT:
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, size.z)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 1.0f, 0.0f}});
 
-    vertices.push_back({position + glm::vec3(0.0f, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, size.z)});
-    vertices.push_back({position + glm::vec3(0.0f, size.y, 0.0f)});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {-1.0f, 1.0f, 0.0f}});
     break;
   case FaceDirection::RIGHT:
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {1.0f, 1.0f, 0.0f}});
 
-    vertices.push_back({position + glm::vec3(size.x, 0.0f, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, 0.0f)});
-    vertices.push_back({position + glm::vec3(size.x, size.y, size.z)});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {1.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 1.0f, 0.0f}});
     break;
   default:
     break;
@@ -129,33 +129,7 @@ public:
     vbo.generate();
     ebo.generate();
 
-    grid.setValue(1, 0, 0, 1);
-    grid.setValue(2, 0, 0, 1);
-    grid.setValue(3, 0, 0, 1);
-    grid.setValue(4, 0, 0, 1);
-
-    grid.setValue(6, 0, 0, 1);
-    grid.setValue(7, 0, 0, 1);
-    grid.setValue(8, 0, 0, 1);
-    grid.setValue(9, 0, 0, 1);
-
-    grid.setValue(1, 0, 1, 1);
-    grid.setValue(2, 0, 1, 1);
-    grid.setValue(3, 0, 1, 1);
-    grid.setValue(4, 0, 1, 1);
-
-    grid.setValue(1, 0, 2, 1);
-    grid.setValue(2, 0, 2, 1);
-    grid.setValue(3, 0, 2, 1);
-    grid.setValue(4, 0, 2, 1);
-
-    grid.setValue(1, 1, 0, 1);
-    grid.setValue(2, 1, 0, 1);
-    grid.setValue(3, 1, 0, 1);
-    grid.setValue(4, 1, 0, 1);
-
-    grid.setValue(0, 1, 1, 1);
-    grid.setValue(1, 1, 1, 1);
+    grid.setValue(0, 0, 0, 1);
 
     // fill();
     fillSphere();
@@ -164,46 +138,60 @@ public:
   void generateMesh(std::vector<Vertex> &vertices)
   {
     UniformGrid3D voxels = grid;
+    const glm::ivec3 &size = voxels.size();
 
-    for (size_t a = 0; a < 32; a++)
+    for (size_t z = 0; z < size.z; z++)
     {
-      for (size_t b = 0; b < 32; b++)
+      for (size_t x = 0; x < size.x; x++)
       {
-        uint32_t &column = voxels.getColumn(b, 0, a);
-        uint32_t &row = voxels.getRow(0, b, a);
-        uint32_t &depth = voxels.getDepth(a, b, 0);
+        uint32_t &column = voxels.getColumn(x, 0, z);
 
         while (column)
         {
           Info iCol = getInfo(column);
           column &= createMask(iCol.size + iCol.offset);
 
-          glm::vec3 position(b, iCol.offset, a);
+          glm::vec3 position(x, iCol.offset, z);
           glm::vec3 size(1.0f, iCol.size, 1.0f);
 
           generateFace(vertices, position, size, FaceDirection::TOP);
           generateFace(vertices, position, size, FaceDirection::BOTTOM);
         }
+      }
+    }
+
+    for (size_t z = 0; z < size.z; z++)
+    {
+      for (size_t y = 0; y < size.y; y++)
+      {
+        uint32_t &row = voxels.getRow(0, y, z);
 
         while (row)
         {
           Info iRow = getInfo(row);
           row &= createMask(iRow.size + iRow.offset);
 
-          glm::vec3 position(iRow.offset, b, a);
+          glm::vec3 position(iRow.offset, y, z);
           glm::vec3 size(iRow.size, 1.0f, 1.0f);
 
           generateFace(vertices, position, size, FaceDirection::LEFT);
           generateFace(vertices, position, size, FaceDirection::RIGHT);
         }
+      }
+    }
+
+    for (size_t x = 0; x < size.x; x++)
+    {
+      for (size_t y = 0; y < size.y; y++)
+      {
+        uint32_t &depth = voxels.getDepth(x, y, 0);
 
         while (depth)
         {
           Info iDepth = getInfo(depth);
-
           depth &= createMask(iDepth.size + iDepth.offset);
 
-          glm::vec3 position(a, b, iDepth.offset);
+          glm::vec3 position(x, y, iDepth.offset);
           glm::vec3 size(1.0f, 1.0f, iDepth.size);
 
           generateFace(vertices, position, size, FaceDirection::FRONT);
@@ -212,66 +200,6 @@ public:
       }
     }
 
-    // for (size_t z = 0; z < size.z; z++)
-    // {
-    //   for (size_t x = 0; x < size.x; x++)
-    //   {
-    //     uint32_t &column = voxels.getColumn(x, 0, z);
-
-    //     while (column)
-    //     {
-    //       Info iCol = getInfo(column);
-    //       column &= createMask(iCol.size + iCol.offset);
-
-    //       glm::vec3 position(x, iCol.offset, z);
-    //       glm::vec3 size(1.0f, iCol.size, 1.0f);
-
-    //       generateFace(vertices, position, size, FaceDirection::TOP);
-    //       generateFace(vertices, position, size, FaceDirection::BOTTOM);
-    //     }
-    //   }
-    // }
-
-    // for (size_t z = 0; z < size.z; z++)
-    // {
-    //   for (size_t y = 0; y < size.y; y++)
-    //   {
-    //     uint32_t &row = voxels.getRow(0, y, z);
-
-    //     while (row)
-    //     {
-    //       Info iRow = getInfo(row);
-    //       row &= createMask(iRow.size + iRow.offset);
-
-    //       glm::vec3 position(iRow.offset, y, z);
-    //       glm::vec3 size(iRow.size, 1.0f, 1.0f);
-
-    //       generateFace(vertices, position, size, FaceDirection::LEFT);
-    //       generateFace(vertices, position, size, FaceDirection::RIGHT);
-    //     }
-    //   }
-    // }
-
-    // for (size_t x = 0; x < size.x; x++)
-    // {
-    //   for (size_t y = 0; y < size.y; y++)
-    //   {
-    //     uint32_t &depth = voxels.getDepth(x, y, 0);
-
-    //     while (depth)
-    //     {
-    //       Info iDepth = getInfo(depth);
-    //       depth &= createMask(iDepth.size + iDepth.offset);
-
-    //       glm::vec3 position(x, y, iDepth.offset);
-    //       glm::vec3 size(1.0f, 1.0f, iDepth.size);
-
-    //       generateFace(vertices, position, size, FaceDirection::FRONT);
-    //       generateFace(vertices, position, size, FaceDirection::BACK);
-    //     }
-    //   }
-    // }
-
     // https://www.youtube.com/watch?v=4xs66m1Of4A
   }
 
@@ -279,7 +207,8 @@ public:
   {
     vao.bind();
     vbo.set(vertices);
-    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)offsetof(Vertex, position));
+    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, position)));
+    vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
 
     std::cout << "Vertices: " << vertices.size() << std::endl;
   }

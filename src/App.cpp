@@ -43,34 +43,16 @@ App::App() : Window(opts)
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  // t.detach();
+  std::thread t([this]() mutable
+                { BENCHMARK("generateVertexBuffer()", [this]() mutable
+                            { std::vector<Vertex> vertices;
+                              this->world.generateMesh(vertices); }, 1000); });
 
-  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
-  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111110");
-  // std::bitset<64> bits("1111111111111111111111111111111111111111111111111111111111111111");
-  // std::bitset<64> bits("0111111111111111111111111111111111111111111111111111111111111111");
-  // std::bitset<64> bits("1111111111111111111111111111111100000000000000000000000000000000");
-  // int offset = __builtin_ffsll(bits.to_ullong());
-
-  // if (offset)
-  //   bits = bits >> offset - 1;
-
-  // int size = __builtin_ctzll(~bits.to_ullong());
-
-  // std::cout << offset << std::endl;
-  // std::cout << size << std::endl;
-
-  // std::thread t([this]() mutable
-  //               { BENCHMARK("generateVertexBuffer()", [this]() mutable
-  //                           { std::vector<Vertex> vertices;
-  //                             this->world.generateMesh(vertices); }, 1000); });
-
-  // t.detach();
+  t.join();
 
   std::vector<Vertex> vertices;
   this->world.generateMesh(vertices);
   this->world.setBuffer(vertices);
-
   open();
 }
 
@@ -100,17 +82,17 @@ void App::onDraw()
 
   shader.setUniform3f("u_CameraPosition", camera.position);
 
-  shader.setUniform3f("u_Material.diffuse", 1.0f, 1.0f, 1.0f);
-  shader.setUniform3f("u_Material.specular", 1.0f, 1.0f, 1.0f);
-  shader.setUniform1f("u_Material.shininess", 0.4f * 128.0f);
+  shader.setUniform3f("u_Material.diffuse", 1.0f, 0.0f, 0.0f);
+  shader.setUniform3f("u_Material.specular", 0.5f, 0.5f, 0.5f);
+  shader.setUniform1f("u_Material.shininess", 32.0f);
 
-  shader.setUniform3f("u_Light.position", 5.0f, 5.0f, 5.0f);
+  shader.setUniform3f("u_Light.position", 5.0f, 5.0f, 0.0f);
   shader.setUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
-  shader.setUniform3f("u_Light.ambient", 1.0f, 1.0f, 1.0f);
+  shader.setUniform3f("u_Light.ambient", 0.1f, 0.1f, 0.1f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  glDrawArrays(GL_LINES, 0, 147456);
-  // glDrawArrays(GL_TRIANGLES, 0, 147456);
+  // glDrawArrays(GL_LINES, 0, 147456);
+  glDrawArrays(GL_TRIANGLES, 0, 147456);
   // glDrawElements(GL_TRIANGLES, 38460, GL_UNSIGNED_INT, 0);
   // glDrawElements(GL_LINES, 38460, GL_UNSIGNED_INT, 0);
 
