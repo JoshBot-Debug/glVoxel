@@ -129,6 +129,7 @@ public:
     vbo.generate();
     ebo.generate();
 
+    grid.setValue(2, 2, 0, 1);
     grid.setValue(0, 0, 0, 1);
 
     // fill();

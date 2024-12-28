@@ -31,8 +31,7 @@ void main()
   
   // Diffuse
   vec3 lightDirection=normalize(u_Light.position-f_Position);
-  float diff=max(dot(nNormal,lightDirection),0.);
-  vec3 diffuse=u_Light.diffuse*(diff*u_Material.diffuse);
+  vec3 diffuse=u_Light.diffuse*(max(dot(nNormal,lightDirection),0.)*u_Material.diffuse);
   
   // Specular
   vec3 viewDirection=normalize(u_CameraPosition-f_Position);
