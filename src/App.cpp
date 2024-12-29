@@ -13,8 +13,6 @@
 #include "Engine/Types.h"
 #include "Debug.h"
 
-#include <thread>
-
 const WindowOptions opts = {.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true};
 
 /**
@@ -43,17 +41,14 @@ App::App() : Window(opts)
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  std::thread t([this]() mutable
-                { BENCHMARK("generateVertexBuffer()", [this]() mutable
-                            { std::vector<Vertex> vertices;
-                              this->world.generateMesh(vertices); }, 1000); });
-
-  t.join();
-
-  std::vector<Vertex> vertices;
-  this->world.generateMesh(vertices);
-  this->world.setBuffer(vertices);
   open();
+}
+
+void App::onInitialize()
+{
+  glFrontFace(GL_CCW);
+  glCullFace(GL_BACK);
+  glEnable(GL_CULL_FACE);
 }
 
 void App::onUpdate()
@@ -71,10 +66,6 @@ void App::onDraw()
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glFrontFace(GL_CCW);
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
-
   Shader &shader = resource.getShader();
   shader.bind("default");
   shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
@@ -91,16 +82,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", 0.2f, 0.2f, 0.2f);
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
-  // glDrawArrays(GL_LINES, 0, 147456);
-  glDrawArrays(GL_TRIANGLES, 0, 147456);
-  // glDrawElements(GL_TRIANGLES, 38460, GL_UNSIGNED_INT, 0);
-  // glDrawElements(GL_LINES, 38460, GL_UNSIGNED_INT, 0);
-
-  // glDrawArrays(GL_TRIANGLES, 0, 49152);
-  // glDrawArrays(GL_LINES, 0, 49152);
-
-  // glDrawArrays(GL_TRIANGLES, 0, 8);
-  // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  world.draw();
 
   controlPanel.draw();
 }

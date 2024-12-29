@@ -6,7 +6,7 @@
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Model.h"
 #include "World/Voxel.h"
-#include "World/OctreeNode.h"
+#include "World/Octree.h"
 #include "World/UniformGrid3D.h"
 
 #include <iostream>
@@ -117,27 +117,32 @@ class World
 private:
   VertexArray vao;
   Buffer vbo;
-  Buffer ebo;
 
   UniformGrid3D grid;
+  std::vector<Vertex> vertices;
+  Octree<UniformGrid3D> tree;
 
 public:
-  World() : vbo(BufferTarget::ARRAY_BUFFER),
-            ebo(BufferTarget::ELEMENT_ARRAY_BUFFER)
+  World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
   {
     vao.generate();
     vbo.generate();
-    ebo.generate();
-
-    grid.setValue(2, 2, 0, 1);
-    grid.setValue(0, 0, 0, 1);
-
-    // fill();
+    
     fillSphere();
+    update();
+    setBuffer();
   }
 
-  void generateMesh(std::vector<Vertex> &vertices)
+  void draw()
   {
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+  }
+
+  void update()
+  {
+    // Optimizations
+    // https://www.youtube.com/watch?v=4xs66m1Of4A
+
     UniformGrid3D voxels = grid;
     const glm::ivec3 &size = voxels.size();
 
@@ -200,18 +205,14 @@ public:
         }
       }
     }
-
-    // https://www.youtube.com/watch?v=4xs66m1Of4A
   }
 
-  void setBuffer(std::vector<Vertex> &vertices)
+  void setBuffer()
   {
     vao.bind();
     vbo.set(vertices);
     vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, position)));
     vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
-
-    std::cout << "Vertices: " << vertices.size() << std::endl;
   }
 
   void fill()
