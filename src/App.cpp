@@ -13,6 +13,8 @@
 #include "Engine/Types.h"
 #include "Debug.h"
 
+#include <thread>
+
 App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true})
 {
   controlPanel.setCamera(&camera);
@@ -27,6 +29,14 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .vertex = "src/Shaders/voxel.vs",
       .fragment = "src/Shaders/voxel.fs",
   });
+
+  
+  std::thread t([this]()
+                { BENCHMARK("generateVertexBuffer()", [this]()
+                            { this->world.update(); }, 1000); });
+
+  t.join();
+
 
   open();
 }

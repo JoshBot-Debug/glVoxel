@@ -127,84 +127,186 @@ public:
   {
     vao.generate();
     vbo.generate();
-    
+
     fillSphere();
+    // fill();
     update();
     setBuffer();
   }
 
   void draw()
   {
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    glDrawArrays(GL_LINES, 0, vertices.size());
   }
 
   void update()
   {
-    // Optimizations
-    // https://www.youtube.com/watch?v=4xs66m1Of4A
+    const glm::ivec3 &size = grid.size();
 
-    UniformGrid3D voxels = grid;
-    const glm::ivec3 &size = voxels.size();
+    UniformGrid3D va = grid;
 
+    /**
+     * This is correct however,
+     * We only want to increase the size of the face if it's touching an air block
+     * We also need to clear the bits we use
+     */
     for (size_t z = 0; z < size.z; z++)
     {
       for (size_t x = 0; x < size.x; x++)
       {
-        uint32_t &column = voxels.getColumn(x, 0, z);
+        uint32_t &column = va.getColumn(x, 0, z);
 
         while (column)
         {
           Info iCol = getInfo(column);
-          column &= createMask(iCol.size + iCol.offset);
+          va.setColumn(x, 0, z, va.getColumn(x, 0, z) &= createMask(iCol.size + iCol.offset));
+
+          Info iRow = getInfo(va.getRow(x, iCol.offset, z));
+          // Info iDepth = getInfo(va.getDepth(x, iCol.offset, z));
+
+          // std::cout << iCol.offset << std::endl;
+
+          // for (size_t ir = 0; ir < iRow.size; ir++)
+          //   va.setColumn(x + ir, 0, z, va.getColumn(x + ir, 0, z) &= createMask(iCol.size + iCol.offset));
+
+          // for (size_t id = 0; id < iDepth.size; id++)
+          //   for (size_t ir = 0; ir < iRow.size; ir++)
+          //     va.setColumn(x + ir, 0, z + id, va.getColumn(x + ir, 0, z + id) &= createMask(iCol.size + iCol.offset));
 
           glm::vec3 position(x, iCol.offset, z);
-          glm::vec3 size(1.0f, iCol.size, 1.0f);
+          // glm::vec3 size(iRow.size, iCol.size, iDepth.size);
+          glm::vec3 size(iRow.size, iCol.size, 1.0f);
 
           generateFace(vertices, position, size, FaceDirection::TOP);
           generateFace(vertices, position, size, FaceDirection::BOTTOM);
+
+          // x += iRow.offset;
+          // z += iDepth.offset;
         }
       }
     }
 
-    for (size_t z = 0; z < size.z; z++)
-    {
-      for (size_t y = 0; y < size.y; y++)
-      {
-        uint32_t &row = voxels.getRow(0, y, z);
+    // UniformGrid3D vb = grid;
 
-        while (row)
-        {
-          Info iRow = getInfo(row);
-          row &= createMask(iRow.size + iRow.offset);
+    // for (size_t y = 0; y < size.y; y++)
+    // {
+    //   for (size_t z = 0; z < size.z; z++)
+    //   {
+    //     uint32_t &row = vb.getRow(0, y, z);
 
-          glm::vec3 position(iRow.offset, y, z);
-          glm::vec3 size(iRow.size, 1.0f, 1.0f);
+    //     while (row)
+    //     {
+    //       Info iRow = getInfo(row);
+    //       Info iCol = getInfo(vb.getColumn(iRow.offset, y, z));
+    //       Info iDepth = getInfo(vb.getDepth(iRow.offset, y, 0));
 
-          generateFace(vertices, position, size, FaceDirection::LEFT);
-          generateFace(vertices, position, size, FaceDirection::RIGHT);
-        }
-      }
-    }
+    //       for (size_t ic = 0; ic < iCol.size; ic++)
+    //         for (size_t id = 0; id < iDepth.size; id++)
+    //           vb.getRow(0, y + ic, z + id) &= createMask(iRow.size + iRow.offset);
 
-    for (size_t x = 0; x < size.x; x++)
-    {
-      for (size_t y = 0; y < size.y; y++)
-      {
-        uint32_t &depth = voxels.getDepth(x, y, 0);
+    //       glm::vec3 position(iRow.offset, y, z);
+    //       glm::vec3 size(iRow.size, iCol.size, iDepth.size);
 
-        while (depth)
-        {
-          Info iDepth = getInfo(depth);
-          depth &= createMask(iDepth.size + iDepth.offset);
+    //       generateFace(vertices, position, size, FaceDirection::LEFT);
+    //       generateFace(vertices, position, size, FaceDirection::RIGHT);
 
-          glm::vec3 position(x, y, iDepth.offset);
-          glm::vec3 size(1.0f, 1.0f, iDepth.size);
+    //       y += iCol.size - 1;
+    //       z += iDepth.size - 1;
+    //     }
+    //   }
+    // }
 
-          generateFace(vertices, position, size, FaceDirection::FRONT);
-          generateFace(vertices, position, size, FaceDirection::BACK);
-        }
-      }
-    }
+    // UniformGrid3D vc = grid;
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &depth = vc.getDepth(x, y, 0);
+
+    //     while (depth)
+    //     {
+    //       Info iDepth = getInfo(depth);
+    //       Info iCol = getInfo(vb.getColumn(x, y, iDepth.offset));
+    //       Info iRow = getInfo(va.getRow(x, y, iDepth.offset));
+
+    //       depth &= createMask(iDepth.size + iDepth.offset);
+
+    //       for (size_t ir = 0; ir < iRow.size; ir++)
+    //         for (size_t ic = 0; ic < iCol.size; ic++)
+    //           vc.getDepth(x + ir, y + ic, 0) &= createMask(iDepth.size + iDepth.offset);
+
+    //       glm::vec3 position(x, y, iDepth.offset);
+    //       glm::vec3 size(iRow.size, iCol.size, iDepth.size);
+
+    //       generateFace(vertices, position, size, FaceDirection::FRONT);
+    //       generateFace(vertices, position, size, FaceDirection::BACK);
+    //     }
+    //   }
+    // }
+
+    // UniformGrid3D voxels = grid;
+    // const glm::ivec3 &size = voxels.size();
+
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t x = 0; x < size.x; x++)
+    //   {
+    //     uint32_t &column = voxels.getColumn(x, 0, z);
+
+    //     while (column)
+    //     {
+    //       Info iCol = getInfo(column);
+    //       column &= createMask(iCol.size + iCol.offset);
+
+    //       glm::vec3 position(x, iCol.offset, z);
+    //       glm::vec3 size(1.0f, iCol.size, 1.0f);
+
+    //       generateFace(vertices, position, size, FaceDirection::TOP);
+    //       generateFace(vertices, position, size, FaceDirection::BOTTOM);
+    //     }
+    //   }
+    // }
+
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &row = voxels.getRow(0, y, z);
+
+    //     while (row)
+    //     {
+    //       Info iRow = getInfo(row);
+    //       row &= createMask(iRow.size + iRow.offset);
+
+    //       glm::vec3 position(iRow.offset, y, z);
+    //       glm::vec3 size(iRow.size, 1.0f, 1.0f);
+
+    //       generateFace(vertices, position, size, FaceDirection::LEFT);
+    //       generateFace(vertices, position, size, FaceDirection::RIGHT);
+    //     }
+    //   }
+    // }
+
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &depth = voxels.getDepth(x, y, 0);
+
+    //     while (depth)
+    //     {
+    //       Info iDepth = getInfo(depth);
+    //       depth &= createMask(iDepth.size + iDepth.offset);
+
+    //       glm::vec3 position(x, y, iDepth.offset);
+    //       glm::vec3 size(1.0f, 1.0f, iDepth.size);
+
+    //       generateFace(vertices, position, size, FaceDirection::FRONT);
+    //       generateFace(vertices, position, size, FaceDirection::BACK);
+    //     }
+    //   }
+    // }
   }
 
   void setBuffer()

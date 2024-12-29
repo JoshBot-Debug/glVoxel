@@ -39,5 +39,6 @@ void main()
   float spec=pow(max(dot(viewDirection,reflectDirection),0.),u_Material.shininess);
   vec3 specular=u_Light.specular*(spec*u_Material.specular);
   
-  FragColor=vec4(ambient+diffuse+specular,1.);
+  // FragColor=vec4(ambient+diffuse+specular,1.);
+  FragColor=vec4(1.,1.,1.,1.);
 }
