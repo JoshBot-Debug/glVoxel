@@ -13,27 +13,14 @@
 #include "Engine/Types.h"
 #include "Debug.h"
 
-const WindowOptions opts = {.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true};
-
-/**
- * TODO need to add a ViewportManager class that holds all this information\
- * so that it can be edited/controlled from all menus and property panels.
- */
-App::App() : Window(opts)
+App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true})
 {
   controlPanel.setCamera(&camera);
   controlPanel.setResourceManager(&resource);
 
-  /**
-   * Setup a camera
-   * Specify the type, and other properties.
-   */
   camera.setPosition(0.0f, 0.0f, 20.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
 
-  /**
-   * Setup the shader
-   */
   Shader &shader = resource.getShader();
   shader.create({
       .name = "default",
