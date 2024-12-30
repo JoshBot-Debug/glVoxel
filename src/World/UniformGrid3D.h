@@ -61,7 +61,7 @@ public:
 
   uint32_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
   {
-    return gridBT[y + (SIZE * (x + (SIZE * z))) / BITS];
+    return gridBT[(SIZE * (x + (SIZE * z))) / BITS];
   }
 
   void setColumn(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
@@ -69,9 +69,9 @@ public:
     gridBT[(SIZE * (x + (SIZE * z))) / BITS] = value;
   }
 
-  uint32_t getRow(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getRow(unsigned int x, unsigned int y, unsigned int z)
   {
-    return gridLR[(SIZE * (y + (SIZE * z))) / BITS] >> x;
+    return gridLR[(SIZE * (y + (SIZE * z))) / BITS];
   }
 
   void setRow(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
@@ -79,9 +79,9 @@ public:
     gridLR[(SIZE * (y + (SIZE * z))) / BITS] = value;
   }
 
-  uint32_t getDepth(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getDepth(unsigned int x, unsigned int y, unsigned int z)
   {
-    return gridFB[(SIZE * (y + (SIZE * x))) / BITS] >> z;
+    return gridFB[(SIZE * (y + (SIZE * x))) / BITS];
   }
 
   void setDepth(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
