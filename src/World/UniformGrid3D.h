@@ -88,4 +88,11 @@ public:
   {
     gridFB[(SIZE * (y + (SIZE * x))) / BITS] = value;
   }
+
+  void clear()
+  {
+    std::memset(gridBT, 0, sizeof(gridBT));
+    std::memset(gridLR, 0, sizeof(gridLR));
+    std::memset(gridFB, 0, sizeof(gridFB));
+  }
 };

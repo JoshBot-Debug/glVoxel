@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.mdx": "mdx",
+    "*.glsl": "glsl",
     "array": "cpp",
     "atomic": "cpp",
     "bit": "cpp",
@@ -76,7 +77,8 @@
     "fstream": "cpp",
     "filesystem": "cpp",
     "charconv": "cpp",
-    "format": "cpp"
+    "format": "cpp",
+    "valarray": "cpp"
   },
   "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

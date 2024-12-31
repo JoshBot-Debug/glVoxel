@@ -130,6 +130,7 @@ public:
   {
     vao.generate();
     vbo.generate();
+    generateNoise();
   }
 
   void draw()
@@ -224,40 +225,33 @@ public:
 
   void fillNoise(const glm::ivec3 &size)
   {
-    noise::module::Perlin perlin; // Perlin noise generator
+    grid.clear();
+
+    noise::module::Perlin perlin;
     perlin.SetSeed(static_cast<int>(std::time(0)));
 
-    // Scale factor for noise coordinates
-    float scale = 0.1f;     // Adjust for noise detail level
-    float threshold = 0.5f; // Threshold for deciding if voxel is solid (1) or empty (0)
+    utils::NoiseMap heightMap;
+    utils::NoiseMapBuilderPlane heightMapBuilder;
 
-    // Loop through the 3D grid
+    heightMapBuilder.SetSourceModule(perlin);
+    heightMapBuilder.SetDestNoiseMap(heightMap);
+    heightMapBuilder.SetDestSize(32, 32);
+    heightMapBuilder.SetBounds(1.0, 3.0, 1.0, 3.0);
+    heightMapBuilder.Build();
+
     for (int z = 0; z < size.z; ++z)
     {
-      for (int y = 0; y < size.y; ++y)
+      for (int x = 0; x < size.x; ++x)
       {
-        for (int x = 0; x < size.x; ++x)
-        {
-          // Map grid coordinates to noise space
-          float nx = x * scale;
-          float ny = y * scale;
-          float nz = z * scale;
-
-          // Generate noise value
-          float noiseValue = perlin.GetValue(nx, ny, nz);
-
-          // Apply threshold: if noise value is greater than threshold, set voxel to 1 (solid)
-          int voxelValue = (noiseValue > threshold) ? 1 : 0;
-
-          // Store the result in the grid
-          grid.setValue(x, y, z, voxelValue);
-        }
+        float n = heightMap.GetValue(x, z);
+        unsigned int height = static_cast<int>(std::round((15 * (std::clamp(n, -1.0f, 1.0f) + 1)))) + 1;
+        for (size_t y = 0; y < height; y++)
+          grid.setValue(x, y, z, 1);
       }
     }
   }
 
-  void
-  fill(const glm::ivec3 &size)
+  void fill(const glm::ivec3 &size)
   {
     for (size_t z = 0; z < size.z; z++)
       for (size_t x = 0; x < size.x; x++)
