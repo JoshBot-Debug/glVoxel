@@ -11,6 +11,7 @@
 #include "Engine/ResourceManager.h"
 #include "Engine/Model.h"
 #include "Engine/Camera/PerspectiveCamera.h"
+#include "World/World.h"
 
 class EngineControlPanel
 {
@@ -18,6 +19,7 @@ private:
   std::vector<Model *> models;
   PerspectiveCamera *camera;
   ResourceManager *resource;
+  World *world;
 
   glm::vec2 mouse;
 
@@ -34,6 +36,11 @@ public:
     this->camera = camera;
   }
 
+  void setWorld(World *world)
+  {
+    this->world = world;
+  }
+
   void setResourceManager(ResourceManager *resource)
   {
     this->resource = resource;
@@ -45,6 +52,9 @@ public:
 
     if (ImGui::Button("Recompile shaders"))
       resource->getShader().recompile();
+
+   if (ImGui::Button("Generate noise"))
+      world->generateNoise();
 
     ImGui::End();
   }

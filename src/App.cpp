@@ -19,6 +19,7 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
 {
   controlPanel.setCamera(&camera);
   controlPanel.setResourceManager(&resource);
+  controlPanel.setWorld(&world);
 
   camera.setPosition(0.0f, 0.0f, 20.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
@@ -84,22 +85,6 @@ void App::onDraw()
   shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
 
   world.draw();
-
-  const glm::vec2 &window = Window::GetDimensions();
-  const glm::vec2 &mouse = Input::MousePosition();
-
-  float normalizedX = (mouse.x / window.x) * 2.0f - 1.0f;
-  float normalizedY = 1.0f - (mouse.y / window.y) * 2.0f; // Flip Y axis
-
-  shader.bind("grid");
-  shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
-  shader.setUniformMatrix4fv("u_Projection", camera.getProjectionMatrix());
-  shader.setUniform1f("u_GridSize", 1.0f);
-  shader.setUniform3f("u_CameraPosition", camera.position);
-  shader.setUniform2f("u_MousePosition", normalizedX, normalizedY);
-  shader.setUniform4f("u_GridColor", 1.0f, 0.1f, 0.1f, 1.0f);
-
-  world.drawGrid();
 
   controlPanel.draw();
 }

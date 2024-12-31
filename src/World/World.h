@@ -8,9 +8,11 @@
 #include "World/Voxel.h"
 #include "World/Octree.h"
 #include "World/UniformGrid3D.h"
-#include "World/Grid.h"
 
 #include <iostream>
+#include <noise/noise.h>
+#include <noise/noiseutils.h>
+#include <ctime>
 
 inline uint32_t createMask(unsigned int x)
 {
@@ -119,7 +121,6 @@ private:
   VertexArray vao;
   Buffer vbo;
 
-  Grid viewportGrid;
   UniformGrid3D grid;
   std::vector<Vertex> vertices;
   Octree<UniformGrid3D> tree;
@@ -129,10 +130,6 @@ public:
   {
     vao.generate();
     vbo.generate();
-
-    fillPlane(grid.size());
-    update();
-    setBuffer();
   }
 
   void draw()
@@ -142,13 +139,10 @@ public:
     // glDrawArrays(GL_LINES, 0, vertices.size());
   }
 
-  void drawGrid()
-  {
-    viewportGrid.draw();
-  }
-
   void update()
   {
+    vertices.clear();
+
     UniformGrid3D voxels = grid;
     const glm::ivec3 &size = voxels.size();
 
@@ -221,7 +215,49 @@ public:
     vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
   }
 
-  void fill(const glm::ivec3 &size)
+  void generateNoise()
+  {
+    fillNoise(grid.size());
+    update();
+    setBuffer();
+  }
+
+  void fillNoise(const glm::ivec3 &size)
+  {
+    noise::module::Perlin perlin; // Perlin noise generator
+    perlin.SetSeed(static_cast<int>(std::time(0)));
+
+    // Scale factor for noise coordinates
+    float scale = 0.1f;     // Adjust for noise detail level
+    float threshold = 0.5f; // Threshold for deciding if voxel is solid (1) or empty (0)
+
+    // Loop through the 3D grid
+    for (int z = 0; z < size.z; ++z)
+    {
+      for (int y = 0; y < size.y; ++y)
+      {
+        for (int x = 0; x < size.x; ++x)
+        {
+          // Map grid coordinates to noise space
+          float nx = x * scale;
+          float ny = y * scale;
+          float nz = z * scale;
+
+          // Generate noise value
+          float noiseValue = perlin.GetValue(nx, ny, nz);
+
+          // Apply threshold: if noise value is greater than threshold, set voxel to 1 (solid)
+          int voxelValue = (noiseValue > threshold) ? 1 : 0;
+
+          // Store the result in the grid
+          grid.setValue(x, y, z, voxelValue);
+        }
+      }
+    }
+  }
+
+  void
+  fill(const glm::ivec3 &size)
   {
     for (size_t z = 0; z < size.z; z++)
       for (size_t x = 0; x < size.x; x++)
