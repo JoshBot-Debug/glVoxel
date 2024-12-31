@@ -236,7 +236,7 @@ public:
     heightMapBuilder.SetSourceModule(perlin);
     heightMapBuilder.SetDestNoiseMap(heightMap);
     heightMapBuilder.SetDestSize(32, 32);
-    heightMapBuilder.SetBounds(1.0, 3.0, 1.0, 3.0);
+    heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
     heightMapBuilder.Build();
 
     for (int z = 0; z < size.z; ++z)
