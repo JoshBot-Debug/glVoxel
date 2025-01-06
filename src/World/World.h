@@ -126,11 +126,11 @@ public:
     vbo.generate();
     // grid.setValue(0, 0, 0, 1);
     // generateNoise();
-    // fillSphere(grid.size());
-    fill(grid.size());
+    fillSphere(grid.size());
+    // fill(grid.size());
 
-    for (size_t i = 0; i < 32; i++)
-      grid.setValue(0, i, 0, 0);
+    // for (size_t i = 0; i < 32; i++)
+    //   grid.setValue(0, i, 0, 0);
 
     update();
     setBuffer();
@@ -161,46 +161,7 @@ public:
           column &= voxels.createMask(iCol.size + iCol.offset);
 
           glm::vec3 position(x, iCol.offset, z);
-
-          uint32_t &row = voxels.getRow(0, iCol.offset, z);
-          Info iRow = getInfo(row);
-          if (iRow.size == 0)
-            continue;
-
-          uint32_t &depth = voxels.getDepth(x, iCol.offset, 0);
-          Info iDepth = getInfo(depth);
-          // if (iDepth.size == 0)
-          //   continue;
-
-          x += iRow.size;
-          std::cout << iDepth.offset << std::endl;
-          // std::cout << iDepth.size + iDepth.offset << std::endl;
-          // std::cout << iRow.size + iRow.offset << std::endl;
-
-          uint32_t rMask = voxels.createMask(iRow.size + iRow.offset);
-          uint32_t dMask = voxels.createMask(iDepth.size + iDepth.offset);
-
-
-          std::cout << std::bitset<32>(row) << std::endl;
-          std::cout << "NET" << std::endl;
-
-
-          for (size_t iz = iDepth.offset; iz < iDepth.size; iz++) {
-
-            std::cout << std::bitset<32>(voxels.getRow(0, 0, iz)) << std::endl;
-            voxels.getRow(0, 0, iz) &= row;
-
-          }
-
-          row &= voxels.createMask(iRow.size + iRow.offset);
-
-          // for (size_t ix = iRow.offset + 1; ix < iRow.size; ix++)
-          //   voxels.getDepth(ix, 0, 0) &= dMask;
-
-          // depth &= dMask;
-
-          // glm::vec3 size(iRow.size, iCol.size, iDepth.size);
-          glm::vec3 size(iRow.size, iCol.size, 1.0f);
+          glm::vec3 size(1.0f, iCol.size, 1.0f);
 
           generateFace(vertices, position, size, FaceDirection::TOP);
           generateFace(vertices, position, size, FaceDirection::BOTTOM);
@@ -208,45 +169,45 @@ public:
       }
     }
 
-    // for (size_t z = 0; z < size.z; z++)
-    // {
-    //   for (size_t y = 0; y < size.y; y++)
-    //   {
-    //     uint32_t &row = voxels.getRow(0, y, z);
+    for (size_t z = 0; z < size.z; z++)
+    {
+      for (size_t y = 0; y < size.y; y++)
+      {
+        uint32_t &row = voxels.getRow(0, y, z);
 
-    //     while (row)
-    //     {
-    //       Info iRow = getInfo(row);
-    //       row &= voxels.createMask(iRow.size + iRow.offset);
+        while (row)
+        {
+          Info iRow = getInfo(row);
+          row &= voxels.createMask(iRow.size + iRow.offset);
 
-    //       glm::vec3 position(iRow.offset, y, z);
-    //       glm::vec3 size(iRow.size, 1.0f, 1.0f);
+          glm::vec3 position(iRow.offset, y, z);
+          glm::vec3 size(iRow.size, 1.0f, 1.0f);
 
-    //       generateFace(vertices, position, size, FaceDirection::LEFT);
-    //       generateFace(vertices, position, size, FaceDirection::RIGHT);
-    //     }
-    //   }
-    // }
+          generateFace(vertices, position, size, FaceDirection::LEFT);
+          generateFace(vertices, position, size, FaceDirection::RIGHT);
+        }
+      }
+    }
 
-    // for (size_t x = 0; x < size.x; x++)
-    // {
-    //   for (size_t y = 0; y < size.y; y++)
-    //   {
-    //     uint32_t &depth = voxels.getDepth(x, y, 0);
+    for (size_t x = 0; x < size.x; x++)
+    {
+      for (size_t y = 0; y < size.y; y++)
+      {
+        uint32_t &depth = voxels.getDepth(x, y, 0);
 
-    //     while (depth)
-    //     {
-    //       Info iDepth = getInfo(depth);
-    //       depth &= voxels.createMask(iDepth.size + iDepth.offset);
+        while (depth)
+        {
+          Info iDepth = getInfo(depth);
+          depth &= voxels.createMask(iDepth.size + iDepth.offset);
 
-    //       glm::vec3 position(x, y, iDepth.offset);
-    //       glm::vec3 size(1.0f, 1.0f, iDepth.size);
+          glm::vec3 position(x, y, iDepth.offset);
+          glm::vec3 size(1.0f, 1.0f, iDepth.size);
 
-    //       generateFace(vertices, position, size, FaceDirection::FRONT);
-    //       generateFace(vertices, position, size, FaceDirection::BACK);
-    //     }
-    //   }
-    // }
+          generateFace(vertices, position, size, FaceDirection::FRONT);
+          generateFace(vertices, position, size, FaceDirection::BACK);
+        }
+      }
+    }
   }
 
   void setBuffer()
