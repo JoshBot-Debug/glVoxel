@@ -31,12 +31,6 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  shader.create({
-      .name = "grid",
-      .vertex = "src/Shaders/grid.vs",
-      .fragment = "src/Shaders/grid.fs",
-  });
-
   std::thread t([this]()
                 { BENCHMARK("generateVertexBuffer()", [this]()
                             { this->world.update(); }, 1000); });

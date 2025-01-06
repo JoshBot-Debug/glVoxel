@@ -5,7 +5,8 @@ project(glVoxel)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
-find_package(noise REQUIRED)
+find_library(NOISE_LIB noise PATHS /usr/local/lib REQUIRED)
+find_library(NOISEUTILS_LIB noiseutils PATHS /usr/local/lib REQUIRED)
 
 # Collect all source files (.cpp files)
 file(GLOB_RECURSE SOURCES_FILES
@@ -37,8 +38,8 @@ target_link_libraries(glVoxel PRIVATE
   GLEW
   glfw
   assimp
-  noiseutils
-  noise
+  ${NOISE_LIB}
+  ${NOISEUTILS_LIB}
   ${STATIC_LIB}
 )
 

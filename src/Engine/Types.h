@@ -39,29 +39,17 @@ enum class Primitive
 
 struct Vertex
 {
-  glm::vec3 position = glm::vec3(0.0f);
-  glm::vec3 normal = glm::vec3(0.0f);
-  glm::vec2 texCoord = glm::vec2(0.0f);
+  float x;
+  float y;
+  float z;
+  int normal;
 
   Vertex() = default;
-  Vertex(glm::vec3 position, glm::vec3 normal) : position(position), normal(normal) {}
+  Vertex(float x, float y, float z, int normal) : x(x), y(y), z(z), normal(normal) {}
 
   bool operator==(const Vertex &other) const
   {
-    return position == other.position && texCoord == other.texCoord && normal == other.normal;
-  }
-
-  std::size_t operator()(const Vertex &v) const
-  {
-    auto hash1 = std::hash<float>()(v.position.x) ^ (std::hash<float>()(v.position.y) << 1) ^ (std::hash<float>()(v.position.z) << 2);
-    auto hash2 = std::hash<float>()(v.texCoord.x) ^ (std::hash<float>()(v.texCoord.y) << 1);
-    auto hash3 = std::hash<float>()(v.normal.x) ^ (std::hash<float>()(v.normal.y) << 1) ^ (std::hash<float>()(v.normal.z) << 2);
-    return hash1 ^ hash2 ^ hash3;
-  }
-
-  bool operator()(const Vertex &a, const Vertex &b) const
-  {
-    return a.position == b.position && a.texCoord == b.texCoord && a.normal == b.normal;
+    return x == other.x && y == other.y && z == other.z && normal == other.normal;
   }
 };
 

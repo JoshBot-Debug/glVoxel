@@ -52,63 +52,63 @@ enum class FaceDirection
   RIGHT
 };
 
-inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, FaceDirection direction)
+inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, const FaceDirection &direction)
 {
   switch (direction)
   {
   case FaceDirection::TOP:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z, 0});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 0});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z, 0});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z, 0});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z + size.z, 0});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 0});
     break;
   case FaceDirection::BOTTOM:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 1});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z, 1});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z + size.z, 1});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, -1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, -1.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 1});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z + size.z, 1});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z + size.z, 1});
     break;
   case FaceDirection::FRONT:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 2});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z, 2});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z, 2});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {0.0f, 0.0f, -1.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 2});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z, 2});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z, 2});
     break;
   case FaceDirection::BACK:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z + size.z, 3});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z + size.z, 3});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 3});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {0.0f, 0.0f, 1.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {0.0f, 0.0f, 1.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z + size.z, 3});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 3});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z + size.z, 3});
     break;
   case FaceDirection::LEFT:
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, size.z), {-1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 4});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z + size.z, 4});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z + size.z, 4});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, 0.0f, 0.0f), {-1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, size.z), {-1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(0.0f, size.y, 0.0f), {-1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x, position.y, position.z, 4});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z + size.z, 4});
+    vertices.emplace_back(Vertex{position.x, position.y + size.y, position.z, 4});
     break;
   case FaceDirection::RIGHT:
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, size.z), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z, 5});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 5});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z + size.z, 5});
 
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, 0.0f, 0.0f), {1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, 0.0f), {1.0f, 0.0f, 0.0f}});
-    vertices.emplace_back(Vertex{position + glm::vec3(size.x, size.y, size.z), {1.0f, 0.0f, 0.0f}});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y, position.z, 5});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z, 5});
+    vertices.emplace_back(Vertex{position.x + size.x, position.y + size.y, position.z + size.z, 5});
     break;
   default:
     break;
@@ -130,7 +130,11 @@ public:
   {
     vao.generate();
     vbo.generate();
-    generateNoise();
+    // generateNoise();
+    // fillSphere(grid.size());
+    fill(grid.size());
+    update();
+    setBuffer();
   }
 
   void draw()
@@ -143,7 +147,6 @@ public:
   void update()
   {
     vertices.clear();
-
     UniformGrid3D voxels = grid;
     const glm::ivec3 &size = voxels.size();
 
@@ -212,8 +215,8 @@ public:
   {
     vao.bind();
     vbo.set(vertices);
-    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, position)));
-    vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
+    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, x)));
+    vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
   }
 
   void generateNoise()

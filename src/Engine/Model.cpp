@@ -9,16 +9,10 @@
 #include <assimp/postprocess.h>
 
 #include "Debug.h"
-#include "OBJLoader.h"
-
-void loadOBJ(const std::string &filepath, std::vector<Mesh> &meshes)
-{
-  OBJLoader loader(filepath, meshes);
-}
 
 Model::Model(unsigned int id, const char *filepath) : id(id)
 {
-  loadOBJ(filepath, meshes);
+  // loadOBJ(filepath, meshes);
 }
 
 Model::~Model() {}
