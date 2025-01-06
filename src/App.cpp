@@ -31,11 +31,11 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  std::thread t([this]()
-                { BENCHMARK("generateVertexBuffer()", [this]()
-                            { this->world.update(); }, 1000); });
+  // std::thread t([this]()
+  //               { BENCHMARK("generateVertexBuffer()", [this]()
+  //                           { this->world.update(); }, 1000); });
 
-  t.join();
+  // t.join();
 
   open();
 }

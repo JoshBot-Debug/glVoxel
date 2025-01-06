@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.22)
 project(glVoxel)
 
+option(ENABLE_AVX256 "Enable AVX-256 instructions" OFF)
+
+if(ENABLE_AVX256)
+  add_compile_options(-mavx2)
+  message(STATUS "AVX-256 instructions enabled.")
+else()
+  message(WARNING "AVX-256 is not enabled. Falling back to default instructions.")
+endif()
+
 # Find packages
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
