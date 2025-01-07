@@ -17,7 +17,7 @@
 
 struct Info
 {
-  unsigned int size;
+  float size;
   unsigned int offset;
 };
 
@@ -28,7 +28,7 @@ inline Info getInfo(uint32_t bits)
   if (offset > 0)
     bits = bits >> offset;
 
-  unsigned int size = __builtin_ctz(~bits);
+  float size = __builtin_ctz(~bits);
 
   return {
       size,
@@ -120,18 +120,17 @@ struct Face
 
 inline void mergeXAxis(std::vector<Face> &faces)
 {
-  std::sort(faces.begin(), faces.end(), [](const Face &a, const Face &b)
-          {
-  if (a.z != b.z) return a.z < b.z;
-  if (a.y != b.y) return a.y < b.y;
-  return a.x < b.x; });
+  // std::sort(faces.begin(), faces.end(), [](const Face &a, const Face &b)
+  //         {
+  // if (a.z != b.z) return a.z < b.z;
+  // if (a.y != b.y) return a.y < b.y;
+  // return a.x < b.x; });
 
   std::vector<Face> merged;
 
   for (size_t i = 0; i < faces.size(); ++i)
   {
     Face current = faces[i];
-
     while (i + 1 < faces.size())
     {
       const Face &next = faces[i + 1];
@@ -164,7 +163,6 @@ inline void mergeZAxis(std::vector<Face> &faces)
   for (size_t i = 0; i < faces.size(); ++i)
   {
     Face current = faces[i];
-
     while (i + 1 < faces.size())
     {
       const Face &next = faces[i + 1];
@@ -215,8 +213,8 @@ public:
   void draw()
   {
     vao.bind();
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    // glDrawArrays(GL_LINES, 0, vertices.size());
+    // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    glDrawArrays(GL_LINES, 0, vertices.size());
   }
 
   void update()
@@ -225,11 +223,12 @@ public:
     UniformGrid3D voxels = grid;
     const glm::ivec3 &size = voxels.size();
 
+    // std::unordered_map<std::string, Face> faces;
     std::vector<Face> faces;
 
-    for (size_t z = 0; z < size.z; z++)
+    for (float z = 0; z < size.z; z++)
     {
-      for (size_t x = 0; x < size.x; x++)
+      for (float x = 0; x < size.x; x++)
       {
         uint32_t &column = voxels.getColumn(x, 0, z);
 
@@ -241,7 +240,7 @@ public:
           glm::vec3 position(x, iCol.offset, z);
           glm::vec3 size(1.0f, iCol.size, 1.0f);
 
-          faces.emplace_back(Face{static_cast<float>(x), static_cast<float>(iCol.offset + iCol.size), static_cast<float>(z), 1, 1});
+          faces.emplace_back(Face{x, iCol.offset + iCol.size, z, 1, 1});
           // generateVertices(vertices, position, size, FaceDirection::TOP);
           // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
         }
