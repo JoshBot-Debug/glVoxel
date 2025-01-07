@@ -17,18 +17,18 @@
 
 struct Info
 {
-  int size;
-  int offset;
+  unsigned int size;
+  unsigned int offset;
 };
 
 inline Info getInfo(uint32_t bits)
 {
-  int offset = __builtin_ffs(bits) - 1;
+  unsigned int offset = __builtin_ffs(bits) - 1;
 
   if (offset > 0)
     bits = bits >> offset;
 
-  int size = __builtin_ctz(~bits);
+  unsigned int size = __builtin_ctz(~bits);
 
   return {
       size,
@@ -46,7 +46,7 @@ enum class FaceDirection
   RIGHT
 };
 
-inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, const FaceDirection &direction)
+inline void generateVertices(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, const FaceDirection &direction)
 {
   switch (direction)
   {
@@ -109,6 +109,81 @@ inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm:
   }
 }
 
+struct Face
+{
+  float x;
+  float y;
+  float z;
+  float h;
+  float w;
+};
+
+inline void mergeXAxis(std::vector<Face> &faces)
+{
+  std::sort(faces.begin(), faces.end(), [](const Face &a, const Face &b)
+          {
+  if (a.z != b.z) return a.z < b.z;
+  if (a.y != b.y) return a.y < b.y;
+  return a.x < b.x; });
+
+  std::vector<Face> merged;
+
+  for (size_t i = 0; i < faces.size(); ++i)
+  {
+    Face current = faces[i];
+
+    while (i + 1 < faces.size())
+    {
+      const Face &next = faces[i + 1];
+      if (current.z == next.z && current.y == next.y &&
+          current.x + current.w == next.x && current.h == next.h)
+      {
+        current.w += next.w;
+        ++i;
+      }
+      else
+        break;
+    }
+
+    merged.push_back(current);
+  }
+
+  faces = std::move(merged);
+}
+
+inline void mergeZAxis(std::vector<Face> &faces)
+{
+  std::sort(faces.begin(), faces.end(), [](const Face &a, const Face &b)
+            {
+    if (a.x != b.x) return a.x < b.x;
+    if (a.y != b.y) return a.y < b.y;
+    return a.z < b.z; });
+
+  std::vector<Face> merged;
+
+  for (size_t i = 0; i < faces.size(); ++i)
+  {
+    Face current = faces[i];
+
+    while (i + 1 < faces.size())
+    {
+      const Face &next = faces[i + 1];
+      if (current.x == next.x && current.y == next.y &&
+          current.z + current.h == next.z && current.w == next.w)
+      {
+        current.h += next.h;
+        ++i;
+      }
+      else
+        break;
+    }
+
+    merged.push_back(current);
+  }
+
+  faces = std::move(merged);
+}
+
 class World
 {
 private:
@@ -127,6 +202,7 @@ public:
     // grid.setValue(0, 0, 0, 1);
     // generateNoise();
     fillSphere(grid.size());
+    // fill(grid.size() / 8);
     // fill(grid.size());
 
     // for (size_t i = 0; i < 32; i++)
@@ -139,8 +215,8 @@ public:
   void draw()
   {
     vao.bind();
-    // glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glDrawArrays(GL_LINES, 0, vertices.size());
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    // glDrawArrays(GL_LINES, 0, vertices.size());
   }
 
   void update()
@@ -148,6 +224,8 @@ public:
     vertices.clear();
     UniformGrid3D voxels = grid;
     const glm::ivec3 &size = voxels.size();
+
+    std::vector<Face> faces;
 
     for (size_t z = 0; z < size.z; z++)
     {
@@ -163,51 +241,66 @@ public:
           glm::vec3 position(x, iCol.offset, z);
           glm::vec3 size(1.0f, iCol.size, 1.0f);
 
-          generateFace(vertices, position, size, FaceDirection::TOP);
-          generateFace(vertices, position, size, FaceDirection::BOTTOM);
+          faces.emplace_back(Face{static_cast<float>(x), static_cast<float>(iCol.offset + iCol.size), static_cast<float>(z), 1, 1});
+          // generateVertices(vertices, position, size, FaceDirection::TOP);
+          // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
         }
       }
     }
 
-    for (size_t z = 0; z < size.z; z++)
+    mergeXAxis(faces);
+    mergeZAxis(faces);
+
+    for (size_t i = 0; i < faces.size(); i++)
     {
-      for (size_t y = 0; y < size.y; y++)
-      {
-        uint32_t &row = voxels.getRow(0, y, z);
-
-        while (row)
-        {
-          Info iRow = getInfo(row);
-          row &= voxels.createMask(iRow.size + iRow.offset);
-
-          glm::vec3 position(iRow.offset, y, z);
-          glm::vec3 size(iRow.size, 1.0f, 1.0f);
-
-          generateFace(vertices, position, size, FaceDirection::LEFT);
-          generateFace(vertices, position, size, FaceDirection::RIGHT);
-        }
-      }
+      // std::cout << faces[i].x << " " << faces[i].y << " " << faces[i].z << " : " << faces[i].w << " " << faces[i].h << std::endl;
+      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
+      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
+      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z, 0});
+      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
+      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z + faces[i].h, 0});
+      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
     }
 
-    for (size_t x = 0; x < size.x; x++)
-    {
-      for (size_t y = 0; y < size.y; y++)
-      {
-        uint32_t &depth = voxels.getDepth(x, y, 0);
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &row = voxels.getRow(0, y, z);
 
-        while (depth)
-        {
-          Info iDepth = getInfo(depth);
-          depth &= voxels.createMask(iDepth.size + iDepth.offset);
+    //     while (row)
+    //     {
+    //       Info iRow = getInfo(row);
+    //       row &= voxels.createMask(iRow.size + iRow.offset);
 
-          glm::vec3 position(x, y, iDepth.offset);
-          glm::vec3 size(1.0f, 1.0f, iDepth.size);
+    //       glm::vec3 position(iRow.offset, y, z);
+    //       glm::vec3 size(iRow.size, 1.0f, 1.0f);
 
-          generateFace(vertices, position, size, FaceDirection::FRONT);
-          generateFace(vertices, position, size, FaceDirection::BACK);
-        }
-      }
-    }
+    //       generateVertices(vertices, position, size, FaceDirection::LEFT);
+    //       generateVertices(vertices, position, size, FaceDirection::RIGHT);
+    //     }
+    //   }
+    // }
+
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &depth = voxels.getDepth(x, y, 0);
+
+    //     while (depth)
+    //     {
+    //       Info iDepth = getInfo(depth);
+    //       depth &= voxels.createMask(iDepth.size + iDepth.offset);
+
+    //       glm::vec3 position(x, y, iDepth.offset);
+    //       glm::vec3 size(1.0f, 1.0f, iDepth.size);
+
+    //       generateVertices(vertices, position, size, FaceDirection::FRONT);
+    //       generateVertices(vertices, position, size, FaceDirection::BACK);
+    //     }
+    //   }
+    // }
   }
 
   void setBuffer()
