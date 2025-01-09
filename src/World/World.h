@@ -270,6 +270,14 @@ public:
           // unsigned int index = y + (size.x * (x + (size.z * z)));
           unsigned int index = (size.x * (x + (size.z * z)));
 
+          /**
+           * The mask is correct for the z axis
+           * If mask[index / UniformGrid3D::BITS] is zero
+           * skip the vertices, only make it when it has a value
+           * it will tell you if all vertices are joining or seperated
+           * 10001 or 111 example
+           */
+
           uint32_t &row = tmp.getRow(0, y, z);
           uint32_t &depth = tmp.getDepth(x, y, 0);
           std::cout << x << " " << y << " " << z << " b " << std::bitset<32>(column) << std::endl;
