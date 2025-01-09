@@ -199,7 +199,7 @@ public:
     vbo.generate();
     // grid.setValue(0, 0, 0, 1);
     // generateNoise();
-    fillSphere(grid.size());
+    fillSphere(grid.size() / 4);
     // fill(grid.size() / 8);
     // fill(grid.size());
 
@@ -221,10 +221,110 @@ public:
   {
     vertices.clear();
     UniformGrid3D voxels = grid;
+    UniformGrid3D tmp = grid;
+    UniformGrid3D hwd = grid;
     const glm::ivec3 &size = voxels.size();
 
-    // std::unordered_map<std::string, Face> faces;
-    std::vector<Face> faces;
+    uint32_t mask[UniformGrid3D::GRID_SIZE] = {};
+
+    for (unsigned int z = 0; z < 8; z++)
+    {
+      for (unsigned int x = 0; x < size.x; x++)
+      {
+        uint32_t &column = hwd.getColumn(x, 0, z);
+        column &= ~(column << 1) | ~(column >> 1);
+        Info iCol = getInfo(column);
+
+        if (iCol.offset < 0)
+          continue;
+
+        unsigned int y = iCol.offset + iCol.size - 1;
+        unsigned int index = x + (size.y * (y + (size.z * z)));
+        // unsigned int index = z + (size.y * (y + (size.x * x)));
+        // unsigned int index = y + (size.x * (x + (size.z * z)));
+
+        // std::cout << std::bitset<32>(column) << std::endl;
+        if (column & 1 << y)
+        {
+          mask[index / UniformGrid3D::BITS] |= (1U << (index % UniformGrid3D::BITS));
+        }
+        // std::cout << y << " " << (column & 1 << y) << std::endl;
+      }
+    }
+
+    for (unsigned int z = 0; z < size.z; z++)
+    {
+      for (unsigned int x = 0; x < size.x; x++)
+      {
+        uint32_t &column = tmp.getColumn(x, 0, z);
+
+        while (column)
+        {
+          Info iCol = getInfo(column);
+          // if (iCol.size < 1)
+          //   continue;
+
+          unsigned int y = iCol.offset + iCol.size - 1;
+          // unsigned int index = x + (size.y * (y + (size.z * z)));
+          // unsigned int index = z + (size.y * (y + (size.x * x)));
+          // unsigned int index = y + (size.x * (x + (size.z * z)));
+          unsigned int index = (size.x * (x + (size.z * z)));
+
+          uint32_t &row = tmp.getRow(0, y, z);
+          uint32_t &depth = tmp.getDepth(x, y, 0);
+          std::cout << x << " " << y << " " << z << " b " << std::bitset<32>(column) << std::endl;
+          std::cout << x << " " << y << " " << z << " m " << std::bitset<32>(mask[index / UniformGrid3D::BITS]) << " " << std::bitset<32>(row) << " " << std::bitset<32>(depth) << std::endl;
+          // generateVertices(vertices, position, size, FaceDirection::TOP);
+          // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+          column &= tmp.createMask(iCol.size + iCol.offset);
+        }
+
+        // Info info = getInfo(mask[index / UniformGrid3D::BITS]);
+
+        // glm::vec3 position(x, info.offset, z);
+        // glm::vec3 size(1.0f, info.size, 1.0f);
+
+        // generateVertices(vertices, position, size, FaceDirection::TOP);
+        // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+      }
+    }
+
+    // std::vector<Face> faces;
+
+    // for (float z = 0; z < size.z; z++)
+    // {
+    //   for (float x = 0; x < size.x; x++)
+    //   {
+    //     uint32_t &column = voxels.getColumn(x, 0, z);
+
+    //     while (column)
+    //     {
+    //       Info iCol = getInfo(column);
+    //       column &= voxels.createMask(iCol.size + iCol.offset);
+
+    //       glm::vec3 position(x, iCol.offset, z);
+    //       glm::vec3 size(1.0f, iCol.size, 1.0f);
+
+    //       faces.emplace_back(Face{x, iCol.offset + iCol.size, z, 1, 1});
+    //       // generateVertices(vertices, position, size, FaceDirection::TOP);
+    //       // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+    //     }
+    //   }
+    // }
+
+    // mergeXAxis(faces);
+    // mergeZAxis(faces);
+
+    // for (size_t i = 0; i < faces.size(); i++)
+    // {
+    //   // std::cout << faces[i].x << " " << faces[i].y << " " << faces[i].z << " : " << faces[i].w << " " << faces[i].h << std::endl;
+    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
+    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
+    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z, 0});
+    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
+    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z + faces[i].h, 0});
+    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
+    // }
 
     for (float z = 0; z < size.z; z++)
     {
@@ -240,25 +340,10 @@ public:
           glm::vec3 position(x, iCol.offset, z);
           glm::vec3 size(1.0f, iCol.size, 1.0f);
 
-          faces.emplace_back(Face{x, iCol.offset + iCol.size, z, 1, 1});
-          // generateVertices(vertices, position, size, FaceDirection::TOP);
+          generateVertices(vertices, position, size, FaceDirection::TOP);
           // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
         }
       }
-    }
-
-    mergeXAxis(faces);
-    mergeZAxis(faces);
-
-    for (size_t i = 0; i < faces.size(); i++)
-    {
-      // std::cout << faces[i].x << " " << faces[i].y << " " << faces[i].z << " : " << faces[i].w << " " << faces[i].h << std::endl;
-      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
-      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
-      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z, 0});
-      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
-      vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z + faces[i].h, 0});
-      vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
     }
 
     // for (size_t z = 0; z < size.z; z++)
