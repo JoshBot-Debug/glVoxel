@@ -15,6 +15,9 @@
 #include <ctime>
 #include <bitset>
 
+#include <chrono>
+#include <thread>
+
 struct Info
 {
   float size;
@@ -182,6 +185,61 @@ inline void mergeZAxis(std::vector<Face> &faces)
   faces = std::move(merged);
 }
 
+inline void greedyMesh(std::vector<Vertex> &vertices, UniformGrid3D &grid, FaceDirection dir)
+{
+  glm::ivec3 size = grid.size();
+
+  bool used[size.x][size.y] = {false}; // Track merged areas
+
+  for (size_t y = 0; y < size.y; y++)
+  {
+    for (size_t x = 0; x < size.x; x++)
+    {
+      if (used[x][y] || !grid.get(x, y, 0))
+        continue; // Skip empty or merged voxels
+
+      size_t maxWidth = 1;
+      size_t maxHeight = 1;
+
+      // Expand width
+      while (x + maxWidth < size.x && grid.get(x + maxWidth, y, 0) && !used[x + maxWidth][y])
+      {
+        maxWidth++;
+      }
+
+      // Expand height
+      bool canExpand = true;
+      while (y + maxHeight < size.y && canExpand)
+      {
+        for (size_t i = 0; i < maxWidth; i++)
+        {
+          if (!grid.get(x + i, y + maxHeight, 0) || used[x + i][y + maxHeight])
+          {
+            canExpand = false;
+            break;
+          }
+        }
+        if (canExpand)
+          maxHeight++;
+      }
+
+      // Mark area as used
+      for (size_t i = 0; i < maxWidth; i++)
+      {
+        for (size_t j = 0; j < maxHeight; j++)
+        {
+          used[x + i][y + j] = true;
+        }
+      }
+
+      glm::vec3 position = glm::vec3(x, y, 0);               // Base position of the quad
+      glm::vec3 size = glm::vec3(maxWidth, maxHeight, 1.0f); // Extend in X and Y
+
+      generateVertices(vertices, position, size, dir);
+    }
+  }
+}
+
 class World
 {
 private:
@@ -197,14 +255,21 @@ public:
   {
     vao.generate();
     vbo.generate();
-    // grid.setValue(0, 0, 0, 1);
+    // grid.set(0, 0, 0, 1);
+    // grid.set(1, 0, 0, 1);
+    // grid.set(1, 0, 1, 1);
+    // grid.set(0, 0, 1, 1);
+    // grid.set(0, 1, 0, 1);
+    // grid.set(1, 1, 0, 1);
+    // grid.set(1, 1, 1, 1);
+    // grid.set(0, 1, 1, 1);
     // generateNoise();
-    fillSphere(grid.size() / 4);
+    // fillSphere(grid.size());
     // fill(grid.size() / 8);
-    // fill(grid.size());
+    fill(grid.size());
 
     // for (size_t i = 0; i < 32; i++)
-    //   grid.setValue(0, i, 0, 0);
+    //   grid.set(0, i, 0, 0);
 
     update();
     setBuffer();
@@ -221,87 +286,116 @@ public:
   {
     vertices.clear();
     UniformGrid3D voxels = grid;
-    UniformGrid3D tmp = grid;
-    UniformGrid3D hwd = grid;
-    const glm::ivec3 &size = voxels.size();
+    const glm::vec3 &size = voxels.size();
 
-    uint32_t mask[UniformGrid3D::GRID_SIZE] = {};
+    UniformGrid3D a;
+    UniformGrid3D b;
 
-    for (unsigned int z = 0; z < 8; z++)
+    // const glm::ivec3 &size = voxels.size();
+
+    // bits & ~(bits << 1 & bits >> 1)
+
+    for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     {
-      for (unsigned int x = 0; x < size.x; x++)
+      for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
       {
-        uint32_t &column = hwd.getColumn(x, 0, z);
-        column &= ~(column << 1) | ~(column >> 1);
-        Info iCol = getInfo(column);
+        uint32_t &column = grid.getColumn(x, 0, z);
+        uint32_t first = column & ~(column << 1);
+        uint32_t last = column & ~(column >> 1);
 
-        if (iCol.offset < 0)
-          continue;
-
-        unsigned int y = iCol.offset + iCol.size - 1;
-        unsigned int index = x + (size.y * (y + (size.z * z)));
-        // unsigned int index = z + (size.y * (y + (size.x * x)));
-        // unsigned int index = y + (size.x * (x + (size.z * z)));
-
-        // std::cout << std::bitset<32>(column) << std::endl;
-        if (column & 1 << y)
+        while (first)
         {
-          mask[index / UniformGrid3D::BITS] |= (1U << (index % UniformGrid3D::BITS));
+          unsigned int w = __builtin_ffs(first) - 1;
+          generateVertices(vertices, {x, w, z}, {1.0f, 0.0f, 1.0f}, FaceDirection::BOTTOM);
+          first &= grid.createMask(w + 1);
         }
-        // std::cout << y << " " << (column & 1 << y) << std::endl;
+
+        while (last)
+        {
+          unsigned int w = __builtin_ffs(last) - 1;
+          generateVertices(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::TOP);
+          last &= grid.createMask(w + 1);
+        }
       }
     }
 
-    for (unsigned int z = 0; z < size.z; z++)
+    for (size_t z = 0; z < size.z; z++)
     {
-      for (unsigned int x = 0; x < size.x; x++)
+      for (size_t y = 0; y < size.y; y++)
       {
-        uint32_t &column = tmp.getColumn(x, 0, z);
+        uint32_t &row = grid.getRow(0, y, z);
+        uint32_t first = row & ~(row << 1);
+        uint32_t last = row & ~(row >> 1);
 
-        while (column)
+        while (first)
         {
-          Info iCol = getInfo(column);
-          // if (iCol.size < 1)
-          //   continue;
-
-          unsigned int y = iCol.offset + iCol.size - 1;
-          // unsigned int index = x + (size.y * (y + (size.z * z)));
-          // unsigned int index = z + (size.y * (y + (size.x * x)));
-          // unsigned int index = y + (size.x * (x + (size.z * z)));
-          unsigned int index = (size.x * (x + (size.z * z)));
-
-          /**
-           * The mask is correct for the z axis
-           * If mask[index / UniformGrid3D::BITS] is zero
-           * skip the vertices, only make it when it has a value
-           * it will tell you if all vertices are joining or seperated
-           * 10001 or 111 example
-           */
-
-          uint32_t &row = tmp.getRow(0, y, z);
-          uint32_t &depth = tmp.getDepth(x, y, 0);
-          std::cout << x << " " << y << " " << z << " b " << std::bitset<32>(column) << std::endl;
-          std::cout << x << " " << y << " " << z << " m " << std::bitset<32>(mask[index / UniformGrid3D::BITS]) << " " << std::bitset<32>(row) << " " << std::bitset<32>(depth) << std::endl;
-          // generateVertices(vertices, position, size, FaceDirection::TOP);
-          // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
-          column &= tmp.createMask(iCol.size + iCol.offset);
+          unsigned int w = __builtin_ffs(first) - 1;
+          generateVertices(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::LEFT);
+          first &= grid.createMask(w + 1);
         }
 
-        // Info info = getInfo(mask[index / UniformGrid3D::BITS]);
-
-        // glm::vec3 position(x, info.offset, z);
-        // glm::vec3 size(1.0f, info.size, 1.0f);
-
-        // generateVertices(vertices, position, size, FaceDirection::TOP);
-        // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+        while (last)
+        {
+          unsigned int w = __builtin_ffs(last) - 1;
+          generateVertices(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::RIGHT);
+          last &= grid.createMask(w + 1);
+        }
       }
     }
 
-    // std::vector<Face> faces;
+    for (size_t x = 0; x < size.x; x++)
+    {
+      for (size_t y = 0; y < size.y; y++)
+      {
+        uint32_t &depth = grid.getLayer(x, y, 0);
+        uint32_t first = depth & ~(depth << 1);
+        uint32_t last = depth & ~(depth >> 1);
 
-    // for (float z = 0; z < size.z; z++)
+        while (first)
+        {
+          unsigned int w = __builtin_ffs(first) - 1;
+          generateVertices(vertices, {x, y, w}, {1.0f, 1.0f, 0.0f}, FaceDirection::FRONT);
+          first &= grid.createMask(w + 1);
+        }
+
+        while (last)
+        {
+          unsigned int w = __builtin_ffs(last) - 1;
+          generateVertices(vertices, {x, y, w}, {1.0f, 1.0f, 1.0f}, FaceDirection::BACK);
+          last &= grid.createMask(w + 1);
+        }
+      }
+    }
+
+    // for (size_t z = 0; z < size.z; z++)
     // {
-    //   for (float x = 0; x < size.x; x++)
+    //   for (size_t x = 0; x < size.x; x++)
+    //   {
+    //     uint32_t &column = voxels.getColumn(x, 0, z);
+    //     unsigned int offset = __builtin_ffs(column) - 1;
+
+    //     bool alt = false;
+
+    //     while (column)
+    //     {
+    //       const Info iCol = getInfo(column);
+    //       // generateVertices(vertices, {x, iCol.offset, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
+    //       column &= voxels.createMask(iCol.size + iCol.offset);
+    //       alt = !alt;
+    //     }
+    //   }
+    // }
+
+    // std::cout << vertices.size() << std::endl;
+
+    // /**
+    //  * Perf
+    //  * Circle 1.01195, 1.00715, 1.00628, 1.00891, 1.00919
+    //  * Cube 0.317164, 0.317527, 0.312736, 0.312611, 0.319995
+    //  */
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t x = 0; x < size.x; x++)
     //   {
     //     uint32_t &column = voxels.getColumn(x, 0, z);
 
@@ -313,46 +407,181 @@ public:
     //       glm::vec3 position(x, iCol.offset, z);
     //       glm::vec3 size(1.0f, iCol.size, 1.0f);
 
-    //       faces.emplace_back(Face{x, iCol.offset + iCol.size, z, 1, 1});
-    //       // generateVertices(vertices, position, size, FaceDirection::TOP);
-    //       // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+    //       a.set(x, iCol.size + iCol.offset - 1.0f, z, 1);
+    //       b.set(x, iCol.offset, z, 1);
     //     }
     //   }
     // }
 
-    // mergeXAxis(faces);
-    // mergeZAxis(faces);
-
-    // for (size_t i = 0; i < faces.size(); i++)
+    // for (size_t z = 0; z < size.z; z++)
     // {
-    //   // std::cout << faces[i].x << " " << faces[i].y << " " << faces[i].z << " : " << faces[i].w << " " << faces[i].h << std::endl;
-    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
-    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
-    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z, 0});
-    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z, 0});
-    //   vertices.emplace_back(Vertex{faces[i].x, faces[i].y, faces[i].z + faces[i].h, 0});
-    //   vertices.emplace_back(Vertex{faces[i].x + faces[i].w, faces[i].y, faces[i].z + faces[i].h, 0});
+    //   for (size_t x = 0; x < size.x; x++)
+    //   {
+    //     uint32_t &ca = a.getColumn(x, 0, z);
+    //     uint32_t &cb = b.getColumn(x, 0, z);
+
+    //     while (ca || cb)
+    //     {
+    //       const Info ica = getInfo(ca);
+    //       uint32_t &arow = a.getRow(x, ica.size + ica.offset - 1.0f, z);
+
+    //       const Info icb = getInfo(cb);
+    //       uint32_t &brow = b.getRow(x, icb.offset, z);
+
+    //       while (arow)
+    //       {
+    //         const Info iaRow = getInfo(arow);
+    //         arow &= a.createMask(iaRow.size + iaRow.offset);
+    //         generateVertices(vertices, {iaRow.offset, ica.size + ica.offset - 1.0f, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
+    //       }
+
+    //       while (brow)
+    //       {
+    //         const Info ibRow = getInfo(brow);
+    //         brow &= a.createMask(ibRow.size + ibRow.offset);
+    //         generateVertices(vertices, {ibRow.offset, icb.offset, z}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+    //       }
+
+    //       ca &= a.createMask(ica.size + ica.offset);
+    //       cb &= b.createMask(icb.size + icb.offset);
+    //     }
+    //   }
     // }
 
-    for (float z = 0; z < size.z; z++)
-    {
-      for (float x = 0; x < size.x; x++)
-      {
-        uint32_t &column = voxels.getColumn(x, 0, z);
+    // a.clear();
+    // b.clear();
 
-        while (column)
-        {
-          Info iCol = getInfo(column);
-          column &= voxels.createMask(iCol.size + iCol.offset);
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &row = voxels.getRow(0, y, z);
 
-          glm::vec3 position(x, iCol.offset, z);
-          glm::vec3 size(1.0f, iCol.size, 1.0f);
+    //     while (row)
+    //     {
+    //       Info iRow = getInfo(row);
+    //       row &= voxels.createMask(iRow.size + iRow.offset);
 
-          generateVertices(vertices, position, size, FaceDirection::TOP);
-          // generateVertices(vertices, position, size, FaceDirection::BOTTOM);
-        }
-      }
-    }
+    //       a.set(iRow.size + iRow.offset - 1.0f, y, z, 1);
+    //       b.set(iRow.offset, y, z, 1);
+    //     }
+    //   }
+    // }
+
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &ra = a.getRow(0, y, z);
+    //     uint32_t &rb = b.getRow(0, y, z);
+
+    //     while (ra || rb)
+    //     {
+    //       const Info ira = getInfo(ra);
+    //       uint32_t &acol = a.getColumn(ira.size + ira.offset - 1.0f, y, z);
+
+    //       const Info irb = getInfo(rb);
+    //       uint32_t &bcol = b.getColumn(irb.offset, y, z);
+
+    //       while (acol)
+    //       {
+    //         const Info iaCol = getInfo(acol);
+    //         acol &= a.createMask(iaCol.size + iaCol.offset);
+    //         generateVertices(vertices, {ira.size + ira.offset  - 1.0f, iaCol.offset, z}, {1.0f, iaCol.size, 1.0f}, FaceDirection::RIGHT);
+    //       }
+
+    //       while (bcol)
+    //       {
+    //         const Info ibCol = getInfo(bcol);
+    //         bcol &= a.createMask(ibCol.size + ibCol.offset);
+    //         generateVertices(vertices, {irb.offset, ibCol.offset, z}, {1.0f, ibCol.size, 1.0f}, FaceDirection::LEFT);
+    //       }
+
+    //       ra &= a.createMask(ira.size + ira.offset);
+    //       rb &= b.createMask(irb.size + irb.offset);
+    //     }
+    //   }
+    // }
+
+    // a.clear();
+    // b.clear();
+
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &depth = voxels.getLayer(x, y, 0);
+
+    //     while (depth)
+    //     {
+    //       Info iDepth = getInfo(depth);
+    //       depth &= voxels.createMask(iDepth.size + iDepth.offset);
+
+    //       a.set(x, y, iDepth.size + iDepth.offset - 1.0f, 1);
+    //       b.set(x, y, iDepth.offset, 1);
+    //     }
+    //   }
+    // }
+
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &da = a.getLayer(x, y, 0);
+    //     uint32_t &db = b.getLayer(x, y, 0);
+
+    //     while (da || db)
+    //     {
+    //       const Info ida = getInfo(da);
+    //       uint32_t &arow = a.getRow(x, y, ida.size + ida.offset - 1.0f);
+
+    //       const Info idb = getInfo(db);
+    //       uint32_t &brow = b.getRow(x, y, idb.offset);
+
+    //       while (arow)
+    //       {
+    //         const Info iaRow = getInfo(arow);
+    //         arow &= a.createMask(iaRow.size + iaRow.offset);
+    //         generateVertices(vertices, {iaRow.offset, y, ida.size + ida.offset - 1.0f}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::BACK);
+    //       }
+
+    //       while (brow)
+    //       {
+    //         const Info ibRow = getInfo(brow);
+    //         brow &= a.createMask(ibRow.size + ibRow.offset);
+    //         generateVertices(vertices, {ibRow.offset, y, idb.offset}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::FRONT);
+    //       }
+
+    //       da &= a.createMask(ida.size + ida.offset);
+    //       db &= b.createMask(idb.size + ida.offset);
+    //     }
+    //   }
+    // }
+
+    // /**
+    //  * Perf
+    //  * Circle 1.25888, 1.26835, 1.25914, 1.27016, 1.25388
+    //  * Cube 1.58843, 1.5937, 1.5932, 1.60254, 1.5867
+    //  */
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t x = 0; x < size.x; x++)
+    //   {
+    //     uint32_t &column = voxels.getColumn(x, 0, z);
+
+    //     while (column)
+    //     {
+    //       Info iCol = getInfo(column);
+    //       column &= voxels.createMask(iCol.size + iCol.offset);
+
+    //       glm::vec3 position(x, iCol.offset, z);
+    //       glm::vec3 size(1.0f, iCol.size, 1.0f);
+
+    //       generateVertices(vertices, position, size, FaceDirection::TOP);
+    //       generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+    //     }
+    //   }
+    // }
 
     // for (size_t z = 0; z < size.z; z++)
     // {
@@ -378,7 +607,7 @@ public:
     // {
     //   for (size_t y = 0; y < size.y; y++)
     //   {
-    //     uint32_t &depth = voxels.getDepth(x, y, 0);
+    //     uint32_t &depth = voxels.getLayer(x, y, 0);
 
     //     while (depth)
     //     {
@@ -433,7 +662,7 @@ public:
         float n = heightMap.GetValue(x, z);
         unsigned int height = static_cast<int>(std::round((15 * (std::clamp(n, -1.0f, 1.0f) + 1)))) + 1;
         for (size_t y = 0; y < height; y++)
-          grid.setValue(x, y, z, 1);
+          grid.set(x, y, z, 1);
       }
     }
   }
@@ -443,14 +672,14 @@ public:
     for (size_t z = 0; z < size.z; z++)
       for (size_t x = 0; x < size.x; x++)
         for (size_t y = 0; y < size.y; y++)
-          grid.setValue(x, y, z, 1);
+          grid.set(x, y, z, 1);
   }
 
   void fillPlane(const glm::ivec3 &size)
   {
     for (size_t z = 0; z < size.z; z++)
       for (size_t x = 0; x < size.x; x++)
-        grid.setValue(x, 0, z, 1);
+        grid.set(x, 0, z, 1);
   }
 
   void fillSphere(const glm::ivec3 &size)
@@ -470,7 +699,7 @@ public:
           int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
           if (distance <= radius)
-            grid.setValue(x, y, z, 1);
+            grid.set(x, y, z, 1);
         }
   }
 };

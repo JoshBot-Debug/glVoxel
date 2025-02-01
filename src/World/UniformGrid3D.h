@@ -11,53 +11,50 @@ public:
   static constexpr uint32_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
 
 private:
-#if __AVX2__
-  alignas(32) uint32_t gridBT[GRID_SIZE] = {};
-  alignas(32) uint32_t gridLR[GRID_SIZE] = {};
-  alignas(32) uint32_t gridFB[GRID_SIZE] = {};
-#else
-  uint32_t gridBT[GRID_SIZE] = {};
-  uint32_t gridLR[GRID_SIZE] = {};
-  uint32_t gridFB[GRID_SIZE] = {};
-#endif
+  uint32_t gx[GRID_SIZE] = {};
+  uint32_t gy[GRID_SIZE] = {};
+  uint32_t gz[GRID_SIZE] = {};
 
 public:
-  unsigned int getValue(int x, int y, int z)
+  unsigned int get(int x, int y, int z)
   {
-    unsigned int btIndex = y + (SIZE * (x + (SIZE * z)));
-    return (gridBT[btIndex / BITS] >> btIndex % BITS) & 1;
+    if (x < 0 || y < 0 || z < 0 || x >= SIZE || y >= SIZE || z >= SIZE)
+      return 0;
+
+    unsigned int xi = x + (SIZE * (y + (SIZE * z)));
+    return (gx[xi / BITS] >> xi % BITS) & 1;
   }
 
-  void setValue(int x, int y, int z, unsigned int value)
+  void set(int x, int y, int z, unsigned int value)
   {
-    assert(value == 0 || value == 1);
+    assert(value == 0 || value == 1 && !(x < 0 || y < 0 || z < 0 || x >= SIZE || y >= SIZE || z >= SIZE));
 
-    unsigned int btIndex = y + (SIZE * (x + (SIZE * z)));
-    unsigned int lrIndex = x + (SIZE * (y + (SIZE * z)));
-    unsigned int fbIndex = z + (SIZE * (y + (SIZE * x)));
+    unsigned int xi = x + (SIZE * (y + (SIZE * z)));
+    unsigned int yi = y + (SIZE * (x + (SIZE * z)));
+    unsigned int zi = z + (SIZE * (y + (SIZE * x)));
 
     if (value == 1)
     {
-      gridBT[btIndex / BITS] |= (1U << (btIndex % BITS));
-      gridLR[lrIndex / BITS] |= (1U << (lrIndex % BITS));
-      gridFB[fbIndex / BITS] |= (1U << (fbIndex % BITS));
+      gx[xi / BITS] |= (1U << (xi % BITS));
+      gy[yi / BITS] |= (1U << (yi % BITS));
+      gz[zi / BITS] |= (1U << (zi % BITS));
     }
     else
     {
-      gridBT[btIndex / BITS] &= ~(1U << (btIndex % BITS));
-      gridLR[lrIndex / BITS] &= ~(1U << (lrIndex % BITS));
-      gridFB[fbIndex / BITS] &= ~(1U << (fbIndex % BITS));
+      gx[xi / BITS] &= ~(1U << (xi % BITS));
+      gy[yi / BITS] &= ~(1U << (yi % BITS));
+      gz[zi / BITS] &= ~(1U << (zi % BITS));
     }
   }
 
-  unsigned int getValue(glm::ivec3 position)
+  unsigned int get(glm::ivec3 position)
   {
-    return getValue(position.x, position.y, position.z);
+    return get(position.x, position.y, position.z);
   }
 
-  void setValue(glm::ivec3 position, unsigned int value)
+  void set(glm::ivec3 position, unsigned int value)
   {
-    setValue(position.x, position.y, position.z, value);
+    set(position.x, position.y, position.z, value);
   }
 
   const glm::ivec3 size()
@@ -65,96 +62,26 @@ public:
     return {SIZE, SIZE, SIZE};
   }
 
-  uint32_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
-  {
-    return gridBT[(SIZE * (x + (SIZE * z))) / BITS];
-  }
-
-  void setColumn(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
-  {
-    gridBT[(SIZE * (x + (SIZE * z))) / BITS] = value;
-  }
-
   uint32_t &getRow(unsigned int x, unsigned int y, unsigned int z)
   {
-    return gridLR[(SIZE * (y + (SIZE * z))) / BITS];
+    return gx[(SIZE * (y + (SIZE * z))) / BITS];
   }
 
-  void setRow(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
+  uint32_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
   {
-    gridLR[(SIZE * (y + (SIZE * z))) / BITS] = value;
+    return gy[(SIZE * (x + (SIZE * z))) / BITS];
   }
 
-  uint32_t &getDepth(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getLayer(unsigned int x, unsigned int y, unsigned int z)
   {
-    return gridFB[(SIZE * (y + (SIZE * x))) / BITS];
-  }
-
-  void setDepth(unsigned int x, unsigned int y, unsigned int z, uint32_t value)
-  {
-    gridFB[(SIZE * (y + (SIZE * x))) / BITS] = value;
+    return gz[(SIZE * (y + (SIZE * x))) / BITS];
   }
 
   void clear()
   {
-    std::memset(gridBT, 0, sizeof(gridBT));
-    std::memset(gridLR, 0, sizeof(gridLR));
-    std::memset(gridFB, 0, sizeof(gridFB));
-  }
-
-  void applyRowMask(uint32_t *data, uint32_t mask, int x, int y, int z, unsigned int count)
-  {
-    // unsigned int endIndex = startIndex + count;
-    // for (size_t z = 0; z < size.z; z++)
-    // {
-    //   for (size_t x = 0; x < size.x; x++)
-    //   {
-    //   }
-    // }
-
-    for (unsigned int i = 0; i < count; ++i)
-    {
-      data[(SIZE * ((y + i) + (SIZE * (z)))) / BITS] &= mask;
-    }
-  }
-
-  void applyMask(uint32_t *data, uint32_t mask, unsigned int startIndex, unsigned int count)
-  {
-#if __AVX2__
-    __m256i vec_mask = _mm256_set1_epi32(mask);
-
-    unsigned int endIndex = startIndex + count;
-
-    assert(data != nullptr);
-    assert(endIndex > startIndex);
-
-    // Process the entire array in chunks of 8
-    for (size_t i = startIndex; i < endIndex; i += 8)
-    {
-      unsigned int remaining = endIndex - i;
-
-      if (remaining < 8)
-      {
-        for (unsigned int j = 0; j < remaining; ++j)
-          data[i + j] &= mask;
-        break;
-      }
-
-      // Load 8 elements into the SIMD register
-      __m256i vec_data = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(&data[i]));
-      // Apply the mask
-      vec_data = _mm256_and_si256(vec_data, vec_mask);
-      // Store the results back into the array
-      _mm256_storeu_si256(reinterpret_cast<__m256i *>(&data[i]), vec_data);
-    }
-#else
-    // fallback to scalar implementation
-    unsigned int endIndex = startIndex + count;
-    for (unsigned int i = startIndex; i < endIndex; ++i)
-    {
-      data[i] &= mask;
-    }
-#endif
+    std::memset(gx, 0, sizeof(gx));
+    std::memset(gy, 0, sizeof(gy));
+    std::memset(gz, 0, sizeof(gz));
   }
 
   uint32_t createMask(unsigned int x)
