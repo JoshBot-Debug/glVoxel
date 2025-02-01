@@ -49,7 +49,7 @@ enum class FaceDirection
   RIGHT
 };
 
-inline void generateVertices(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, const FaceDirection &direction)
+inline void generateFace(std::vector<Vertex> &vertices, glm::vec3 position, glm::vec3 size, const FaceDirection &direction)
 {
   switch (direction)
   {
@@ -235,7 +235,7 @@ inline void greedyMesh(std::vector<Vertex> &vertices, UniformGrid3D &grid, FaceD
       glm::vec3 position = glm::vec3(x, y, 0);               // Base position of the quad
       glm::vec3 size = glm::vec3(maxWidth, maxHeight, 1.0f); // Extend in X and Y
 
-      generateVertices(vertices, position, size, dir);
+      generateFace(vertices, position, size, dir);
     }
   }
 }
@@ -264,9 +264,9 @@ public:
     // grid.set(1, 1, 1, 1);
     // grid.set(0, 1, 1, 1);
     // generateNoise();
-    // fillSphere(grid.size());
-    // fill(grid.size() / 8);
-    fill(grid.size());
+    // fillSphere(grid.size() / 2);
+    fill(grid.size() / 8);
+    // fill(grid.size());
 
     // for (size_t i = 0; i < 32; i++)
     //   grid.set(0, i, 0, 0);
@@ -285,15 +285,9 @@ public:
   void update()
   {
     vertices.clear();
-    UniformGrid3D voxels = grid;
-    const glm::vec3 &size = voxels.size();
 
-    UniformGrid3D a;
-    UniformGrid3D b;
-
-    // const glm::ivec3 &size = voxels.size();
-
-    // bits & ~(bits << 1 & bits >> 1)
+    uint32_t wMask[UniformGrid3D::GRID_SIZE] = {};
+    uint32_t hMask[UniformGrid3D::GRID_SIZE] = {};
 
     for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     {
@@ -306,66 +300,195 @@ public:
         while (first)
         {
           unsigned int w = __builtin_ffs(first) - 1;
-          generateVertices(vertices, {x, w, z}, {1.0f, 0.0f, 1.0f}, FaceDirection::BOTTOM);
-          first &= grid.createMask(w + 1);
-        }
 
-        while (last)
-        {
-          unsigned int w = __builtin_ffs(last) - 1;
-          generateVertices(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::TOP);
-          last &= grid.createMask(w + 1);
+          unsigned int wi = x + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z)));
+          unsigned int hi = z + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x)));
+
+          wMask[wi / UniformGrid3D::BITS] |= (1U << (wi % UniformGrid3D::BITS));
+          hMask[hi / UniformGrid3D::BITS] |= (1U << (hi % UniformGrid3D::BITS));
+
+          // generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+          first &= ~((1UL << w + 1) - 1);
         }
       }
     }
 
-    for (size_t z = 0; z < size.z; z++)
+    for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     {
-      for (size_t y = 0; y < size.y; y++)
+      for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
       {
-        uint32_t &row = grid.getRow(0, y, z);
-        uint32_t first = row & ~(row << 1);
-        uint32_t last = row & ~(row >> 1);
+
+        uint32_t &column = grid.getColumn(x, 0, z);
+        uint32_t first = column & ~(column << 1);
+        uint32_t last = column & ~(column >> 1);
 
         while (first)
         {
           unsigned int w = __builtin_ffs(first) - 1;
-          generateVertices(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::LEFT);
-          first &= grid.createMask(w + 1);
-        }
 
-        while (last)
-        {
-          unsigned int w = __builtin_ffs(last) - 1;
-          generateVertices(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::RIGHT);
-          last &= grid.createMask(w + 1);
-        }
-      }
-    }
+          uint32_t &width = wMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z))) / UniformGrid3D::BITS];
+          uint32_t &height = hMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x))) / UniformGrid3D::BITS];
 
-    for (size_t x = 0; x < size.x; x++)
-    {
-      for (size_t y = 0; y < size.y; y++)
-      {
-        uint32_t &depth = grid.getLayer(x, y, 0);
-        uint32_t first = depth & ~(depth << 1);
-        uint32_t last = depth & ~(depth >> 1);
+          if (!width || !height)
+          {
+            first &= ~((1UL << w + 1) - 1);
+            continue;
+          }
 
-        while (first)
-        {
-          unsigned int w = __builtin_ffs(first) - 1;
-          generateVertices(vertices, {x, y, w}, {1.0f, 1.0f, 0.0f}, FaceDirection::FRONT);
-          first &= grid.createMask(w + 1);
-        }
+          std::cout << "c " << std::bitset<32>(first) << std::endl;
+          std::cout << "w " << std::bitset<32>(width) << std::endl;
+          std::cout << "h " << std::bitset<32>(height) << std::endl;
 
-        while (last)
-        {
-          unsigned int w = __builtin_ffs(last) - 1;
-          generateVertices(vertices, {x, y, w}, {1.0f, 1.0f, 1.0f}, FaceDirection::BACK);
-          last &= grid.createMask(w + 1);
+          const Info wInfo = getInfo(width);
+          const Info hInfo = getInfo(height);
+
+          // generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+          generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, hInfo.size}, FaceDirection::BOTTOM);
+          
+          first &= ~((1UL << w + 1) - 1);
+          width &= ~((1UL << (wInfo.offset + (int)wInfo.size)) - 1);
+          height &= ~((1UL << (hInfo.offset + (int)hInfo.size)) - 1);
         }
       }
     }
+
+    // for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
+    // {
+    //   for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
+    //   {
+    //     for (size_t y = 0; y < UniformGrid3D::SIZE; y++)
+    //     {
+    //       if (lMask[x][y][z])
+    //       {
+    //         // Try to extend the top face in the x and z directions
+    //         int width = 1;
+    //         while (x + width < UniformGrid3D::SIZE && lMask[x + width][y][z])
+    //         {
+    //           width++;
+    //         }
+
+    //         int depth = 1;
+    //         while (z + depth < UniformGrid3D::SIZE && lMask[x][y][z + depth])
+    //         {
+    //           depth++;
+    //         }
+
+    //         // Now we have the width and depth. Create the face.
+    //         generateFace(vertices, {x, y, z}, {width, 1.0f, depth}, FaceDirection::TOP);
+
+    //         // Clear the used mask entries (important!)
+    //         for (int i = 0; i < width; i++)
+    //         {
+    //           for (int j = 0; j < depth; j++)
+    //           {
+    //             lMask[x + i][y][z + j] = false;
+    //           }
+    //         }
+    //       }
+
+    //       // Same for fMask
+    //       if (fMask[x][y][z])
+    //       {
+    //         // Try to extend the bottom face in the x and z directions
+    //         int width = 1;
+    //         while (x + width < UniformGrid3D::SIZE && fMask[x + width][y][z])
+    //         {
+    //           width++;
+    //         }
+
+    //         int depth = 1;
+    //         while (z + depth < UniformGrid3D::SIZE && fMask[x][y][z + depth])
+    //         {
+    //           depth++;
+    //         }
+
+    //         // Now we have the width and depth. Create the face.
+    //         generateFace(vertices, {x, y, z}, {width, 1.0f, depth}, FaceDirection::BOTTOM);
+
+    //         // Clear the used mask entries (important!)
+    //         for (int i = 0; i < width; i++)
+    //         {
+    //           for (int j = 0; j < depth; j++)
+    //           {
+    //             fMask[x + i][y][z + j] = false;
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+
+    // for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
+    // {
+    //   for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
+    //   {
+    //     uint32_t &column = grid.getColumn(x, 0, z);
+    //     uint32_t first = column & ~(column << 1);
+    //     uint32_t last = column & ~(column >> 1);
+
+    //     while (first)
+    //     {
+    //       unsigned int w = __builtin_ffs(first) - 1;
+    //       generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+    //       first &= ~((1UL << w + 1) - 1);
+    //     }
+
+    //     while (last)
+    //     {
+    //       unsigned int w = __builtin_ffs(last) - 1;
+    //       generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::TOP);
+    //       last &= ~((1UL << w + 1) - 1);
+    //     }
+    //   }
+    // }
+
+    // for (size_t z = 0; z < size.z; z++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &row = grid.getRow(0, y, z);
+    //     uint32_t first = row & ~(row << 1);
+    //     uint32_t last = row & ~(row >> 1);
+
+    //     while (first)
+    //     {
+    //       unsigned int w = __builtin_ffs(first) - 1;
+    //       generateFace(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::LEFT);
+    //       first &= ~((1UL << w + 1) - 1);
+    //     }
+
+    //     while (last)
+    //     {
+    //       unsigned int w = __builtin_ffs(last) - 1;
+    //       generateFace(vertices, {w, y, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::RIGHT);
+    //       last &= ~((1UL << w + 1) - 1);
+    //     }
+    //   }
+    // }
+
+    // for (size_t x = 0; x < size.x; x++)
+    // {
+    //   for (size_t y = 0; y < size.y; y++)
+    //   {
+    //     uint32_t &depth = grid.getLayer(x, y, 0);
+    //     uint32_t first = depth & ~(depth << 1);
+    //     uint32_t last = depth & ~(depth >> 1);
+
+    //     while (first)
+    //     {
+    //       unsigned int w = __builtin_ffs(first) - 1;
+    //       generateFace(vertices, {x, y, w}, {1.0f, 1.0f, 0.0f}, FaceDirection::FRONT);
+    //       first &= ~((1UL << w + 1) - 1);
+    //     }
+
+    //     while (last)
+    //     {
+    //       unsigned int w = __builtin_ffs(last) - 1;
+    //       generateFace(vertices, {x, y, w}, {1.0f, 1.0f, 1.0f}, FaceDirection::BACK);
+    //       last &= ~((1UL << w + 1) - 1);
+    //     }
+    //   }
+    // }
 
     // for (size_t z = 0; z < size.z; z++)
     // {
@@ -379,7 +502,7 @@ public:
     //     while (column)
     //     {
     //       const Info iCol = getInfo(column);
-    //       // generateVertices(vertices, {x, iCol.offset, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
+    //       // generateFace(vertices, {x, iCol.offset, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
     //       column &= voxels.createMask(iCol.size + iCol.offset);
     //       alt = !alt;
     //     }
@@ -432,14 +555,14 @@ public:
     //       {
     //         const Info iaRow = getInfo(arow);
     //         arow &= a.createMask(iaRow.size + iaRow.offset);
-    //         generateVertices(vertices, {iaRow.offset, ica.size + ica.offset - 1.0f, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
+    //         generateFace(vertices, {iaRow.offset, ica.size + ica.offset - 1.0f, z}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::TOP);
     //       }
 
     //       while (brow)
     //       {
     //         const Info ibRow = getInfo(brow);
     //         brow &= a.createMask(ibRow.size + ibRow.offset);
-    //         generateVertices(vertices, {ibRow.offset, icb.offset, z}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+    //         generateFace(vertices, {ibRow.offset, icb.offset, z}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
     //       }
 
     //       ca &= a.createMask(ica.size + ica.offset);
@@ -487,14 +610,14 @@ public:
     //       {
     //         const Info iaCol = getInfo(acol);
     //         acol &= a.createMask(iaCol.size + iaCol.offset);
-    //         generateVertices(vertices, {ira.size + ira.offset  - 1.0f, iaCol.offset, z}, {1.0f, iaCol.size, 1.0f}, FaceDirection::RIGHT);
+    //         generateFace(vertices, {ira.size + ira.offset  - 1.0f, iaCol.offset, z}, {1.0f, iaCol.size, 1.0f}, FaceDirection::RIGHT);
     //       }
 
     //       while (bcol)
     //       {
     //         const Info ibCol = getInfo(bcol);
     //         bcol &= a.createMask(ibCol.size + ibCol.offset);
-    //         generateVertices(vertices, {irb.offset, ibCol.offset, z}, {1.0f, ibCol.size, 1.0f}, FaceDirection::LEFT);
+    //         generateFace(vertices, {irb.offset, ibCol.offset, z}, {1.0f, ibCol.size, 1.0f}, FaceDirection::LEFT);
     //       }
 
     //       ra &= a.createMask(ira.size + ira.offset);
@@ -542,14 +665,14 @@ public:
     //       {
     //         const Info iaRow = getInfo(arow);
     //         arow &= a.createMask(iaRow.size + iaRow.offset);
-    //         generateVertices(vertices, {iaRow.offset, y, ida.size + ida.offset - 1.0f}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::BACK);
+    //         generateFace(vertices, {iaRow.offset, y, ida.size + ida.offset - 1.0f}, {iaRow.size, 1.0f, 1.0f}, FaceDirection::BACK);
     //       }
 
     //       while (brow)
     //       {
     //         const Info ibRow = getInfo(brow);
     //         brow &= a.createMask(ibRow.size + ibRow.offset);
-    //         generateVertices(vertices, {ibRow.offset, y, idb.offset}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::FRONT);
+    //         generateFace(vertices, {ibRow.offset, y, idb.offset}, {ibRow.size, 1.0f, 1.0f}, FaceDirection::FRONT);
     //       }
 
     //       da &= a.createMask(ida.size + ida.offset);
@@ -577,8 +700,8 @@ public:
     //       glm::vec3 position(x, iCol.offset, z);
     //       glm::vec3 size(1.0f, iCol.size, 1.0f);
 
-    //       generateVertices(vertices, position, size, FaceDirection::TOP);
-    //       generateVertices(vertices, position, size, FaceDirection::BOTTOM);
+    //       generateFace(vertices, position, size, FaceDirection::TOP);
+    //       generateFace(vertices, position, size, FaceDirection::BOTTOM);
     //     }
     //   }
     // }
@@ -597,8 +720,8 @@ public:
     //       glm::vec3 position(iRow.offset, y, z);
     //       glm::vec3 size(iRow.size, 1.0f, 1.0f);
 
-    //       generateVertices(vertices, position, size, FaceDirection::LEFT);
-    //       generateVertices(vertices, position, size, FaceDirection::RIGHT);
+    //       generateFace(vertices, position, size, FaceDirection::LEFT);
+    //       generateFace(vertices, position, size, FaceDirection::RIGHT);
     //     }
     //   }
     // }
@@ -617,8 +740,8 @@ public:
     //       glm::vec3 position(x, y, iDepth.offset);
     //       glm::vec3 size(1.0f, 1.0f, iDepth.size);
 
-    //       generateVertices(vertices, position, size, FaceDirection::FRONT);
-    //       generateVertices(vertices, position, size, FaceDirection::BACK);
+    //       generateFace(vertices, position, size, FaceDirection::FRONT);
+    //       generateFace(vertices, position, size, FaceDirection::BACK);
     //     }
     //   }
     // }

@@ -31,19 +31,16 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  const uint32_t bits = std::bitset<32>("10011111111111110111111111111111").to_ulong();
-
-  // std::cout << std::bitset<32>(bits << 1) << std::endl;
   // std::cout << std::bitset<32>(bits >> 1) << std::endl;
   // std::cout << std::bitset<32>(bits & ~(bits << 1 & bits >> 1)) << std::endl;
   // std::cout << std::bitset<32>(bits & ~(bits << 1)) << std::endl;
   // std::cout << std::bitset<32>(bits & ~(bits >> 1)) << std::endl;
 
-  std::thread t([this]()
-                { BENCHMARK("generateVertexBuffer()", [this]()
-                            { this->world.update(); }, 1000); });
+  // std::thread t([this]()
+  //               { BENCHMARK("generateVertexBuffer()", [this]()
+  //                           { this->world.update(); }, 1000); });
 
-  t.join();
+  // t.join();
 
   open();
 }

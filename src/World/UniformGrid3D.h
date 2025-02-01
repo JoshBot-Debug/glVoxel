@@ -83,11 +83,4 @@ public:
     std::memset(gy, 0, sizeof(gy));
     std::memset(gz, 0, sizeof(gz));
   }
-
-  uint32_t createMask(unsigned int x)
-  {
-    if (x == 32)
-      return 0U;
-    return ~((1U << x) - 1);
-  }
 };
