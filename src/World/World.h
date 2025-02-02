@@ -256,20 +256,45 @@ public:
     vao.generate();
     vbo.generate();
     // grid.set(0, 0, 0, 1);
-    // grid.set(1, 0, 0, 1);
-    // grid.set(1, 0, 1, 1);
-    // grid.set(0, 0, 1, 1);
     // grid.set(0, 1, 0, 1);
+    // grid.set(0, 2, 0, 1);
+    // grid.set(1, 0, 0, 1);
     // grid.set(1, 1, 0, 1);
-    // grid.set(1, 1, 1, 1);
-    // grid.set(0, 1, 1, 1);
-    // generateNoise();
-    // fillSphere(grid.size() / 2);
-    fill(grid.size() / 8);
-    // fill(grid.size());
+    // grid.set(1, 2, 0, 1);
 
-    // for (size_t i = 0; i < 32; i++)
-    //   grid.set(0, i, 0, 0);
+    // grid.set(3, 0, 0, 1);
+    // grid.set(3, 1, 0, 1);
+    // grid.set(4, 0, 0, 1);
+    // grid.set(4, 1, 0, 1);
+    // grid.set(5, 0, 0, 1);
+    // grid.set(5, 1, 0, 1);
+    // grid.set(6, 0, 0, 1);
+    // grid.set(6, 1, 0, 1);
+
+    // grid.set(0, 0, 1, 1);
+    // grid.set(0, 1, 1, 1);
+    // grid.set(0, 2, 1, 1);
+    // grid.set(1, 0, 1, 1);
+    // grid.set(1, 1, 1, 1);
+    // grid.set(1, 2, 1, 1);
+
+    grid.set(3, 0, 1, 1);
+    grid.set(3, 1, 1, 1);
+    grid.set(4, 0, 1, 1);
+    grid.set(4, 1, 1, 1);
+    grid.set(5, 0, 1, 1);
+    grid.set(5, 1, 1, 1);
+    grid.set(6, 0, 1, 1);
+    grid.set(6, 1, 1, 1);
+
+    grid.set(4, 0, 2, 1);
+    grid.set(4, 1, 2, 1);
+    grid.set(5, 0, 2, 1);
+    grid.set(5, 1, 2, 1);
+
+    // generateNoise();
+    // fillSphere(grid.size());
+    // fill(grid.size());
 
     update();
     setBuffer();
@@ -286,28 +311,27 @@ public:
   {
     vertices.clear();
 
-    uint32_t wMask[UniformGrid3D::GRID_SIZE] = {};
-    uint32_t hMask[UniformGrid3D::GRID_SIZE] = {};
+    uint8_t wMask[UniformGrid3D::GRID_SIZE] = {};
+    uint8_t hMask[UniformGrid3D::GRID_SIZE] = {};
 
     for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     {
       for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
       {
-        uint32_t &column = grid.getColumn(x, 0, z);
-        uint32_t first = column & ~(column << 1);
-        uint32_t last = column & ~(column >> 1);
+        uint8_t &column = grid.getColumn(x, 0, z);
+        uint8_t first = column & ~(column << 1);
+        uint8_t last = column & ~(column >> 1);
 
         while (first)
         {
           unsigned int w = __builtin_ffs(first) - 1;
 
           unsigned int wi = x + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z)));
-          unsigned int hi = z + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x)));
-
           wMask[wi / UniformGrid3D::BITS] |= (1U << (wi % UniformGrid3D::BITS));
+
+          unsigned int hi = z + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x)));
           hMask[hi / UniformGrid3D::BITS] |= (1U << (hi % UniformGrid3D::BITS));
 
-          // generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::BOTTOM);
           first &= ~((1UL << w + 1) - 1);
         }
       }
@@ -317,40 +341,109 @@ public:
     {
       for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
       {
+        uint8_t &column = grid.getColumn(x, 0, z);
 
-        uint32_t &column = grid.getColumn(x, 0, z);
-        uint32_t first = column & ~(column << 1);
-        uint32_t last = column & ~(column >> 1);
+        uint8_t first = column & ~(column << 1);
+        uint8_t last = column & ~(column >> 1);
 
         while (first)
         {
           unsigned int w = __builtin_ffs(first) - 1;
 
-          uint32_t &width = wMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z))) / UniformGrid3D::BITS];
-          uint32_t &height = hMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x))) / UniformGrid3D::BITS];
-
-          if (!width || !height)
-          {
-            first &= ~((1UL << w + 1) - 1);
-            continue;
-          }
-
-          std::cout << "c " << std::bitset<32>(first) << std::endl;
-          std::cout << "w " << std::bitset<32>(width) << std::endl;
-          std::cout << "h " << std::bitset<32>(height) << std::endl;
-
+          uint8_t &width = wMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z))) / UniformGrid3D::BITS];
           const Info wInfo = getInfo(width);
+
+          uint8_t &height = hMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x))) / UniformGrid3D::BITS];
           const Info hInfo = getInfo(height);
 
-          // generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
-          generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, hInfo.size}, FaceDirection::BOTTOM);
-          
+          std::cout << "wzho " << w << " " << z << " " << hInfo.offset << std::endl;
+          std::cout << "wxwo " << w << " " << x << " " << wInfo.offset << std::endl;
+          std::cout << "c " << std::bitset<8>(column) << std::endl;
+          std::cout << "h " << std::bitset<8>(height) << std::endl;
+          std::cout << "w " << std::bitset<8>(width) << std::endl;
+
           first &= ~((1UL << w + 1) - 1);
+
+          if (hInfo.offset != z || wInfo.offset != x)
+            continue;
+
+          generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, hInfo.size}, FaceDirection::BOTTOM);
+
           width &= ~((1UL << (wInfo.offset + (int)wInfo.size)) - 1);
           height &= ~((1UL << (hInfo.offset + (int)hInfo.size)) - 1);
         }
+
+        //     while (last)
+        //     {
+        //       unsigned int w = __builtin_ffs(last) - 1;
+        //       generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::TOP);
+        //       last &= ~((1UL << w + 1) - 1);
+        //     }
       }
     }
+
+    // for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
+    // {
+    //   for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
+    //   {
+    //     uint32_t &column = grid.getColumn(x, 0, z);
+    //     uint32_t first = column & ~(column << 1);
+    //     uint32_t last = column & ~(column >> 1);
+
+    //     while (first)
+    //     {
+    //       unsigned int w = __builtin_ffs(first) - 1;
+
+    //       unsigned int wi = x + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z)));
+    //       unsigned int hi = z + (UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x)));
+
+    //       wMask[wi / UniformGrid3D::BITS] |= (1U << (wi % UniformGrid3D::BITS));
+    //       hMask[hi / UniformGrid3D::BITS] |= (1U << (hi % UniformGrid3D::BITS));
+
+    //       // generateFace(vertices, {x, w, z}, {1.0f, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+    //       first &= ~((1UL << w + 1) - 1);
+    //     }
+    //   }
+    // }
+
+    // for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
+    // {
+    //   for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
+    //   {
+
+    //     uint8_t &column = grid.getColumn(x, 0, z);
+    //     uint8_t first = column & ~(column << 1);
+    //     uint8_t last = column & ~(column >> 1);
+
+    //     while (first)
+    //     {
+    //       unsigned int w = __builtin_ffs(first) - 1;
+
+    //       uint32_t &width = wMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z))) / UniformGrid3D::BITS];
+    //       uint32_t &height = hMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * x))) / UniformGrid3D::BITS];
+
+    //       if (!width || !height)
+    //       {
+    //         first &= ~((1UL << w + 1) - 1);
+    //         continue;
+    //       }
+
+    //       std::cout << "c " << std::bitset<32>(first) << std::endl;
+    //       std::cout << "w " << std::bitset<32>(width) << std::endl;
+    //       std::cout << "h " << std::bitset<32>(height) << std::endl;
+
+    //       const Info wInfo = getInfo(width);
+    //       const Info hInfo = getInfo(height);
+
+    //       // generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, 1.0f}, FaceDirection::BOTTOM);
+    //       generateFace(vertices, {x, w, z}, {wInfo.size, 1.0f, hInfo.size}, FaceDirection::BOTTOM);
+
+    //       first &= ~((1UL << w + 1) - 1);
+    //       width &= ~((1UL << (wInfo.offset + (int)wInfo.size)) - 1);
+    //       height &= ~((1UL << (hInfo.offset + (int)hInfo.size)) - 1);
+    //     }
+    //   }
+    // }
 
     // for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     // {
