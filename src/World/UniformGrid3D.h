@@ -6,14 +6,14 @@
 class UniformGrid3D
 {
 public:
-  static constexpr uint8_t SIZE = 8;
-  static constexpr uint8_t BITS = sizeof(uint8_t) * 8;
-  static constexpr uint8_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
+  static constexpr uint32_t SIZE = 32;
+  static constexpr uint32_t BITS = sizeof(uint32_t) * 8;
+  static constexpr uint32_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
 
 private:
-  uint8_t gx[GRID_SIZE] = {};
-  uint8_t gy[GRID_SIZE] = {};
-  uint8_t gz[GRID_SIZE] = {};
+  uint32_t gx[GRID_SIZE] = {};
+  uint32_t gy[GRID_SIZE] = {};
+  uint32_t gz[GRID_SIZE] = {};
 
 public:
   unsigned int get(int x, int y, int z)
@@ -62,17 +62,17 @@ public:
     return {SIZE, SIZE, SIZE};
   }
 
-  uint8_t &getRow(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getRow(unsigned int x, unsigned int y, unsigned int z)
   {
     return gx[(SIZE * (y + (SIZE * z))) / BITS];
   }
 
-  uint8_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
   {
     return gy[(SIZE * (x + (SIZE * z))) / BITS];
   }
 
-  uint8_t &getLayer(unsigned int x, unsigned int y, unsigned int z)
+  uint32_t &getLayer(unsigned int x, unsigned int y, unsigned int z)
   {
     return gz[(SIZE * (y + (SIZE * x))) / BITS];
   }
@@ -93,14 +93,14 @@ public:
 // class UniformGrid3D
 // {
 // public:
-//   static constexpr uint8_t SIZE = 32;
-//   static constexpr uint8_t BITS = sizeof(uint8_t) * 8;
-//   static constexpr uint8_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
+//   static constexpr uint32_t SIZE = 32;
+//   static constexpr uint32_t BITS = sizeof(uint32_t) * 8;
+//   static constexpr uint32_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
 
 // private:
-//   uint8_t gx[GRID_SIZE] = {};
-//   uint8_t gy[GRID_SIZE] = {};
-//   uint8_t gz[GRID_SIZE] = {};
+//   uint32_t gx[GRID_SIZE] = {};
+//   uint32_t gy[GRID_SIZE] = {};
+//   uint32_t gz[GRID_SIZE] = {};
 
 // public:
 //   unsigned int get(int x, int y, int z)
@@ -149,17 +149,17 @@ public:
 //     return {SIZE, SIZE, SIZE};
 //   }
 
-//   uint8_t &getRow(unsigned int x, unsigned int y, unsigned int z)
+//   uint32_t &getRow(unsigned int x, unsigned int y, unsigned int z)
 //   {
 //     return gx[(SIZE * (y + (SIZE * z))) / BITS];
 //   }
 
-//   uint8_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
+//   uint32_t &getColumn(unsigned int x, unsigned int y, unsigned int z)
 //   {
 //     return gy[(SIZE * (x + (SIZE * z))) / BITS];
 //   }
 
-//   uint8_t &getLayer(unsigned int x, unsigned int y, unsigned int z)
+//   uint32_t &getLayer(unsigned int x, unsigned int y, unsigned int z)
 //   {
 //     return gz[(SIZE * (y + (SIZE * x))) / BITS];
 //   }

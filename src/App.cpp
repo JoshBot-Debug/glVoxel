@@ -21,7 +21,8 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
   controlPanel.setResourceManager(&resource);
   controlPanel.setWorld(&world);
 
-  camera.setPosition(0.0f, 0.0f, 20.0f);
+  camera.setPosition(4.0f, 3.0f, 8.0f);
+  camera.setRotation(-25.0f, 0.0f, 0.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
 
   Shader &shader = resource.getShader();
@@ -31,10 +32,11 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  // std::cout << std::bitset<32>(bits >> 1) << std::endl;
-  // std::cout << std::bitset<32>(bits & ~(bits << 1 & bits >> 1)) << std::endl;
-  // std::cout << std::bitset<32>(bits & ~(bits << 1)) << std::endl;
-  // std::cout << std::bitset<32>(bits & ~(bits >> 1)) << std::endl;
+  // uint32_t a = ((1UL << 4) - 1) << 4;
+  // uint32_t b = ((1UL << 16) - 1) << 2;
+  // std::cout << std::bitset<32>(a) << std::endl;
+  // std::cout << std::bitset<32>(b) << std::endl;
+  // std::cout << std::bitset<32>(b &= a) << std::endl;
 
   // std::thread t([this]()
   //               { BENCHMARK("generateVertexBuffer()", [this]()
