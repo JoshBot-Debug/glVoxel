@@ -161,28 +161,28 @@ public:
     // grid.set(5, 0, 3, 1);
     // grid.set(6, 0, 3, 1);
 
-    grid.set(4, 0, 0, 1);
-    grid.set(5, 1, 0, 1);
+    // grid.set(4, 0, 0, 1);
+    // grid.set(5, 1, 0, 1);
 
-    grid.set(3, 1, 1, 1);
-    grid.set(4, 1, 1, 1);
-    grid.set(5, 1, 1, 1);
-    grid.set(6, 2, 1, 1);
+    // grid.set(3, 1, 1, 1);
+    // grid.set(4, 1, 1, 1);
+    // grid.set(5, 1, 1, 1);
+    // grid.set(6, 2, 1, 1);
 
-    grid.set(3, 1, 2, 1);
-    grid.set(5, 1, 2, 1);
+    // grid.set(3, 1, 2, 1);
+    // grid.set(5, 1, 2, 1);
 
-    // grid.set(9, 0, 0, 1);
-    // grid.set(10, 0, 0, 1);
-    // grid.set(8, 0, 1, 1);
-    // grid.set(9, 0, 1, 1);
-    // grid.set(10, 0, 1, 1);
-    // grid.set(11, 0, 1, 1);
-    // grid.set(9, 0, 2, 1);
-    // grid.set(11, 0, 2, 1);
+    grid.set(9, 0, 0, 1);
+    grid.set(10, 0, 0, 1);
+    grid.set(8, 0, 1, 1);
+    grid.set(9, 0, 1, 1);
+    grid.set(10, 0, 1, 1);
+    grid.set(11, 0, 1, 1);
+    grid.set(9, 0, 2, 1);
+    grid.set(11, 0, 2, 1);
 
     // generateNoise();
-    fillSphere(grid.size());
+    // fillSphere(grid.size());
     // fill(grid.size());
 
     update();
@@ -279,14 +279,10 @@ public:
 
             w1 &= ((1UL << (int)wInfo.size) - 1) << wInfo.offset;
 
-            const Info w1Info = getInfo(w1);
-
-            if (w1Info.size == wInfo.size)
+            if (getInfo(w1).size == wInfo.size)
             {
               ++faceHeight;
-
               uint32_t &w11 = wfMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z1))) / UniformGrid3D::BITS];
-
               w11 &= w11 ^ (((1UL << (int)wInfo.size) - 1) << wInfo.offset);
             }
           }
