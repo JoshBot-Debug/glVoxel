@@ -182,7 +182,7 @@ public:
     grid.set(11, 0, 2, 1);
 
     // generateNoise();
-    // fillSphere(grid.size());
+    fillSphere(grid.size());
     // fill(grid.size());
 
     update();
@@ -242,6 +242,7 @@ public:
       }
     }
 
+
     for (size_t z = 0; z < UniformGrid3D::SIZE; z++)
     {
       for (size_t x = 0; x < UniformGrid3D::SIZE; x++)
@@ -256,13 +257,16 @@ public:
           first &= ~((1UL << w + 1) - 1);
 
           uint32_t &width = wfMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z))) / UniformGrid3D::BITS] &= ~((1UL << x) - 1);
-          if(!width) continue;
+          if (!width)
+            continue;
 
           const Info wInfo = getInfo(width);
 
           uint32_t &height = hfMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * (int)(wInfo.offset)))) / UniformGrid3D::BITS] &= ~((1UL << z) - 1);
 
           const Info hInfo = getInfo(height);
+
+          if(wInfo.offset != x || hInfo.offset != z) continue;
 
           std::cout << "x:y:z " << x << " " << w << " " << z << std::endl;
           std::cout << "wo:ho " << wInfo.offset << " " << hInfo.offset << std::endl;
@@ -271,9 +275,9 @@ public:
           std::cout << "h " << std::bitset<32>(height) << std::endl;
           std::cout << "w " << std::bitset<32>(width) << std::endl;
 
-          unsigned int faceHeight = 1;
+          unsigned int faceHeight = 0;
 
-          for (size_t z1 = hInfo.offset + 1; z1 < hInfo.offset + hInfo.size; z1++)
+          for (size_t z1 = hInfo.offset; z1 < hInfo.offset + hInfo.size; z1++)
           {
             uint32_t w1 = wfMask[(UniformGrid3D::SIZE * (w + (UniformGrid3D::SIZE * z1))) / UniformGrid3D::BITS];
 
@@ -287,10 +291,14 @@ public:
             }
           }
 
+          std::cout << "faceHeight " << faceHeight << std::endl;
+
           generateFace(vertices, {wInfo.offset, w, z}, {wInfo.size, 1.0f, faceHeight}, FaceDirection::BOTTOM);
 
-          width &= ~((1UL << (wInfo.offset + (int)wInfo.size)) - 1);
-          height &= ~((1UL << (z + (int)faceHeight)) - 1);
+          // width &= ~((1UL << (wInfo.offset + (int)wInfo.size)) - 1);
+          // height &= ~((1UL << (z + (int)faceHeight)) - 1);
+          
+          x += wInfo.size - 1;
         }
 
         // while (last)
