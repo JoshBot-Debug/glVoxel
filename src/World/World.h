@@ -24,8 +24,6 @@ private:
   Buffer vbo;
 
   VoxelGrid grid;
-  static constexpr unsigned int CHUNK_SIZE = 32;
-  // std::unordered_map<glm::ivec3, VoxelGrid, IVec3Hash> chunks;
   std::vector<Vertex> vertices;
 
 public:
@@ -34,10 +32,9 @@ public:
     vao.generate();
     vbo.generate();
 
-    // fillNoise({128, 128, 128});
     fillSphere(grid.size());
+    // fill(grid.size());
     // fillAlternate(grid.size());
-    // fill(grid.size(), 1);
 
     update();
     setBuffer();
@@ -53,8 +50,6 @@ public:
   void update()
   {
     grid.mesh(vertices);
-    // for (auto &[coord, grid] : chunks)
-    //   grid.mesh(vertices);
   }
 
   void setBuffer()
@@ -75,8 +70,6 @@ public:
   void fillNoise(const glm::ivec3 &size)
   {
     grid.clear();
-    // for (auto &[coord, grid] : chunks)
-    //   grid.clear();
 
     noise::module::Perlin perlin;
     perlin.SetSeed(static_cast<int>(std::time(0)));
@@ -103,21 +96,21 @@ public:
     }
   }
 
-  // void fill(const glm::ivec3 &size, unsigned int value = 1)
-  // {
-  //   for (size_t z = 0; z < size.z; z++)
-  //     for (size_t x = 0; x < size.x; x++)
-  //       for (size_t y = 0; y < size.y; y++)
-  //         grid.set(x, y, z, value);
-  // }
+  void fill(const glm::ivec3 &size, unsigned int value = 1)
+  {
+    for (size_t z = 0; z < size.z; z++)
+      for (size_t x = 0; x < size.x; x++)
+        for (size_t y = 0; y < size.y; y++)
+          grid.set(x, y, z, value);
+  }
 
-  // void fillAlternate(const glm::ivec3 &size)
-  // {
-  //   for (size_t z = 0; z < size.z; z += 2)
-  //     for (size_t x = 0; x < size.x; x += 2)
-  //       for (size_t y = 0; y < size.y; y += 2)
-  //         grid.set(x, y, z, 1);
-  // }
+  void fillAlternate(const glm::ivec3 &size)
+  {
+    for (size_t z = 0; z < size.z; z += 2)
+      for (size_t x = 0; x < size.x; x += 2)
+        for (size_t y = 0; y < size.y; y += 2)
+          grid.set(x, y, z, 1);
+  }
 
   void fillSphere(const glm::ivec3 &size)
   {
