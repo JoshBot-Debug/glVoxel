@@ -15,7 +15,7 @@
 
 #include <thread>
 
-App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true})
+App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true})
 {
   controlPanel.setCamera(&camera);
   controlPanel.setResourceManager(&resource);
@@ -32,17 +32,11 @@ App::App() : Window({.title = "glPlay", .width = 800, .height = 600, .enableDept
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  // uint32_t a = ((1UL << 4) - 1) << 4;
-  // uint32_t b = ((1UL << 16) - 1) << 2;
-  // std::cout << std::bitset<32>(a) << std::endl;
-  // std::cout << std::bitset<32>(b) << std::endl;
-  // std::cout << std::bitset<32>(b &= a) << std::endl;
+  std::thread t([this]()
+                { BENCHMARK("generateVertexBuffer()", [this]()
+                            { this->world.update(); }, 1000); });
 
-  // std::thread t([this]()
-  //               { BENCHMARK("generateVertexBuffer()", [this]()
-  //                           { this->world.update(); }, 1000); });
-
-  // t.join();
+  t.join();
 
   open();
 }

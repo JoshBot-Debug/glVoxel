@@ -60,7 +60,7 @@ set_target_properties(glVoxel PROPERTIES
 )
 
 # Enable the best optimization settings
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto -funroll-loops -fomit-frame-pointer")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -march=native -flto -funroll-loops -fomit-frame-pointer")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto")
 set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "-flto")
 
