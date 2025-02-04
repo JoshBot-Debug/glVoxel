@@ -88,12 +88,12 @@ inline void generateFace(std::vector<Vertex> &vertices, float px, float py, floa
   }
 }
 
-class VoxelGrid
+class VoxelChunk
 {
 public:
-  static constexpr uint32_t SIZE = 32;
-  static constexpr uint32_t BITS = sizeof(uint32_t) * 8;
-  static constexpr uint32_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
+  static constexpr const uint32_t SIZE = 32;
+  static constexpr const uint32_t BITS = sizeof(uint32_t) * 8;
+  static constexpr const uint32_t GRID_SIZE = (SIZE * SIZE * SIZE) / BITS;
 
 private:
   uint32_t gx[GRID_SIZE] = {};
@@ -101,12 +101,13 @@ private:
   uint32_t gz[GRID_SIZE] = {};
 
 public:
-  unsigned int get(int x, int y, int z)
+  const unsigned int get(int x, int y, int z)
   {
     if (x < 0 || y < 0 || z < 0 || x >= SIZE || y >= SIZE || z >= SIZE)
       return 0;
 
-    unsigned int xi = x + (SIZE * (y + (SIZE * z)));
+    const unsigned int xi = x + (SIZE * (y + (SIZE * z)));
+
     return (gx[xi / BITS] >> xi % BITS) & 1;
   }
 
@@ -114,9 +115,9 @@ public:
   {
     assert(value == 0 || value == 1 && !(x < 0 || y < 0 || z < 0 || x >= SIZE || y >= SIZE || z >= SIZE));
 
-    unsigned int xi = x + (SIZE * (y + (SIZE * z)));
-    unsigned int yi = y + (SIZE * (x + (SIZE * z)));
-    unsigned int zi = z + (SIZE * (y + (SIZE * x)));
+    const unsigned int xi = x + (SIZE * (y + (SIZE * z)));
+    const unsigned int yi = y + (SIZE * (x + (SIZE * z)));
+    const unsigned int zi = z + (SIZE * (y + (SIZE * x)));
 
     if (value == 1)
     {
@@ -132,7 +133,7 @@ public:
     }
   }
 
-  unsigned int get(glm::ivec3 position)
+  const unsigned int get(glm::ivec3 position)
   {
     return get(position.x, position.y, position.z);
   }
@@ -173,15 +174,15 @@ public:
   {
     vertices.clear();
 
-    uint32_t wfMask[VoxelGrid::GRID_SIZE] = {};
-    uint32_t hfMask[VoxelGrid::GRID_SIZE] = {};
+    uint32_t wfMask[VoxelChunk::GRID_SIZE] = {};
+    uint32_t hfMask[VoxelChunk::GRID_SIZE] = {};
 
-    uint32_t wlMask[VoxelGrid::GRID_SIZE] = {};
-    uint32_t hlMask[VoxelGrid::GRID_SIZE] = {};
+    uint32_t wlMask[VoxelChunk::GRID_SIZE] = {};
+    uint32_t hlMask[VoxelChunk::GRID_SIZE] = {};
 
-    for (size_t z = 0; z < VoxelGrid::SIZE; z++)
+    for (size_t z = 0; z < VoxelChunk::SIZE; z++)
     {
-      for (size_t x = 0; x < VoxelGrid::SIZE; x++)
+      for (size_t x = 0; x < VoxelChunk::SIZE; x++)
       {
         uint32_t &column = this->getColumn(x, 0, z);
         uint32_t first = column & ~(column << 1);
@@ -189,13 +190,13 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
 
-          unsigned int wi = x + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z)));
-          wfMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = x + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z)));
+          wfMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = z + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x)));
-          hfMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = z + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x)));
+          hfMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           /**
            * This bit shift works because we are use a 32bit int to hold out bits
@@ -208,22 +209,22 @@ public:
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
 
-          unsigned int wi = x + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z)));
-          wlMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = x + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z)));
+          wlMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = z + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x)));
-          hlMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = z + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x)));
+          hlMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           last &= ~((1ULL << w + 1) - 1);
         }
       }
     }
 
-    for (size_t z = 0; z < VoxelGrid::SIZE; z++)
+    for (size_t z = 0; z < VoxelChunk::SIZE; z++)
     {
-      for (size_t x = 0; x < VoxelGrid::SIZE; x++)
+      for (size_t x = 0; x < VoxelChunk::SIZE; x++)
       {
         uint32_t &column = this->getColumn(x, 0, z);
         uint32_t first = column & ~(column << 1);
@@ -231,26 +232,26 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
           first &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z))) / VoxelGrid::BITS] &= ~((1ULL << x) - 1);
+          uint32_t &width = wfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z))) / VoxelChunk::BITS] &= ~((1ULL << x) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << z) - 1);
+          uint32_t &height = hfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << z) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {
@@ -266,26 +267,26 @@ public:
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
           last &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z))) / VoxelGrid::BITS] &= ~((1ULL << x) - 1);
+          uint32_t &width = wlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z))) / VoxelChunk::BITS] &= ~((1ULL << x) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << z) - 1);
+          uint32_t &height = hlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << z) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {
@@ -306,9 +307,9 @@ public:
     std::memset(wlMask, 0, sizeof(wlMask));
     std::memset(hlMask, 0, sizeof(hlMask));
 
-    for (size_t z = 0; z < VoxelGrid::SIZE; z++)
+    for (size_t z = 0; z < VoxelChunk::SIZE; z++)
     {
-      for (size_t y = 0; y < VoxelGrid::SIZE; y++)
+      for (size_t y = 0; y < VoxelChunk::SIZE; y++)
       {
         uint32_t &row = this->getRow(0, y, z);
         uint32_t first = row & ~(row << 1);
@@ -316,35 +317,35 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
 
-          unsigned int wi = y + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z)));
-          wfMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = y + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z)));
+          wfMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = z + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * y)));
-          hfMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = z + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * y)));
+          hfMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           first &= ~((1ULL << w + 1) - 1);
         }
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
 
-          unsigned int wi = y + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z)));
-          wlMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = y + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z)));
+          wlMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = z + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * y)));
-          hlMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = z + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * y)));
+          hlMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           last &= ~((1ULL << w + 1) - 1);
         }
       }
     }
 
-    for (size_t z = 0; z < VoxelGrid::SIZE; z++)
+    for (size_t z = 0; z < VoxelChunk::SIZE; z++)
     {
-      for (size_t y = 0; y < VoxelGrid::SIZE; y++)
+      for (size_t y = 0; y < VoxelChunk::SIZE; y++)
       {
         uint32_t &row = this->getRow(0, y, z);
         uint32_t first = row & ~(row << 1);
@@ -352,26 +353,26 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
           first &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z))) / VoxelGrid::BITS] &= ~((1ULL << y) - 1);
+          uint32_t &width = wfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z))) / VoxelChunk::BITS] &= ~((1ULL << y) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << z) - 1);
+          uint32_t &height = hfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << z) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {
@@ -387,26 +388,26 @@ public:
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
           last &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * z))) / VoxelGrid::BITS] &= ~((1ULL << y) - 1);
+          uint32_t &width = wlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * z))) / VoxelChunk::BITS] &= ~((1ULL << y) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << z) - 1);
+          uint32_t &height = hlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << z) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {
@@ -427,9 +428,9 @@ public:
     std::memset(wlMask, 0, sizeof(wlMask));
     std::memset(hlMask, 0, sizeof(hlMask));
 
-    for (size_t x = 0; x < VoxelGrid::SIZE; x++)
+    for (size_t x = 0; x < VoxelChunk::SIZE; x++)
     {
-      for (size_t y = 0; y < VoxelGrid::SIZE; y++)
+      for (size_t y = 0; y < VoxelChunk::SIZE; y++)
       {
         uint32_t &depth = this->getLayer(x, y, 0);
         uint32_t first = depth & ~(depth << 1);
@@ -437,35 +438,35 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
 
-          unsigned int wi = y + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x)));
-          wfMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = y + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x)));
+          wfMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = x + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * y)));
-          hfMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = x + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * y)));
+          hfMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           first &= ~((1ULL << w + 1) - 1);
         }
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
 
-          unsigned int wi = y + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x)));
-          wlMask[wi / VoxelGrid::BITS] |= (1ULL << (wi % VoxelGrid::BITS));
+          const unsigned int wi = y + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x)));
+          wlMask[wi / VoxelChunk::BITS] |= (1ULL << (wi % VoxelChunk::BITS));
 
-          unsigned int hi = x + (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * y)));
-          hlMask[hi / VoxelGrid::BITS] |= (1ULL << (hi % VoxelGrid::BITS));
+          const unsigned int hi = x + (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * y)));
+          hlMask[hi / VoxelChunk::BITS] |= (1ULL << (hi % VoxelChunk::BITS));
 
           last &= ~((1ULL << w + 1) - 1);
         }
       }
     }
 
-    for (size_t x = 0; x < VoxelGrid::SIZE; x++)
+    for (size_t x = 0; x < VoxelChunk::SIZE; x++)
     {
-      for (size_t y = 0; y < VoxelGrid::SIZE; y++)
+      for (size_t y = 0; y < VoxelChunk::SIZE; y++)
       {
         uint32_t &depth = this->getLayer(x, y, 0);
         uint32_t first = depth & ~(depth << 1);
@@ -473,26 +474,26 @@ public:
 
         while (first)
         {
-          unsigned int w = __builtin_ffs(first) - 1;
+          const unsigned int w = __builtin_ffs(first) - 1;
           first &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x))) / VoxelGrid::BITS] &= ~((1ULL << y) - 1);
+          uint32_t &width = wfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x))) / VoxelChunk::BITS] &= ~((1ULL << y) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hfMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << x) - 1);
+          uint32_t &height = hfMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << x) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wfMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {
@@ -508,26 +509,26 @@ public:
 
         while (last)
         {
-          unsigned int w = __builtin_ffs(last) - 1;
+          const unsigned int w = __builtin_ffs(last) - 1;
           last &= ~((1ULL << w + 1) - 1);
 
-          uint32_t &width = wlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * x))) / VoxelGrid::BITS] &= ~((1ULL << y) - 1);
+          uint32_t &width = wlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * x))) / VoxelChunk::BITS] &= ~((1ULL << y) - 1);
 
           if (!width)
             continue;
 
-          unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
-          unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
+          const unsigned int wOffset = !width ? 0 : __builtin_ffs(width) - 1;
+          const unsigned int wSize = __builtin_ctz(~(width >> (__builtin_ffs(width) - 1)));
 
-          uint32_t &height = hlMask[(VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * (int)(wOffset)))) / VoxelGrid::BITS] &= ~((1ULL << x) - 1);
+          uint32_t &height = hlMask[(VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * (int)(wOffset)))) / VoxelChunk::BITS] &= ~((1ULL << x) - 1);
 
-          unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
+          const unsigned int hOffset = !height ? 0 : __builtin_ffs(height) - 1;
           unsigned int hSize = __builtin_ctz(~(height >> (__builtin_ffs(height) - 1)));
 
           for (size_t i = hOffset; i < hOffset + hSize; i++)
           {
-            const unsigned int index = (VoxelGrid::SIZE * (w + (VoxelGrid::SIZE * i))) / VoxelGrid::BITS;
-            uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
+            const unsigned int index = (VoxelChunk::SIZE * (w + (VoxelChunk::SIZE * i))) / VoxelChunk::BITS;
+            const uint32_t bits = wlMask[index] & (((1ULL << (int)wSize) - 1) << wOffset);
 
             if (__builtin_ctz(~(bits >> (__builtin_ffs(bits) - 1))) != wSize)
             {

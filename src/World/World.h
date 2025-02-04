@@ -5,8 +5,8 @@
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Model.h"
-#include "World/Voxel.h"
-#include "World/VoxelGrid.h"
+#include "World/VoxelChunk.h"
+#include "World/ChunkManager.h"
 
 #include <iostream>
 #include <noise/noise.h>
@@ -23,7 +23,8 @@ private:
   VertexArray vao;
   Buffer vbo;
 
-  VoxelGrid grid;
+  VoxelChunk grid;
+  ChunkManager chunk;
   std::vector<Vertex> vertices;
 
 public:
