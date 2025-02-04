@@ -4,6 +4,7 @@
 #include <immintrin.h>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "Engine/Types.h"
 
@@ -172,8 +173,6 @@ public:
 
   void mesh(std::vector<Vertex> &vertices)
   {
-    vertices.clear();
-
     uint32_t wfMask[VoxelChunk::GRID_SIZE] = {};
     uint32_t hfMask[VoxelChunk::GRID_SIZE] = {};
 

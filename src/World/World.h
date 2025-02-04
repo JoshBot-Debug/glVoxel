@@ -23,8 +23,7 @@ private:
   VertexArray vao;
   Buffer vbo;
 
-  VoxelChunk grid;
-  ChunkManager chunk;
+  ChunkManager chunkManager;
   std::vector<Vertex> vertices;
 
 public:
@@ -32,12 +31,8 @@ public:
   {
     vao.generate();
     vbo.generate();
-
-    fillSphere(grid.size());
-    // fill(grid.size());
-    // fillAlternate(grid.size());
-
-    update();
+    fillNoise();
+    chunkManager.update(vertices);
     setBuffer();
   }
 
@@ -50,7 +45,7 @@ public:
 
   void update()
   {
-    grid.mesh(vertices);
+    // chunkManager.update(vertices);
   }
 
   void setBuffer()
@@ -63,14 +58,14 @@ public:
 
   void generateNoise()
   {
-    fillNoise({0, 0, 0});
-    update();
+    fillNoise();
+    chunkManager.update(vertices);
     setBuffer();
   }
 
-  void fillNoise(const glm::ivec3 &size)
+  void fillNoise()
   {
-    grid.clear();
+    chunkManager.clearAll();
 
     noise::module::Perlin perlin;
     perlin.SetSeed(static_cast<int>(std::time(0)));
@@ -80,57 +75,53 @@ public:
 
     heightMapBuilder.SetSourceModule(perlin);
     heightMapBuilder.SetDestNoiseMap(heightMap);
-    heightMapBuilder.SetDestSize(size.z, size.x);
+    // heightMapBuilder.SetDestSize(VoxelChunk::SIZE * ChunkManager::CHUNKS, VoxelChunk::SIZE * ChunkManager::CHUNKS);
+    heightMapBuilder.SetDestSize(32,32);
     heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
     heightMapBuilder.Build();
 
-    for (int z = 0; z < size.z; ++z)
+    for (int z = 0; z < VoxelChunk::SIZE * ChunkManager::CHUNKS; ++z)
     {
-      for (int x = 0; x < size.x; ++x)
+      for (int x = 0; x < VoxelChunk::SIZE * ChunkManager::CHUNKS; ++x)
       {
         float n = heightMap.GetValue(x, z);
-        unsigned int height = static_cast<int>(std::round((15 * (std::clamp(n, -1.0f, 1.0f) + 1)))) + 1;
+        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * 16));
         for (size_t y = 0; y < height; y++)
-          grid.set(x, y, z, 1);
-        // chunks[{std::floor(x / CHUNK_SIZE), std::floor(y / CHUNK_SIZE), std::floor(z / CHUNK_SIZE)}].set(x % CHUNK_SIZE, y % CHUNK_SIZE, z % CHUNK_SIZE, 1);
+          chunkManager.set(x, y, z, 1);
       }
     }
   }
 
-  void fill(const glm::ivec3 &size, unsigned int value = 1)
-  {
-    for (size_t z = 0; z < size.z; z++)
-      for (size_t x = 0; x < size.x; x++)
-        for (size_t y = 0; y < size.y; y++)
-          grid.set(x, y, z, value);
-  }
+  // void fill(const glm::ivec3 &size, unsigned int value = 1)
+  // {
+  //   for (size_t z = 0; z < size.z; z++)
+  //     for (size_t x = 0; x < size.x; x++)
+  //       for (size_t y = 0; y < size.y; y++)
+  //         grid.set(x, y, z, value);
+  // }
 
-  void fillAlternate(const glm::ivec3 &size)
-  {
-    for (size_t z = 0; z < size.z; z += 2)
-      for (size_t x = 0; x < size.x; x += 2)
-        for (size_t y = 0; y < size.y; y += 2)
-          grid.set(x, y, z, 1);
-  }
+  // void fillAlternate(const glm::ivec3 &size)
+  // {
+  //   for (size_t z = 0; z < size.z; z += 2)
+  //     for (size_t x = 0; x < size.x; x += 2)
+  //       for (size_t y = 0; y < size.y; y += 2)
+  //         grid.set(x, y, z, 1);
+  // }
 
-  void fillSphere(const glm::ivec3 &size)
-  {
-    const glm::ivec3 center = size / 2;
-
-    int radius = std::min({center.x, center.y, center.z}) - 1.0f;
-
-    for (size_t z = 0; z < size.z; z++)
-      for (size_t x = 0; x < size.x; x++)
-        for (size_t y = 0; y < size.y; y++)
-        {
-          int dx = x - center.x;
-          int dy = y - center.y;
-          int dz = z - center.z;
-
-          int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-          if (distance <= radius)
-            grid.set(x, y, z, 1);
-        }
-  }
+  // void fillSphere(const glm::ivec3 &size)
+  // {
+  //   const glm::ivec3 center = size / 2;
+  //   int radius = std::min({center.x, center.y, center.z}) - 1.0f;
+  //   for (size_t z = 0; z < size.z; z++)
+  //     for (size_t x = 0; x < size.x; x++)
+  //       for (size_t y = 0; y < size.y; y++)
+  //       {
+  //         int dx = x - center.x;
+  //         int dy = y - center.y;
+  //         int dz = z - center.z;
+  //         int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+  //         if (distance <= radius)
+  //           grid.set(x, y, z, 1);
+  //       }
+  // }
 };

@@ -32,11 +32,11 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  std::thread t([this]()
-                { BENCHMARK("generateVertexBuffer()", [this]()
-                            { this->world.update(); }, 1000); });
+  // std::thread t([this]()
+  //               { BENCHMARK("generateVertexBuffer()", [this]()
+  //                           { this->world.update(); }, 1000); });
 
-  t.join();
+  // t.join();
 
   open();
 }
