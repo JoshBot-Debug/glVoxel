@@ -19,4 +19,9 @@ To build this project
 cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
 ```
 
+To run the project:
+```bash
+build/glVoxel
+```
+
 To play around go to World/World.h. Check line 35, and play around!
