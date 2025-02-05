@@ -13,7 +13,6 @@
 #include "Engine/Types.h"
 #include "Debug.h"
 
-#include <thread>
 
 App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDepth = true, .enableVSync = false, .MSAA = 16, .imguiEnableDocking = true, .maximized = true})
 {
@@ -31,6 +30,8 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
       .vertex = "src/Shaders/voxel.vs",
       .fragment = "src/Shaders/voxel.fs",
   });
+
+  // std::cout << __builtin_ffs(std::bitset<32>(0b00000000000000000000000000000000).to_ulong()) << std::endl;
 
   // std::thread t([this]()
   //               { BENCHMARK("generateVertexBuffer()", [this]()

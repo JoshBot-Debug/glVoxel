@@ -5,7 +5,7 @@
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Model.h"
-#include "World/VoxelChunk.h"
+#include "World/Chunk.h"
 #include "World/ChunkManager.h"
 
 #include <iostream>
@@ -20,10 +20,9 @@
 class World
 {
 private:
-  VertexArray vao;
   Buffer vbo;
-
-  ChunkManager chunkManager;
+  VertexArray vao;
+  ChunkManager chunks;
   std::vector<Vertex> vertices;
 
 public:
@@ -31,9 +30,6 @@ public:
   {
     vao.generate();
     vbo.generate();
-    fillNoise();
-    chunkManager.update(vertices);
-    setBuffer();
   }
 
   void draw()
@@ -41,11 +37,6 @@ public:
     vao.bind();
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     glDrawArrays(GL_LINES, 0, vertices.size());
-  }
-
-  void update()
-  {
-    // chunkManager.update(vertices);
   }
 
   void setBuffer()
@@ -56,16 +47,9 @@ public:
     vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
   }
 
-  void generateNoise()
+  void generateTerrain()
   {
-    fillNoise();
-    chunkManager.update(vertices);
-    setBuffer();
-  }
-
-  void fillNoise()
-  {
-    chunkManager.clearAll();
+    chunks.clear();
 
     noise::module::Perlin perlin;
     perlin.SetSeed(static_cast<int>(std::time(0)));
@@ -75,53 +59,22 @@ public:
 
     heightMapBuilder.SetSourceModule(perlin);
     heightMapBuilder.SetDestNoiseMap(heightMap);
-    // heightMapBuilder.SetDestSize(VoxelChunk::SIZE * ChunkManager::CHUNKS, VoxelChunk::SIZE * ChunkManager::CHUNKS);
-    heightMapBuilder.SetDestSize(32,32);
+    heightMapBuilder.SetDestSize(Chunk::SIZE * ChunkManager::CHUNKS, Chunk::SIZE * ChunkManager::CHUNKS);
     heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
     heightMapBuilder.Build();
 
-    for (int z = 0; z < VoxelChunk::SIZE * ChunkManager::CHUNKS; ++z)
+    for (int z = 0; z < Chunk::SIZE * ChunkManager::CHUNKS; ++z)
     {
-      for (int x = 0; x < VoxelChunk::SIZE * ChunkManager::CHUNKS; ++x)
+      for (int x = 0; x < Chunk::SIZE * ChunkManager::CHUNKS; ++x)
       {
         float n = heightMap.GetValue(x, z);
-        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * 16));
+        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Chunk::SIZE * ChunkManager::CHUNKS) / 2)));
         for (size_t y = 0; y < height; y++)
-          chunkManager.set(x, y, z, 1);
+          chunks.set(x, y, z, 1);
       }
     }
+
+    chunks.update(vertices);
+    setBuffer();
   }
-
-  // void fill(const glm::ivec3 &size, unsigned int value = 1)
-  // {
-  //   for (size_t z = 0; z < size.z; z++)
-  //     for (size_t x = 0; x < size.x; x++)
-  //       for (size_t y = 0; y < size.y; y++)
-  //         grid.set(x, y, z, value);
-  // }
-
-  // void fillAlternate(const glm::ivec3 &size)
-  // {
-  //   for (size_t z = 0; z < size.z; z += 2)
-  //     for (size_t x = 0; x < size.x; x += 2)
-  //       for (size_t y = 0; y < size.y; y += 2)
-  //         grid.set(x, y, z, 1);
-  // }
-
-  // void fillSphere(const glm::ivec3 &size)
-  // {
-  //   const glm::ivec3 center = size / 2;
-  //   int radius = std::min({center.x, center.y, center.z}) - 1.0f;
-  //   for (size_t z = 0; z < size.z; z++)
-  //     for (size_t x = 0; x < size.x; x++)
-  //       for (size_t y = 0; y < size.y; y++)
-  //       {
-  //         int dx = x - center.x;
-  //         int dy = y - center.y;
-  //         int dz = z - center.z;
-  //         int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-  //         if (distance <= radius)
-  //           grid.set(x, y, z, 1);
-  //       }
-  // }
 };

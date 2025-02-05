@@ -53,8 +53,8 @@ public:
     if (ImGui::Button("Recompile shaders"))
       resource->getShader().recompile();
 
-   if (ImGui::Button("Generate noise"))
-      world->generateNoise();
+   if (ImGui::Button("Generate terrain"))
+      world->generateTerrain();
 
     ImGui::End();
   }
