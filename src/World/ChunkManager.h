@@ -14,9 +14,9 @@ private:
 public:
   void set(int x, int y, int z, unsigned int value)
   {
-    glm::ivec3 root{std::floor(x / Chunk::SIZE), std::floor(y / Chunk::SIZE), std::floor(z / Chunk::SIZE)};
-    Chunk &chunk = chunks[root];
-    chunk.setRootCoordinate(root);
+    glm::ivec3 coord{std::floor(x / Chunk::SIZE), std::floor(y / Chunk::SIZE), std::floor(z / Chunk::SIZE)};
+    Chunk &chunk = chunks[coord];
+    chunk.setRootCoordinate(coord);
     chunk.set(std::abs(x) % Chunk::SIZE, std::abs(y) % Chunk::SIZE, std::abs(z) % Chunk::SIZE, value);
   }
 
