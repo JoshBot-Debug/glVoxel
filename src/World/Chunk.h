@@ -7,87 +7,7 @@
 #include <functional>
 
 #include "Engine/Types.h"
-
-struct IVec3Hash
-{
-  std::size_t operator()(const glm::ivec3 &v) const
-  {
-    return std::hash<int>()(v.x) ^ (std::hash<int>()(v.y) << 1) ^ (std::hash<int>()(v.z) << 2);
-  }
-};
-
-enum class FaceDirection
-{
-  TOP,
-  BOTTOM,
-  FRONT,
-  BACK,
-  LEFT,
-  RIGHT
-};
-
-inline void generateFace(std::vector<Vertex> &vertices, float px, float py, float pz, float sx, float sy, float sz, const FaceDirection &direction)
-{
-  switch (direction)
-  {
-  case FaceDirection::TOP:
-    vertices.emplace_back(Vertex{px, py + sy, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz, (int)direction});
-
-    vertices.emplace_back(Vertex{px, py + sy, pz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-    break;
-  case FaceDirection::BOTTOM:
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz + sz, (int)direction});
-
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px, py, pz + sz, (int)direction});
-    break;
-  case FaceDirection::FRONT:
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz, (int)direction});
-
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz, (int)direction});
-    break;
-  case FaceDirection::BACK:
-    vertices.emplace_back(Vertex{px, py, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-
-    vertices.emplace_back(Vertex{px, py, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz + sz, (int)direction});
-    break;
-  case FaceDirection::LEFT:
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px, py, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz + sz, (int)direction});
-
-    vertices.emplace_back(Vertex{px, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px, py + sy, pz, (int)direction});
-    break;
-  case FaceDirection::RIGHT:
-    vertices.emplace_back(Vertex{px + sx, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py, pz + sz, (int)direction});
-
-    vertices.emplace_back(Vertex{px + sx, py, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz, (int)direction});
-    vertices.emplace_back(Vertex{px + sx, py + sy, pz + sz, (int)direction});
-    break;
-  default:
-    break;
-  }
-}
+#include "Engine/Face.h"
 
 class Chunk
 {
@@ -263,7 +183,7 @@ public:
             wfMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, wOffset + root.x, w + root.y, z + root.z, wSize, 1.0f, hSize, FaceDirection::BOTTOM);
+          Face::Bottom(vertices, wOffset + root.x, w + root.y, z + root.z, wSize, 1.0f, hSize);
         }
 
         while (last)
@@ -298,7 +218,7 @@ public:
             wlMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, wOffset + root.x, w + root.y, z + root.z, wSize, 1.0f, hSize, FaceDirection::TOP);
+          Face::Top(vertices, wOffset + root.x, w + root.y, z + root.z, wSize, 1.0f, hSize);
         }
       }
     }
@@ -384,7 +304,7 @@ public:
             wfMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, w + root.x, wOffset + root.y, z + root.z, 1.0f, wSize, hSize, FaceDirection::LEFT);
+          Face::Left(vertices, w + root.x, wOffset + root.y, z + root.z, 1.0f, wSize, hSize);
         }
 
         while (last)
@@ -419,7 +339,7 @@ public:
             wlMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, w + root.x, wOffset + root.y, z + root.z, 1.0f, wSize, hSize, FaceDirection::RIGHT);
+          Face::Right(vertices, w + root.x, wOffset + root.y, z + root.z, 1.0f, wSize, hSize);
         }
       }
     }
@@ -505,7 +425,7 @@ public:
             wfMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, x + root.x, wOffset + root.y, w + root.z, hSize, wSize, 1.0f, FaceDirection::FRONT);
+          Face::Front(vertices, x + root.x, wOffset + root.y, w + root.z, hSize, wSize, 1.0f);
         }
 
         while (last)
@@ -540,7 +460,7 @@ public:
             wlMask[index] &= ~(((1ULL << (int)wSize) - 1) << wOffset);
           }
 
-          generateFace(vertices, x + root.x, wOffset + root.y, w + root.z, hSize, wSize, 1.0f, FaceDirection::BACK);
+          Face::Back(vertices, x + root.x, wOffset + root.y, w + root.z, hSize, wSize, 1.0f);
         }
       }
     }

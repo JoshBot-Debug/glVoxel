@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <glm/glm.hpp>
 #include "Chunk.h"
+#include "Utility.h"
 
 class ChunkManager
 {
