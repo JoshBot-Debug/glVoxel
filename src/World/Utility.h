@@ -6,6 +6,7 @@ struct IVec3Hash
 {
   std::size_t operator()(const glm::ivec3 &v) const
   {
-    return std::hash<int>()(v.x) ^ (std::hash<int>()(v.y) << 1) ^ (std::hash<int>()(v.z) << 2);
+    return static_cast<std::size_t>(
+        v.x * 73856093 ^ v.y * 19349663 ^ v.z * 83492791);
   }
 };

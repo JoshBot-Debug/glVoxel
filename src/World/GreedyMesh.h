@@ -8,6 +8,7 @@
 #include "Voxel.h"
 #include "Engine/Types.h"
 #include "Engine/Face.h"
+#include <immintrin.h> // For AVX/AVX2 intrinsics
 
 constexpr unsigned int ChunkSize = Voxel::Chunk::SIZE;
 
@@ -190,32 +191,42 @@ public:
      * z1 x0 0  0  0  0
      * z1 x2 0  0  0  0
      * z1 x3 0  0  0  0
+     * 
+     *  // Was removed because it was set while creating the Chunk
+     *  // removing this saved 30% execution time 
+     *  uint32_t rows[MaskLength] = {};
+     *  uint32_t columns[MaskLength] = {};
+     *  uint32_t layers[MaskLength] = {};
+     *   
+     *  for (size_t x = 0; x < ChunkSize; x++)
+     *    for (size_t y = 0; y < ChunkSize; y++)
+     *      for (size_t z = 0; z < ChunkSize; z++)
+     *      {
+     *        Voxel::Voxel &voxel = chunk.get({x, y, z});
+     *  
+     *        if (voxel.isSolid())
+     *        {
+     *          const unsigned int rowIndex = x + (ChunkSize * (y + (ChunkSize * z)));
+     *          const unsigned int columnIndex = y + (ChunkSize * (x + (ChunkSize * z)));
+     *          const unsigned int layerIndex = z + (ChunkSize * (y + (ChunkSize * x)));
+     *  
+     *          rows[rowIndex / ChunkSize] |= (1ULL << (rowIndex % ChunkSize));
+     *          columns[columnIndex / ChunkSize] |= (1ULL << (columnIndex % ChunkSize));
+     *          layers[layerIndex / ChunkSize] |= (1ULL << (layerIndex % ChunkSize));
+     *        }
+     *      }
      */
     uint32_t rows[MaskLength] = {};
     uint32_t columns[MaskLength] = {};
     uint32_t layers[MaskLength] = {};
 
-    for (size_t x = 0; x < ChunkSize; x++)
-      for (size_t y = 0; y < ChunkSize; y++)
-        for (size_t z = 0; z < ChunkSize; z++)
-        {
-          const Voxel::Voxel &voxel = chunk.get({x, y, z});
-
-          if (voxel.isSolid())
-          {
-            const unsigned int rowIndex = x + (ChunkSize * (y + (ChunkSize * z)));
-            const unsigned int columnIndex = y + (ChunkSize * (x + (ChunkSize * z)));
-            const unsigned int layerIndex = z + (ChunkSize * (y + (ChunkSize * x)));
-
-            rows[rowIndex / ChunkSize] |= (1ULL << (rowIndex % ChunkSize));
-            columns[columnIndex / ChunkSize] |= (1ULL << (columnIndex % ChunkSize));
-            layers[layerIndex / ChunkSize] |= (1ULL << (layerIndex % ChunkSize));
-          }
-        }
+    std::memcpy(rows, chunk.getRows(), sizeof(rows));
+    std::memcpy(columns, chunk.getColumns(), sizeof(columns));
+    std::memcpy(layers, chunk.getLayers(), sizeof(layers));
 
     /**
      * Cull meshing, ~0.13ms slower than greedy meshing
-     * 
+     *
      * CullMesh(coord, vertices, columns, rows, layers);
      */
 

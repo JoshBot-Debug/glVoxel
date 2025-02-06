@@ -5,8 +5,6 @@
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Model.h"
-// #include "World/Chunk.h"
-// #include "World/ChunkManager.h"
 #include "World/VoxelManager.h"
 
 #include <iostream>

@@ -41,14 +41,12 @@ namespace Voxel
     {
       vertices.clear();
 
-      Chunk &chunk = chunks.at({0, 0, 0});
+      std::thread t([this, vertices]()
+                    { BENCHMARK("greedyMesh()", [this, vertices]() mutable
+                                { for (auto &[coord, chunk] : this->chunks)
+                                    GreedyMesh::Chunk(coord, chunk, vertices); }, 1000); });
 
-      // std::thread t([this, vertices]()
-      //               { BENCHMARK("generateVertexBuffer()", [this, vertices]() mutable
-      //                           { for (auto &[coord, chunk] : this->chunks)
-      //                               GreedyMesh::Chunk(coord, chunk, vertices); }, 1000); });
-
-      // t.detach();
+      t.detach();
 
       for (auto &[coord, chunk] : chunks)
         GreedyMesh::Chunk(coord, chunk, vertices);
