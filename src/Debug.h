@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <chrono>
+#include <thread>
 
 #define LOG(...) Log(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define BENCHMARK(...) Benchmark(__VA_ARGS__)

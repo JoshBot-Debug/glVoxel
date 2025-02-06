@@ -9,13 +9,14 @@
 #include "GreedyMesh.h"
 #include "Utility.h"
 #include "Engine/Types.h"
+#include "Debug.h"
 
 namespace Voxel
 {
   class Manager
   {
   public:
-    static constexpr const uint32_t CHUNKS = 1;
+    static constexpr const uint32_t CHUNKS = 8;
 
   private:
     std::unordered_map<glm::ivec3, Chunk, IVec3Hash> chunks;
@@ -39,7 +40,16 @@ namespace Voxel
     void greedyMesh(std::vector<Vertex> &vertices)
     {
       vertices.clear();
-      
+
+      Chunk &chunk = chunks.at({0, 0, 0});
+
+      // std::thread t([this, vertices]()
+      //               { BENCHMARK("generateVertexBuffer()", [this, vertices]() mutable
+      //                           { for (auto &[coord, chunk] : this->chunks)
+      //                               GreedyMesh::Chunk(coord, chunk, vertices); }, 1000); });
+
+      // t.detach();
+
       for (auto &[coord, chunk] : chunks)
         GreedyMesh::Chunk(coord, chunk, vertices);
     }

@@ -74,7 +74,6 @@ public:
       {
         float n = heightMap.GetValue(x, z);
         unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS) / 2)));
-        std::cout << z << " " << x << " " << height << std::endl;
         for (size_t y = 0; y < height; y++)
           voxels.set({x, y, z}, Voxel::Type::GRASS);
       }
