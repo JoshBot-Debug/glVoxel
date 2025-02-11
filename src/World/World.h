@@ -51,31 +51,31 @@ public:
     voxels.clear();
 
     // fill();
-    // fillSphere();
+    fillSphere();
     // fillAlternate();
 
-    noise::module::Perlin perlin;
-    perlin.SetSeed(static_cast<int>(std::time(0)));
+    // noise::module::Perlin perlin;
+    // perlin.SetSeed(static_cast<int>(std::time(0)));
 
-    utils::NoiseMap heightMap;
-    utils::NoiseMapBuilderPlane heightMapBuilder;
+    // utils::NoiseMap heightMap;
+    // utils::NoiseMapBuilderPlane heightMapBuilder;
 
-    heightMapBuilder.SetSourceModule(perlin);
-    heightMapBuilder.SetDestNoiseMap(heightMap);
-    heightMapBuilder.SetDestSize(Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS, Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS);
-    heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
-    heightMapBuilder.Build();
+    // heightMapBuilder.SetSourceModule(perlin);
+    // heightMapBuilder.SetDestNoiseMap(heightMap);
+    // heightMapBuilder.SetDestSize(Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
+    // heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
+    // heightMapBuilder.Build();
 
-    for (int z = 0; z < Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS; ++z)
-    {
-      for (int x = 0; x < Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS; ++x)
-      {
-        float n = heightMap.GetValue(x, z);
-        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS) / 2)));
-        for (size_t y = 0; y < height; y++)
-          voxels.set({x, y, z}, Voxel::Type::GRASS);
-      }
-    }
+    // for (int z = 0; z < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++z)
+    // {
+    //   for (int x = 0; x < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++x)
+    //   {
+    //     float n = heightMap.GetValue(x, z);
+    //     unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks) / 2)));
+    //     for (size_t y = 0; y < height; y++)
+    //       voxels.set({x, y, z}, Voxel::Type::GRASS);
+    //   }
+    // }
 
     voxels.greedyMesh(vertices);
     setBuffer();
@@ -83,7 +83,7 @@ public:
 
   void fillAlternate()
   {
-    const int size = Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS;
+    const int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
     for (size_t z = 0; z < size; z += 2)
       for (size_t x = 0; x < size; x += 2)
         for (size_t y = 0; y < size; y += 2)
@@ -92,7 +92,7 @@ public:
 
   void fill()
   {
-    const int size = Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS;
+    const int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
     for (size_t z = 0; z < size; z++)
       for (size_t x = 0; x < size; x++)
         for (size_t y = 0; y < size; y++)
@@ -101,7 +101,7 @@ public:
 
   void fillSphere()
   {
-    const unsigned int size = Voxel::Chunk::SIZE * Voxel::Manager::CHUNKS;
+    const unsigned int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
     const glm::ivec3 center(size / 2);
     int radius = std::min({center.x, center.y, center.z}) - 1.0f;
 

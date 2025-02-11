@@ -16,7 +16,7 @@ namespace Voxel
   class Manager
   {
   public:
-    static constexpr const uint32_t CHUNKS = 8;
+    static constexpr const uint32_t Chunks = 2;
 
   private:
     std::unordered_map<glm::ivec3, Chunk, IVec3Hash> chunks;
@@ -24,7 +24,7 @@ namespace Voxel
   public:
     void set(const glm::ivec3 &position, const Type &type)
     {
-      chunks[{std::floor(position.x / Chunk::SIZE), std::floor(position.y / Chunk::SIZE), std::floor(position.z / Chunk::SIZE)}].set({position.x % Chunk::SIZE, position.y % Chunk::SIZE, position.z % Chunk::SIZE}, Type::GRASS);
+      chunks[{std::floor(position.x / Chunk::ChunkSize), std::floor(position.y / Chunk::ChunkSize), std::floor(position.z / Chunk::ChunkSize)}].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, Type::GRASS);
     }
 
     void clear()
@@ -43,13 +43,32 @@ namespace Voxel
 
       std::thread t([this, vertices]()
                     { BENCHMARK("greedyMesh()", [this, vertices]() mutable
-                                { for (auto &[coord, chunk] : this->chunks)
-                                    GreedyMesh::Chunk(coord, chunk, vertices); }, 1000); });
+                                { for (auto &[coord, chunk] : chunks) {
+                                  std::vector<Chunk *> neighbours = {
+                                      chunks.contains(coord + glm::ivec3(1, 0, 0)) ? &chunks.at(coord + glm::ivec3(1, 0, 0)) : nullptr,   // Right
+                                      chunks.contains(coord + glm::ivec3(-1, 0, 0)) ? &chunks.at(coord + glm::ivec3(-1, 0, 0)) : nullptr, // Left
+                                      chunks.contains(coord + glm::ivec3(0, 1, 0)) ? &chunks.at(coord + glm::ivec3(0, 1, 0)) : nullptr,   // Top
+                                      chunks.contains(coord + glm::ivec3(0, -1, 0)) ? &chunks.at(coord + glm::ivec3(0, -1, 0)) : nullptr, // Bottom
+                                      chunks.contains(coord + glm::ivec3(0, 0, 1)) ? &chunks.at(coord + glm::ivec3(0, 0, 1)) : nullptr,   // Front
+                                      chunks.contains(coord + glm::ivec3(0, 0, -1)) ? &chunks.at(coord + glm::ivec3(0, 0, -1)) : nullptr  // Back
+                                  };
+                                  GreedyMesh::Chunk(coord, chunk, vertices, neighbours);
+                                } }, 100); });
 
       t.detach();
 
       for (auto &[coord, chunk] : chunks)
-        GreedyMesh::Chunk(coord, chunk, vertices);
+      {
+        std::vector<Chunk *> neighbours = {
+            chunks.contains(coord + glm::ivec3(1, 0, 0)) ? &chunks.at(coord + glm::ivec3(1, 0, 0)) : nullptr,   // Right
+            chunks.contains(coord + glm::ivec3(-1, 0, 0)) ? &chunks.at(coord + glm::ivec3(-1, 0, 0)) : nullptr, // Left
+            chunks.contains(coord + glm::ivec3(0, 1, 0)) ? &chunks.at(coord + glm::ivec3(0, 1, 0)) : nullptr,   // Top
+            chunks.contains(coord + glm::ivec3(0, -1, 0)) ? &chunks.at(coord + glm::ivec3(0, -1, 0)) : nullptr, // Bottom
+            chunks.contains(coord + glm::ivec3(0, 0, 1)) ? &chunks.at(coord + glm::ivec3(0, 0, 1)) : nullptr,   // Front
+            chunks.contains(coord + glm::ivec3(0, 0, -1)) ? &chunks.at(coord + glm::ivec3(0, 0, -1)) : nullptr  // Back
+        };
+        GreedyMesh::Chunk(coord, chunk, vertices, neighbours);
+      }
     }
   };
 }
