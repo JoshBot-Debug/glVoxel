@@ -13,6 +13,21 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "World/World.h"
 
+struct Material
+{
+  glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
+  glm::vec3 specular = glm::vec3(0.05f, 0.05f, 0.05f);
+  float shininess = 8.0f;
+};
+
+struct Light
+{
+  glm::vec3 position = glm::vec3(16.5f, 16.5f, -5.0f);
+  glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
+  glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+  glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+};
+
 class EngineControlPanel
 {
 private:
@@ -25,6 +40,9 @@ private:
 
 public:
   std::vector<unsigned int> indices;
+
+  Light light;
+  Material material;
 
   void addModel(Model *model)
   {
@@ -46,21 +64,86 @@ public:
     this->resource = resource;
   }
 
-  void shaderMenu()
+  void generalMenu()
   {
-    ImGui::Begin("Shaders");
+    ImGui::Begin("General");
+
+    ImGui::SeparatorText("Shaders");
 
     if (ImGui::Button("Recompile shaders"))
       resource->getShader().recompile();
 
-   if (ImGui::Button("Generate terrain"))
+    ImGui::SeparatorText("Terrain");
+
+    if (ImGui::TreeNode("Draw mode"))
+    {
+      if (ImGui::Selectable("Draw Traingles", world->drawMode == DrawMode::TRIANGLES))
+        world->drawMode = DrawMode::TRIANGLES;
+
+      if (ImGui::Selectable("Draw Lines", world->drawMode == DrawMode::LINES))
+        world->drawMode = DrawMode::LINES;
+      ImGui::TreePop();
+    }
+
+    ImGui::SeparatorText("Mesh Generator");
+
+    ImGui::SeparatorText("Primitives");
+
+    if (ImGui::Button("Generate sphere"))
+      world->fillSphere();
+
+    if (ImGui::Button("Generate cube"))
+      world->fill();
+
+    ImGui::SeparatorText("Terrain");
+
+    if (ImGui::Button("Generate terrain"))
       world->generateTerrain();
+
+    ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
+    ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
+
+    ImGui::DragFloat("Lower X", reinterpret_cast<float *>(&world->terrain.lowerXBound), 0.01f);
+    ImGui::DragFloat("Upper X", reinterpret_cast<float *>(&world->terrain.upperXBound), 0.01f);
+    ImGui::DragFloat("Lower Z", reinterpret_cast<float *>(&world->terrain.lowerZBound), 0.01f);
+    ImGui::DragFloat("Upper Z", reinterpret_cast<float *>(&world->terrain.upperZBound), 0.01f);
+
+    ImGui::SeparatorText("Material");
+
+    ImGui::DragFloat("Diffuse X", &material.diffuse.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Diffuse Y", &material.diffuse.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Diffuse Z", &material.diffuse.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Specular X", &material.specular.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Specular Y", &material.specular.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Specular Z", &material.specular.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Shininess", &material.shininess, 0.1f, 0.0f, 128.0f);
+
+    ImGui::SeparatorText("Light");
+
+    ImGui::DragFloat("Light Position X", &light.position.x, 0.1f, 0.0f);
+    ImGui::DragFloat("Light Position Y", &light.position.y, 0.1f, 0.0f);
+    ImGui::DragFloat("Light Position Z", &light.position.z, 0.1f, 0.0f);
+
+    ImGui::DragFloat("Light Specular X", &light.specular.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Specular Y", &light.specular.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Specular Z", &light.specular.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Light Ambient X", &light.ambient.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Ambient Y", &light.ambient.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Ambient Z", &light.ambient.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Light Diffuse X", &light.diffuse.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Diffuse Y", &light.diffuse.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Light Diffuse Z", &light.diffuse.z, 0.01f, 0.0f);
 
     ImGui::End();
   }
 
   void instanceMenu()
   {
+    ImGui::ShowDemoWindow();
 
     for (const auto &model : resource->getModels())
     {
@@ -223,7 +306,7 @@ public:
 
     this->stats();
 
-    this->shaderMenu();
+    this->generalMenu();
 
     this->cameraMenu();
 

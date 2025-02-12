@@ -1,5 +1,4 @@
 #include "Texture2D.h"
-
 #include "Debug.h"
 #include <stb/stb_image.h>
 

@@ -16,6 +16,25 @@
 #include <chrono>
 #include <thread>
 
+struct TerrainProperties
+{
+  double lowerXBound = 1.0;
+  double upperXBound = 2.0;
+  double lowerZBound = 1.0;
+  double upperZBound = 2.0;
+
+  int destWidth;
+  int destHeight;
+
+  TerrainProperties(int destWidth, int destHeight) : destWidth(destWidth), destHeight(destHeight) {}
+};
+
+enum class DrawMode : GLenum
+{
+  TRIANGLES = GL_TRIANGLES,
+  LINES = GL_LINES,
+};
+
 class World
 {
 private:
@@ -23,6 +42,10 @@ private:
   VertexArray vao;
   Voxel::Manager voxels;
   std::vector<Vertex> vertices;
+
+public:
+  TerrainProperties terrain{Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks};
+  DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
   World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
@@ -34,8 +57,7 @@ public:
   void draw()
   {
     vao.bind();
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glDrawArrays(GL_LINES, 0, vertices.size());
+    glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
   }
 
   void setBuffer()
@@ -50,57 +72,51 @@ public:
   {
     voxels.clear();
 
-    // fill();
-    fillSphere();
-    // fillAlternate();
+    noise::module::Perlin perlin;
+    perlin.SetSeed(static_cast<int>(std::time(0)));
 
-    // noise::module::Perlin perlin;
-    // perlin.SetSeed(static_cast<int>(std::time(0)));
+    utils::NoiseMap heightMap;
+    utils::NoiseMapBuilderPlane heightMapBuilder;
 
-    // utils::NoiseMap heightMap;
-    // utils::NoiseMapBuilderPlane heightMapBuilder;
+    heightMapBuilder.SetSourceModule(perlin);
+    heightMapBuilder.SetDestNoiseMap(heightMap);
+    heightMapBuilder.SetDestSize(terrain.destWidth, terrain.destHeight);
+    heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
+    heightMapBuilder.Build();
 
-    // heightMapBuilder.SetSourceModule(perlin);
-    // heightMapBuilder.SetDestNoiseMap(heightMap);
-    // heightMapBuilder.SetDestSize(Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
-    // heightMapBuilder.SetBounds(1.0, 2.0, 1.0, 2.0);
-    // heightMapBuilder.Build();
-
-    // for (int z = 0; z < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++z)
-    // {
-    //   for (int x = 0; x < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++x)
-    //   {
-    //     float n = heightMap.GetValue(x, z);
-    //     unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks) / 2)));
-    //     for (size_t y = 0; y < height; y++)
-    //       voxels.set({x, y, z}, Voxel::Type::GRASS);
-    //   }
-    // }
+    for (int z = 0; z < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++z)
+    {
+      for (int x = 0; x < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++x)
+      {
+        float n = heightMap.GetValue(x, z);
+        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks) / 2)));
+        for (size_t y = 0; y < height; y++)
+          voxels.set({x, y, z}, Voxel::Type::GRASS);
+      }
+    }
 
     voxels.greedyMesh(vertices);
     setBuffer();
   }
 
-  void fillAlternate()
-  {
-    const int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
-    for (size_t z = 0; z < size; z += 2)
-      for (size_t x = 0; x < size; x += 2)
-        for (size_t y = 0; y < size; y += 2)
-          voxels.set({x, y, z}, Voxel::Type::GRASS);
-  }
-
   void fill()
   {
+    voxels.clear();
+
     const int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
     for (size_t z = 0; z < size; z++)
       for (size_t x = 0; x < size; x++)
         for (size_t y = 0; y < size; y++)
           voxels.set({x, y, z}, Voxel::Type::GRASS);
+
+    voxels.greedyMesh(vertices);
+    setBuffer();
   }
 
   void fillSphere()
   {
+    voxels.clear();
+
     const unsigned int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
     const glm::ivec3 center(size / 2);
     int radius = std::min({center.x, center.y, center.z}) - 1.0f;
@@ -118,5 +134,8 @@ public:
           if (distance <= radius)
             voxels.set({x, y, z}, Voxel::Type::GRASS);
         }
+
+    voxels.greedyMesh(vertices);
+    setBuffer();
   }
 };

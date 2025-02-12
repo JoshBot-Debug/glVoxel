@@ -3,8 +3,6 @@
 #include "Window/Time.h"
 
 #include "Engine/Camera/PerspectiveCamera.h"
-#include "Engine/Light/PointLight.h"
-#include "Engine/Light/DirectionalLight.h"
 #include "Engine/Shader.h"
 #include "Engine/Texture2D.h"
 
@@ -25,30 +23,16 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
 
   Shader &shader = resource.getShader();
   shader.create({
-      .name = "default",
+      .name = "voxel",
       .vertex = "src/Shaders/voxel.vs",
       .fragment = "src/Shaders/voxel.fs",
   });
 
-  uint64_t a = std::bitset<32>(0b10000000000000000000000000000000).to_ullong();
-
-  std::cout << std::bitset<32>((a & ~(1ULL << 31))) << std::endl;
-  uint64_t m1 = std::bitset<64>(0b11111111111111111111111111111111).to_ullong();
-  uint64_t m2 = std::bitset<64>(0b11111111111111111111111111111111).to_ullong();
-
-  // Shift m1 left and set its LSB to the MSB of m2
-  m1 = (m1 << 1) | (((m2 >> 0) & 1ULL) << 33);
-  m2 = (m2 << 1) | ((m1 >> 32) & 1ULL);
-
-  std::cout << "m1: " << std::bitset<64>(m1) << std::endl;
-  std::cout << "m2: " << std::bitset<64>(m2) << std::endl;
-  std::cout << "mx: " << std::bitset<64>() << std::endl;
-
-  // std::thread t([this]()
-  //               { BENCHMARK("generateVertexBuffer()", [this]()
-  //                           { this->world.update(); }, 1000); });
-
-  // t.join();
+  shader.create({
+      .name = "skybox",
+      .vertex = "src/Shaders/skybox.vs",
+      .fragment = "src/Shaders/skybox.fs",
+  });
 
   open();
 }
@@ -76,20 +60,30 @@ void App::onDraw()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   Shader &shader = resource.getShader();
-  shader.bind("default");
+
+  /**
+   * Skybox
+   */
+  skybox.draw(camera, shader, "skybox");
+
+  /**
+   * Voxels
+   */
+  shader.bind("voxel");
   shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
   shader.setUniformMatrix4fv("u_Projection", camera.getProjectionMatrix());
 
   shader.setUniform3f("u_CameraPosition", camera.position);
 
-  shader.setUniform3f("u_Material.diffuse", 1.0f, 0.5f, 0.0f);
-  shader.setUniform3f("u_Material.specular", 0.5f, 0.5f, 0.5f);
-  shader.setUniform1f("u_Material.shininess", 32.0f);
+  shader.setUniform3f("u_Material.diffuse", controlPanel.material.diffuse.x, controlPanel.material.diffuse.y, controlPanel.material.diffuse.z);
+  shader.setUniform3f("u_Material.specular", controlPanel.material.specular.x, controlPanel.material.specular.y, controlPanel.material.specular.z);
+  shader.setUniform1f("u_Material.shininess", controlPanel.material.shininess);
 
-  shader.setUniform3f("u_Light.position", 16.5f, 16.5f, -5.0f);
-  shader.setUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
-  shader.setUniform3f("u_Light.ambient", 0.2f, 0.2f, 0.2f);
-  shader.setUniform3f("u_Light.diffuse", 1.0f, 1.0f, 1.0f);
+  // Set light properties in the shader
+  shader.setUniform3f("u_Light.position", controlPanel.light.position.x, controlPanel.light.position.y, controlPanel.light.position.z);
+  shader.setUniform3f("u_Light.specular", controlPanel.light.specular.x, controlPanel.light.specular.y, controlPanel.light.specular.z);
+  shader.setUniform3f("u_Light.ambient", controlPanel.light.ambient.x, controlPanel.light.ambient.y, controlPanel.light.ambient.z);
+  shader.setUniform3f("u_Light.diffuse", controlPanel.light.diffuse.x, controlPanel.light.diffuse.y, controlPanel.light.diffuse.z);
 
   world.draw();
 

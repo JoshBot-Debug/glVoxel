@@ -118,6 +118,7 @@ void Shader::recompile()
     return;
 
   create(program->shaderProgram, true);
+  uniforms.clear();
   program = nullptr;
 }
 
@@ -147,6 +148,7 @@ void Shader::bind(const std::string &name)
 {
   if (program && programs[name].id == program->id)
     return;
+
   glUseProgram(programs[name].id);
   program = &programs[name];
 }

@@ -47,16 +47,49 @@ private:
     for (uint8_t a = 0; a < ChunkSize; a++)
       for (uint8_t b = 0; b < ChunkSize; b++)
       {
-        const uint64_t pmask = bits[(ChunkSize * (a + (ChunkSize * b))) / ChunkSize];
+        /**
+         * Get the bitmask at index a,b
+         * The padding mask has an extra bit as the LSB and MSB.
+         * The MSB is the LSB of the pervious neighbour chunk
+         * The LSB is the MSB of the next neighbour chunk
+         * The first & last will always be a zero because there is no neighbour next to them.
+         * 0...1 => 1...1 => 1...0
+         */
+        const uint64_t paddingMask = bits[(ChunkSize * (a + (ChunkSize * b))) / ChunkSize];
 
-        const uint32_t mask = (pmask >> 1) & 0xFFFFFFFF;
+        /**
+         * Shift right to remove the MSB padding bit and extract the following 32bits into a new mask
+         * This is the actual mask we will use for the height and width
+         */
+        const uint32_t mask = (paddingMask >> 1) & 0xFFFFFFFF;
+
+        /**
+         * Remove all the bits other than the start face
+         * 11100111100011 => 00100000100001
+         */
         uint32_t startMask = mask & ~(mask << 1);
+
+        /**
+         * Likewise remove all the bits other than the end face
+         * 11100111100011 => 10000100000010
+         */
         uint32_t endMask = mask & ~(mask >> 1);
 
-        if ((pmask >> 0) & 1)
+        /**
+         * Check the padding mask, if the bit at 0 index is on
+         * turn off the MSB of the start mask
+         */
+        if ((paddingMask >> 0) & 1)
           startMask &= ~(1ULL << 0);
 
-        if ((pmask >> 33) & 1)
+        /**
+         * Check the padding mask, if the bit at 33 index is on
+         * turn off the LSB of the end mask
+         * 
+         * This is done in order to not set the height & width of the face at the end of the chunk if the neighbour is the same
+         * To avoid creating faces inbetween chunks
+         */
+        if ((paddingMask >> 33) & 1)
           endMask &= ~(1ULL << 31);
 
         SetWidthHeight(a, b, startMask, widthStart, heightStart);
@@ -98,7 +131,6 @@ private:
         widthMasks[index] &= ~(((1ULL << (int)widthSize) - 1) << widthOffset);
       }
 
-      // type
       switch (type)
       {
       case FaceType::TOP:
@@ -223,7 +255,6 @@ public:
             layers[layerIndex / ChunkSize] |= (1ULL << (layerIndex % ChunkSize));
           }
         }
-
 
     /**
      * Here we capture the padding bit
