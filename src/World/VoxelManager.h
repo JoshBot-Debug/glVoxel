@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <unordered_map>
-#include <execution>
 
 #include <glm/glm.hpp>
 
@@ -36,11 +35,6 @@ namespace Voxel
     void clear(int x, int y, int z)
     {
       chunks[{x, y, z}].clear();
-    }
-
-    void singleThread(std::vector<Vertex> &vertices)
-    {
-
     }
 
     void greedyMesh(std::vector<Vertex> &vertices)
