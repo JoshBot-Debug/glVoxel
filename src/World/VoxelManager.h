@@ -5,6 +5,9 @@
 
 #include <glm/glm.hpp>
 
+#include <algorithm>
+#include <execution>
+
 #include "Voxel.h"
 #include "GreedyMesh.h"
 #include "Utility.h"
@@ -16,7 +19,7 @@ namespace Voxel
   class Manager
   {
   public:
-    static constexpr const uint32_t Chunks = 8;
+    static constexpr const uint32_t Chunks = 32;
 
   private:
     std::unordered_map<glm::ivec3, Chunk, IVec3Hash> chunks;

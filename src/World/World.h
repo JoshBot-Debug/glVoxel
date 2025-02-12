@@ -44,7 +44,7 @@ private:
   std::vector<Vertex> vertices;
 
 public:
-  TerrainProperties terrain{Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks};
+  TerrainProperties terrain{Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
@@ -72,6 +72,8 @@ public:
   {
     voxels.clear();
 
+    auto start = std::chrono::high_resolution_clock::now(); // Start timing
+
     noise::module::Perlin perlin;
     perlin.SetSeed(static_cast<int>(std::time(0)));
 
@@ -84,6 +86,13 @@ public:
     heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
     heightMapBuilder.Build();
 
+    auto end = std::chrono::high_resolution_clock::now(); // End timing
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Heightmap generation took: " << duration.count() << " seconds\n";
+
+    auto start2 = std::chrono::high_resolution_clock::now(); // Start timing
+
     for (int z = 0; z < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++z)
     {
       for (int x = 0; x < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++x)
@@ -95,7 +104,18 @@ public:
       }
     }
 
+    auto end2 = std::chrono::high_resolution_clock::now(); // End timing
+
+    std::chrono::duration<double> duration2 = end2 - start2;
+    std::cout << "Inserting took: " << duration2.count() << " seconds\n";
+
+    auto start1 = std::chrono::high_resolution_clock::now(); // Start timing
     voxels.greedyMesh(vertices);
+    auto end1 = std::chrono::high_resolution_clock::now(); // End timing
+
+    std::chrono::duration<double> duration1 = end1 - start1;
+    std::cout << "Greedy meshing took: " << duration1.count() << " seconds\n";
+
     setBuffer();
   }
 

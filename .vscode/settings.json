@@ -78,7 +78,8 @@
     "filesystem": "cpp",
     "charconv": "cpp",
     "format": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "execution": "cpp"
   },
   "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }
