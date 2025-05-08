@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <bitset>
+#include <cstring>
 
 #include <glm/glm.hpp>
 
