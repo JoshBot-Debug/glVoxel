@@ -216,7 +216,7 @@ private:
   }
 
 public:
-  static void Chunk(glm::ivec3 coord, Voxel::Chunk &chunk, std::vector<Vertex> &vertices, std::vector<Voxel::Chunk *> &neighbours)
+  static void Chunk(const glm::ivec3 &coord, Voxel::Chunk &chunk, std::vector<Vertex> &vertices, std::vector<Voxel::Chunk *> &neighbours)
   {
     /**
      * Generate the bit mask for rows, columns and layers.

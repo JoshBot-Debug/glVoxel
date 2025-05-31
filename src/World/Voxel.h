@@ -35,7 +35,7 @@ namespace Voxel
       return position.x + (ChunkSize * (position.y + (ChunkSize * position.z)));
     }
 
-  public:
+  public:    
     Voxel &get(const glm::ivec3 &position)
     {
       return grid[index(position)];

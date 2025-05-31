@@ -141,6 +141,8 @@ public:
     const glm::ivec3 center(size / 2);
     int radius = std::min({center.x, center.y, center.z}) - 1.0f;
 
+    auto start1 = std::chrono::high_resolution_clock::now();
+
     for (size_t z = 0; z < size; z++)
       for (size_t x = 0; x < size; x++)
         for (size_t y = 0; y < size; y++)
@@ -155,7 +157,17 @@ public:
             voxels.set({x, y, z}, Voxel::Type::GRASS);
         }
 
+    auto end1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration1 = end1 - start1;
+    std::cout << "Inserting took: " << duration1.count() << " seconds\n";
+
+    auto start2 = std::chrono::high_resolution_clock::now();
     voxels.greedyMesh(vertices);
+
+    auto end2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration2 = end2 - start2;
+    std::cout << "Greedy Meshing took: " << duration2.count() << " seconds\n";
+
     setBuffer();
   }
 };

@@ -216,7 +216,7 @@ public:
     if (io.WantCaptureKeyboard || io.WantCaptureMouse)
       return;
 
-    float speed = 15.0f;
+    float speed = 30.0f;
     double delta = Time::GetDeltaTime();
 
     glm::vec3 translate(0.0f);
