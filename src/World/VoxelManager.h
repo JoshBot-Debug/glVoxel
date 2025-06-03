@@ -24,8 +24,6 @@ namespace Voxel
   //   static constexpr const uint32_t Chunks = 2;
 
   // private:
-  //   std::ofstream logfile{"log.txt", std::ios::app};
-
   //   std::vector<Chunk> chunks{Chunks * Chunks * Chunks};
 
   //   int index(int x, int y, int z)
@@ -36,16 +34,9 @@ namespace Voxel
   // public:
   //   void set(const glm::ivec3 &position, const Type &type)
   //   {
-  //     // const int cx = static_cast<int>(std::floor(position.x / Chunk::ChunkSize));
-  //     // const int cy = static_cast<int>(std::floor(position.y / Chunk::ChunkSize));
-  //     // const int cz = static_cast<int>(std::floor(position.z / Chunk::ChunkSize));
-
-  //     if (logfile.is_open())
-  //     {
-  //       logfile << "i: " << index(cx, cy, cz) << " ";
-  //       logfile << "p: " << position.x << " " << position.y << " " << position.z << " ";
-  //       logfile << "c: " << cx << " " << cy << " " << cz << std::endl;
-  //     }
+  //     const int cx = static_cast<int>(std::floor(position.x / Chunk::ChunkSize));
+  //     const int cy = static_cast<int>(std::floor(position.y / Chunk::ChunkSize));
+  //     const int cz = static_cast<int>(std::floor(position.z / Chunk::ChunkSize));
 
   //     chunks[index(cx, cy, cz)].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, type);
   //   }
@@ -76,30 +67,16 @@ namespace Voxel
   //     {
   //       Chunk &chunk = chunks.at(i);
 
-  //       // Top
-  //       // 2[0,1,0] 3[1,1,0]
-  //       // 6[0,1,1] 7[1,1,1]
+  //       glm::ivec3 coord = {std::floor(i % Chunks), std::floor((i / Chunks) % Chunks), std::floor(i / (Chunks * Chunks))};
 
-  //       // Bottom
-  //       // 0[0,0,0] 1[1,0,0]
-  //       // 4[0,0,1] 5[1,0,1]
+  //       int right = i + 1;
+  //       int left = i - 1;
+  //       int top = i + Chunks;
+  //       int bottom = i - Chunks;
+  //       int front = i + (Chunks * Chunks);
+  //       int back = i - (Chunks * Chunks);
 
-  //       // In Order
-  //       // 0[0,0,0] 1[1,0,0]
-  //       // 2[0,1,0] 3[1,1,0]
-  //       // 4[0,0,1] 5[1,0,1]
-  //       // 6[0,1,1] 7[1,1,1]
-
-  //       glm::ivec3 coord = {i % Chunks, std::floor((i / Chunks) % Chunks), std::floor(i / (Chunks * Chunks))};
-
-  //       int right = index(coord.x + 1, coord.y, coord.z);
-  //       int left = index(coord.x - 1, coord.y, coord.z);
-  //       int top = index(coord.x, coord.y + 1, coord.z);
-  //       int bottom = index(coord.x, coord.y - 1, coord.z);
-  //       int front = index(coord.x, coord.y, coord.z + 1);
-  //       int back = index(coord.x, coord.y, coord.z - 1);
-
-  //       std::cout << index(coord.x, coord.y, coord.z) << " " << coord.x << " " << coord.y << " " << coord.z << std::endl;
+  //       std::cout << coord.x << " " << coord.y << " " << coord.z << std::endl;
 
   //       std::vector<Chunk *> neighbours = {
   //           (right >= 0 && right < chunks.size()) ? &chunks[right] : nullptr,
@@ -109,13 +86,6 @@ namespace Voxel
   //           (front >= 0 && front < chunks.size()) ? &chunks[front] : nullptr,
   //           (back >= 0 && back < chunks.size()) ? &chunks[back] : nullptr,
   //       };
-
-  //       // std::cout << "right: " << right << " n:" << neighbours[0] << std::endl;
-  //       // std::cout << "left: " << left << " n:" << neighbours[1] << std::endl;
-  //       // std::cout << "top: " << top << " n:" << neighbours[2] << std::endl;
-  //       // std::cout << "bottom: " << bottom << " n:" << neighbours[3] << std::endl;
-  //       // std::cout << "front: " << front << " n:" << neighbours[4] << std::endl;
-  //       // std::cout << "back: " << back << " n:" << neighbours[5] << std::endl;
 
   //       // auto start1 = std::chrono::high_resolution_clock::now();
 
@@ -134,20 +104,29 @@ namespace Voxel
     static constexpr const uint32_t Chunks = 2;
 
   private:
-    // std::unordered_map<glm::ivec3, Chunk, IVec3Hash> chunks;
-    std::unordered_map<int, Chunk> chunks;
+    std::unordered_map<glm::ivec3, Chunk, IVec3Hash> chunks;
+    std::vector<Chunk> lchunks{Chunks * Chunks * Chunks};
 
     int index(int x, int y, int z)
     {
       return x + (Chunks * (y + (Chunks * z)));
     }
 
+    glm::ivec3 position(int index)
+    {
+      return glm::ivec3{index / (Chunks * Chunks), (index / Chunks) % Chunks, index % Chunks};
+    }
+
   public:
     void set(const glm::ivec3 &position, const Type &type)
     {
-      int i = index(position.x / Chunk::ChunkSize, position.y / Chunk::ChunkSize, position.z / Chunk::ChunkSize);
-      // chunks[{std::floor(position.x / Chunk::ChunkSize), std::floor(position.y / Chunk::ChunkSize), std::floor(position.z / Chunk::ChunkSize)}].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, Type::GRASS);
-      chunks[i].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, Type::GRASS);
+      const int cx = static_cast<int>(position.x / Chunk::ChunkSize);
+      const int cy = static_cast<int>(position.y / Chunk::ChunkSize);
+      const int cz = static_cast<int>(position.z / Chunk::ChunkSize);
+
+      lchunks[index(cx, cy, cz)].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, type);
+
+      chunks[{cx, cy, cz}].set({position.x % Chunk::ChunkSize, position.y % Chunk::ChunkSize, position.z % Chunk::ChunkSize}, Type::GRASS);
     }
 
     void clear()
@@ -157,57 +136,64 @@ namespace Voxel
 
     void clear(int x, int y, int z)
     {
-      int i = index(x, y, z);
-      // chunks[{x, y, z}].clear();
-      chunks[i].clear();
+      chunks[{x, y, z}].clear();
     }
 
     void greedyMesh(std::vector<Vertex> &vertices)
     {
       vertices.clear();
 
-      // std::thread t([this, vertices]()
-      //               { BENCHMARK("greedyMesh()", [this, vertices]() mutable
-      //                           { multiThread(vertices); }, 100); });
-
-      // t.detach();
-
-      for (auto &[i, chunk] : chunks)
+      for (auto &[coord, chunk] : chunks)
       {
-        glm::ivec3 coord = {std::floor(i % Chunks), std::floor((i / Chunks) % Chunks), std::floor(i / (Chunks * Chunks))};
-
-        int right = index(coord.x + 1, coord.y, coord.z);
-        int left = index(coord.x - 1, coord.y, coord.z);
-        int top = index(coord.x, coord.y + 1, coord.z);
-        int bottom = index(coord.x, coord.y - 1, coord.z);
-        int front = index(coord.x, coord.y, coord.z + 1);
-        int back = index(coord.x, coord.y, coord.z - 1);
-
         std::vector<Chunk *> neighbours = {
-            chunks.contains(right) ? &chunks.at(right) : nullptr,   // Right
-            chunks.contains(left) ? &chunks.at(left) : nullptr,     // Left
-            chunks.contains(top) ? &chunks.at(top) : nullptr,       // Top
-            chunks.contains(bottom) ? &chunks.at(bottom) : nullptr, // Bottom
-            chunks.contains(front) ? &chunks.at(front) : nullptr,   // Front
-            chunks.contains(back) ? &chunks.at(back) : nullptr      // Back
+            chunks.contains(coord + glm::ivec3(1, 0, 0)) ? &chunks.at(coord + glm::ivec3(1, 0, 0)) : nullptr,   // Right
+            chunks.contains(coord + glm::ivec3(-1, 0, 0)) ? &chunks.at(coord + glm::ivec3(-1, 0, 0)) : nullptr, // Left
+            chunks.contains(coord + glm::ivec3(0, 1, 0)) ? &chunks.at(coord + glm::ivec3(0, 1, 0)) : nullptr,   // Top
+            chunks.contains(coord + glm::ivec3(0, -1, 0)) ? &chunks.at(coord + glm::ivec3(0, -1, 0)) : nullptr, // Bottom
+            chunks.contains(coord + glm::ivec3(0, 0, 1)) ? &chunks.at(coord + glm::ivec3(0, 0, 1)) : nullptr,   // Front
+            chunks.contains(coord + glm::ivec3(0, 0, -1)) ? &chunks.at(coord + glm::ivec3(0, 0, -1)) : nullptr  // Back
         };
 
-        // std::vector<Chunk *> neighbours = {
-        //     chunks.contains(coord + glm::ivec3(1, 0, 0)) ? &chunks.at(coord + glm::ivec3(1, 0, 0)) : nullptr,   // Right
-        //     chunks.contains(coord + glm::ivec3(-1, 0, 0)) ? &chunks.at(coord + glm::ivec3(-1, 0, 0)) : nullptr, // Left
-        //     chunks.contains(coord + glm::ivec3(0, 1, 0)) ? &chunks.at(coord + glm::ivec3(0, 1, 0)) : nullptr,   // Top
-        //     chunks.contains(coord + glm::ivec3(0, -1, 0)) ? &chunks.at(coord + glm::ivec3(0, -1, 0)) : nullptr, // Bottom
-        //     chunks.contains(coord + glm::ivec3(0, 0, 1)) ? &chunks.at(coord + glm::ivec3(0, 0, 1)) : nullptr,   // Front
-        //     chunks.contains(coord + glm::ivec3(0, 0, -1)) ? &chunks.at(coord + glm::ivec3(0, 0, -1)) : nullptr  // Back
-        // };
+        int i = index(coord.x, coord.y, coord.z);
 
-        auto start1 = std::chrono::high_resolution_clock::now();
+        // int right = i + 1;
+        // int left = i - 1;
+        // int top = i + Chunks;
+        // int bottom = i - Chunks;
+        // int front = i + (Chunks * Chunks);
+        // int back = i - (Chunks * Chunks);
 
-        GreedyMesh::Chunk(coord, chunk, vertices, neighbours);
+        int right = (coord.x + 1 >= Chunks) ? -1 : i + 1;
+        int left = (coord.x - 1 < 0) ? -1 : i - 1;
+        int top = (coord.y + 1 >= Chunks) ? -1 : i + Chunks;
+        int bottom = (coord.y - 1 < 0) ? -1 : i - Chunks;
+        int front = (coord.z + 1 >= Chunks) ? -1 : i + (Chunks * Chunks);
+        int back = (coord.z - 1 < 0) ? -1 : i - (Chunks * Chunks);
 
-        auto end1 = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> duration1 = end1 - start1;
-        std::cout << "GreedyMesh::Chunk took: " << duration1.count() << " seconds\n";
+        glm::ivec3 icoord = position(i);
+
+        std::cout << coord.x << " " << coord.y << " " << coord.z << std::endl;
+        std::cout << right << " " << lchunks.size() << " " << icoord.x << " " << icoord.y << " " << icoord.z << std::endl;
+
+        std::vector<Chunk *> lneighbours = {
+            (right > -1) ? &lchunks[right] : nullptr,
+            (left >= 0 && left < lchunks.size()) ? &lchunks[left] : nullptr,
+            (top >= 0 && top < lchunks.size()) ? &lchunks[top] : nullptr,
+            (bottom >= 0 && bottom < lchunks.size()) ? &lchunks[bottom] : nullptr,
+            (front >= 0 && front < lchunks.size()) ? &lchunks[front] : nullptr,
+            (back >= 0 && back < lchunks.size()) ? &lchunks[back] : nullptr,
+        };
+
+        std::cout << neighbours[0] << " " << lneighbours[0] << std::endl;
+
+        // auto start1 = std::chrono::high_resolution_clock::now();
+
+        // GreedyMesh::Chunk(coord, chunk, vertices, neighbours);
+        GreedyMesh::Chunk(coord, chunk, vertices, lneighbours);
+
+        // auto end1 = std::chrono::high_resolution_clock::now();
+        // std::chrono::duration<double> duration1 = end1 - start1;
+        // std::cout << "GreedyMesh::Chunk took: " << duration1.count() << " seconds\n";
       }
     }
   };
