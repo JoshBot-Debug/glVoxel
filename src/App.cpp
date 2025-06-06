@@ -17,8 +17,8 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
   controlPanel.setResourceManager(&resource);
   controlPanel.setWorld(&world);
 
-  camera.setPosition(4.0f, 3.0f, 8.0f);
-  camera.setRotation(-25.0f, 0.0f, 0.0f);
+  camera.setPosition(-21.0f, 11.0f, -41.0f);
+  camera.setRotation(0.0f, 133.0f, 0.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
 
   Shader &shader = resource.getShader();

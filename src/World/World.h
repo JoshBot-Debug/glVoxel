@@ -5,7 +5,7 @@
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Model.h"
-#include "World/VoxelManager.h"
+#include "World/SparseVoxelOctree.h"
 
 #include <iostream>
 #include <noise/noise.h>
@@ -40,11 +40,11 @@ class World
 private:
   Buffer vbo;
   VertexArray vao;
-  Voxel::Manager voxels;
+  Voxel::SparseVoxelOctree tree{256};
   std::vector<Vertex> vertices;
 
 public:
-  TerrainProperties terrain{Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks, Voxel::Chunk::ChunkSize *Voxel::Manager::Chunks};
+  TerrainProperties terrain{tree.getSize(), tree.getSize()};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
@@ -70,7 +70,7 @@ public:
 
   void generateTerrain()
   {
-    voxels.clear();
+    tree.clear();
 
     auto start = std::chrono::high_resolution_clock::now(); // Start timing
 
@@ -93,14 +93,14 @@ public:
 
     auto start2 = std::chrono::high_resolution_clock::now(); // Start timing
 
-    for (int z = 0; z < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++z)
+    for (int z = 0; z < tree.getSize(); ++z)
     {
-      for (int x = 0; x < Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks; ++x)
+      for (int x = 0; x < tree.getSize(); ++x)
       {
         float n = heightMap.GetValue(x, z);
-        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks) / 2)));
+        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((tree.getSize()) / 2)));
         for (size_t y = 0; y < height; y++)
-          voxels.set({x, y, z}, Voxel::Type::GRASS);
+          tree.set(x, y, z, Voxel::Type::GRASS);
       }
     }
 
@@ -110,7 +110,7 @@ public:
     std::cout << "Inserting took: " << duration2.count() << " seconds\n";
 
     auto start1 = std::chrono::high_resolution_clock::now(); // Start timing
-    voxels.greedyMesh(vertices);
+    tree.greedyMesh(vertices);
     auto end1 = std::chrono::high_resolution_clock::now(); // End timing
 
     std::chrono::duration<double> duration1 = end1 - start1;
@@ -121,23 +121,23 @@ public:
 
   void fill()
   {
-    voxels.clear();
+    tree.clear();
 
-    const int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
+    const int size = tree.getSize();
     for (size_t z = 0; z < size; z++)
       for (size_t x = 0; x < size; x++)
         for (size_t y = 0; y < size; y++)
-          voxels.set({x, y, z}, Voxel::Type::GRASS);
+          tree.set(x, y, z, Voxel::Type::GRASS);
 
-    voxels.greedyMesh(vertices);
+    tree.greedyMesh(vertices);
     setBuffer();
   }
 
   void fillSphere()
   {
-    voxels.clear();
+    tree.clear();
 
-    const unsigned int size = Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks;
+    const unsigned int size = tree.getSize();
     const glm::ivec3 center(size / 2);
     int radius = std::min({center.x, center.y, center.z}) - 1.0f;
 
@@ -154,7 +154,7 @@ public:
           int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
           if (distance <= radius)
-            voxels.set({x, y, z}, Voxel::Type::GRASS);
+            tree.set(x, y, z, Voxel::Type::GRASS);
         }
 
     auto end1 = std::chrono::high_resolution_clock::now();
@@ -162,7 +162,7 @@ public:
     std::cout << "Inserting took: " << duration1.count() << " seconds\n";
 
     auto start2 = std::chrono::high_resolution_clock::now();
-    voxels.greedyMesh(vertices);
+    tree.greedyMesh(vertices);
 
     auto end2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration2 = end2 - start2;

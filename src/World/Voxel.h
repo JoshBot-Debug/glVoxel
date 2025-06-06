@@ -9,16 +9,16 @@ namespace Voxel
 {
   enum class Type : unsigned char
   {
-    AIR,
-    GRASS,
-    DIRT
+    NONE = 0,
+    GRASS = 1,
+    DIRT = 2
   };
 
   struct Voxel
   {
-    Type type = Type::AIR;
+    Type type = (Type)0;
 
-    const bool isSolid() const { return type != Type::AIR; };
+    const bool isSolid() const { return type != (Type)0; };
   };
 
   class Chunk
@@ -35,7 +35,7 @@ namespace Voxel
       return position.x + (ChunkSize * (position.y + (ChunkSize * position.z)));
     }
 
-  public:    
+  public:
     Voxel &get(const glm::ivec3 &position)
     {
       return grid[index(position)];

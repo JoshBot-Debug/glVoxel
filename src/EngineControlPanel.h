@@ -100,8 +100,8 @@ public:
     if (ImGui::Button("Generate terrain"))
       world->generateTerrain();
 
-    ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
-    ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, Voxel::Chunk::ChunkSize * Voxel::Manager::Chunks);
+    ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, 256);
+    ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, 256);
 
     ImGui::DragFloat("Lower X", reinterpret_cast<float *>(&world->terrain.lowerXBound), 0.01f);
     ImGui::DragFloat("Upper X", reinterpret_cast<float *>(&world->terrain.upperXBound), 0.01f);
