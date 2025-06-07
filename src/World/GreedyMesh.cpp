@@ -190,6 +190,8 @@ void GreedyMesh::CullMesh(const glm::ivec3 &offsetPosition, std::vector<Vertex> 
 
 void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Vertex> &vertices, int originX, int originY, int originZ, unsigned int chunkSize, unsigned int maskLength)
 {
+  glm::vec3 coord = {originX / chunkSize, originY / chunkSize, originZ / chunkSize};
+
   /**
    * Generate the bit mask for rows, columns and layers.
    *
@@ -224,6 +226,13 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
           columns[columnIndex / chunkSize] |= (1ULL << (columnIndex % chunkSize));
           layers[layerIndex / chunkSize] |= (1ULL << (layerIndex % chunkSize));
         }
+
+  /**
+   * Cull meshing, ~0.13ms slower than greedy meshing
+   *
+   * CullMesh(coord, vertices, columns, rows, layers, chunkSize);
+   * return;
+   */
 
   /**
    * Here we capture the padding bit
@@ -262,14 +271,6 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
     if (tree->get(slow + originX, fast + originY, originZ - 1))
       layer |= (1ULL << 0);
   }
-
-  glm::vec3 coord = {originX / chunkSize, originY / chunkSize, originZ / chunkSize};
-
-  /**
-   * Cull meshing, ~0.13ms slower than greedy meshing
-   *
-   * CullMesh(coord, vertices, columns, rows, layers, chunkSize);
-   */
 
   uint32_t widthStart[maskLength] = {};
   uint32_t heightStart[maskLength] = {};

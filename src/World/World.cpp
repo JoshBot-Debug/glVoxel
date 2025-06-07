@@ -22,6 +22,7 @@ void World::setBuffer()
   vbo.set(vertices);
   vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, x)));
   vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
+  vao.set(2, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, voxelType)));
 }
 
 const Voxel::SparseVoxelOctree &World::getTree() const
@@ -91,6 +92,17 @@ void World::generateTerrain()
   auto t3 = START_TIMER;
   tree.greedyMesh(vertices);
   END_TIMER(t3, "tree.greedyMesh()");
+
+  auto t4 = START_TIMER;
+  for (Vertex &vertex : vertices)
+  {
+    auto node = tree.get(vertex.x, vertex.y, vertex.z);
+    if (node != nullptr)
+      vertex.voxelType = static_cast<int>(node->type);
+    else
+      vertex.voxelType = 0;
+  }
+  END_TIMER(t4, "set voxel information()");
 
   setBuffer();
 }

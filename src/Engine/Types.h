@@ -43,6 +43,7 @@ struct Vertex
   float y;
   float z;
   int normal;
+  int voxelType;
 
   Vertex() = default;
   Vertex(float x, float y, float z, int normal) : x(x), y(y), z(z), normal(normal) {}

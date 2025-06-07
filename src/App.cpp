@@ -32,7 +32,7 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
       .vertex = "src/Shaders/voxel.vs",
       .fragment = "src/Shaders/voxel.fs",
   });
-
+  
   shader.create({
       .name = "skybox",
       .vertex = "src/Shaders/skybox.vs",
