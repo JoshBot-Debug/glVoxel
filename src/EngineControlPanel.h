@@ -22,7 +22,7 @@ struct Material
 
 struct Light
 {
-  glm::vec3 position = glm::vec3(16.5f, 16.5f, -5.0f);
+  glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
   glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
   glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
   glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -39,10 +39,10 @@ private:
   glm::vec2 mouse;
 
 public:
-  std::vector<unsigned int> indices;
-
   Light light;
   Material material;
+
+  std::vector<unsigned int> indices;
 
   void addModel(Model *model)
   {
@@ -103,10 +103,17 @@ public:
     ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, 256);
     ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, 256);
 
-    ImGui::DragFloat("Lower X", reinterpret_cast<float *>(&world->terrain.lowerXBound), 0.01f);
-    ImGui::DragFloat("Upper X", reinterpret_cast<float *>(&world->terrain.upperXBound), 0.01f);
-    ImGui::DragFloat("Lower Z", reinterpret_cast<float *>(&world->terrain.lowerZBound), 0.01f);
-    ImGui::DragFloat("Upper Z", reinterpret_cast<float *>(&world->terrain.upperZBound), 0.01f);
+    ImGui::DragFloat("Scale", &world->terrain.scale, 0.01f);
+    ImGui::DragFloat("Bias", &world->terrain.bias, 0.01f);
+
+    ImGui::DragFloat("Frequency", &world->terrain.frequency, 0.01f);
+    ImGui::DragFloat("Persistence", &world->terrain.persistence, 0.01f);
+    ImGui::DragFloat("Octave Count", &world->terrain.octaveCount, 0.01f);
+
+    ImGui::DragFloat("Lower X", &world->terrain.lowerXBound, 0.01f);
+    ImGui::DragFloat("Upper X", &world->terrain.upperXBound, 0.01f);
+    ImGui::DragFloat("Lower Z", &world->terrain.lowerZBound, 0.01f);
+    ImGui::DragFloat("Upper Z", &world->terrain.upperZBound, 0.01f);
 
     ImGui::SeparatorText("Material");
 

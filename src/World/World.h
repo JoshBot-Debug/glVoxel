@@ -6,10 +6,17 @@
 
 struct TerrainProperties
 {
-  double lowerXBound = 1.0;
-  double upperXBound = 2.0;
-  double lowerZBound = 1.0;
-  double upperZBound = 2.0;
+  float lowerXBound = 0.0;
+  float upperXBound = 2.0;
+  float lowerZBound = 0.0;
+  float upperZBound = 2.0;
+
+  float frequency = 0.5;
+  float persistence = 0.4;
+  float octaveCount = 3.0;
+
+  float scale = 0.3;
+  float bias = -0.4;
 
   int destWidth;
   int destHeight;
@@ -41,6 +48,8 @@ public:
   void draw();
 
   void setBuffer();
+
+  const Voxel::SparseVoxelOctree &getTree() const;
 
   void generateTerrain();
 

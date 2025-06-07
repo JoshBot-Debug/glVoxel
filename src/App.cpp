@@ -21,6 +21,11 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
   camera.setRotation(0.0f, 133.0f, 0.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
 
+  const Voxel::SparseVoxelOctree &tree = world.getTree();
+  const int size = tree.getSize();
+
+  controlPanel.light.position = {(size / 2), (size / 2) + (size / 4), -(size / 2)};
+
   Shader &shader = resource.getShader();
   shader.create({
       .name = "voxel",

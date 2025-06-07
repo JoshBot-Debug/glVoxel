@@ -19,7 +19,9 @@ namespace Voxel
   {
     NONE = 0,
     GRASS = 1,
-    DIRT = 2
+    DIRT = 2,
+    STONE = 3,
+    SNOW = 4
   };
 
   class SparseVoxelOctree
@@ -52,8 +54,8 @@ namespace Voxel
     SparseVoxelOctree(int size);
     ~SparseVoxelOctree();
 
-    int getSize();
-    int getMaxDepth();
+    const int getSize() const;
+    const int getMaxDepth() const;
     Node *getRoot();
 
     void set(glm::vec3 position, Type type);

@@ -15,12 +15,12 @@ Voxel::SparseVoxelOctree::~SparseVoxelOctree()
   root = nullptr;
 }
 
-int Voxel::SparseVoxelOctree::getSize()
+const int Voxel::SparseVoxelOctree::getSize() const
 {
   return size;
 }
 
-int Voxel::SparseVoxelOctree::getMaxDepth()
+const int Voxel::SparseVoxelOctree::getMaxDepth() const
 {
   return maxDepth;
 }

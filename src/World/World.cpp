@@ -24,6 +24,11 @@ void World::setBuffer()
   vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
 }
 
+const Voxel::SparseVoxelOctree &World::getTree() const
+{
+  return tree;
+}
+
 void World::generateTerrain()
 {
   tree.clear();
@@ -32,11 +37,19 @@ void World::generateTerrain()
 
   noise::module::Perlin perlin;
   perlin.SetSeed(static_cast<int>(std::time(0)));
+  perlin.SetFrequency(terrain.frequency);
+  perlin.SetPersistence(terrain.persistence);
+  perlin.SetOctaveCount(terrain.octaveCount);
+
+  noise::module::ScaleBias scaleBias;
+  scaleBias.SetSourceModule(0, perlin);
+  scaleBias.SetScale(terrain.scale);
+  scaleBias.SetBias(terrain.bias);
 
   utils::NoiseMap heightMap;
   utils::NoiseMapBuilderPlane heightMapBuilder;
 
-  heightMapBuilder.SetSourceModule(perlin);
+  heightMapBuilder.SetSourceModule(scaleBias);
   heightMapBuilder.SetDestNoiseMap(heightMap);
   heightMapBuilder.SetDestSize(terrain.destWidth, terrain.destHeight);
   heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
@@ -46,13 +59,31 @@ void World::generateTerrain()
 
   auto t2 = START_TIMER;
 
-  for (int z = 0; z < tree.getSize(); ++z)
-    for (int x = 0; x < tree.getSize(); ++x)
+  const int size = tree.getSize();
+
+  for (int z = 0; z < size; ++z)
+    for (int x = 0; x < size; ++x)
     {
       float n = heightMap.GetValue(x, z);
-      unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((tree.getSize()) / 2)));
+      unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
       for (size_t y = 0; y < height; y++)
-        tree.set(x, y, z, Voxel::Type::GRASS);
+      {
+        Voxel::Type type;
+
+        if (y < height - (size / 16))
+          type = Voxel::Type::STONE;
+        else if (y < height - (size / 64))
+          type = Voxel::Type::DIRT;
+        else
+        {
+          if (height >= (size * 0.75f))
+            type = Voxel::Type::SNOW;
+          else
+            type = Voxel::Type::GRASS;
+        }
+
+        tree.set(x, y, z, type);
+      }
     }
 
   END_TIMER(t2, "tree.set()");
