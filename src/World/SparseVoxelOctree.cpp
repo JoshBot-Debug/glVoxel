@@ -12,6 +12,7 @@ Voxel::SparseVoxelOctree::~SparseVoxelOctree()
 {
   clear();
   delete root;
+  root = nullptr;
 }
 
 int Voxel::SparseVoxelOctree::getSize()
