@@ -1,6 +1,6 @@
 #pragma once
 
-// #ifdef DEBUG
+#ifdef DEBUG
 
 #include <iostream>
 #include <string>
@@ -14,8 +14,11 @@
                                    << "----------------------------------------------------------------------------------------" << std::endl
 #define LOG_BREAK_AFTER std::cout << "----------------------------------------------------------------------------------------" << std::endl
 
+#define START_TIMER std::chrono::high_resolution_clock::now()
+#define END_TIMER(...) EndTimer(__VA_ARGS__)
+
 template <typename... Args>
-void Log(const char *file, int line, const char *functionName, const Args &...args)
+inline void Log(const char *file, int line, const char *functionName, const Args &...args)
 {
   std::cout
       << "LOG " << file << ":" << line << " (" << functionName << "):";
@@ -36,9 +39,18 @@ inline void Benchmark(const std::string &functionName, const std::function<void(
   std::cout << functionName << " took " << elapsed.count() / iterations << " ms (average) over " << iterations << " iterations.\n";
 }
 
-// #else
-// #define LOG(...)
-// #define BENCHMARK(...)
-// #define LOG_BREAK_BEFORE
-// #define LOG_BREAK_AFTER
-// #endif
+inline void EndTimer(std::chrono::_V2::system_clock::time_point startTime, const std::string &name)
+{
+  auto end = std::chrono::high_resolution_clock::now(); // End timing
+  std::chrono::duration<double> duration = end - startTime;
+  std::cout << name << ": " << duration.count() << " seconds\n";
+}
+
+#else
+#define LOG(...)
+#define BENCHMARK(...)
+#define LOG_BREAK_BEFORE
+#define LOG_BREAK_AFTER
+#define START_TIMER 0
+#define END_TIMER(...)
+#endif

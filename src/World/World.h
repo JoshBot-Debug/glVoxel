@@ -1,20 +1,8 @@
 #pragma once
 
-#include <algorithm>
-
+#include "World/SparseVoxelOctree.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
-#include "Engine/Model.h"
-#include "World/SparseVoxelOctree.h"
-
-#include <iostream>
-#include <noise/noise.h>
-#include <noise/noiseutils.h>
-#include <ctime>
-#include <bitset>
-
-#include <chrono>
-#include <thread>
 
 struct TerrainProperties
 {
@@ -48,128 +36,15 @@ public:
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
-  World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
-  {
-    vao.generate();
-    vbo.generate();
-  }
+  World();
 
-  void draw()
-  {
-    vao.bind();
-    glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
-  }
+  void draw();
 
-  void setBuffer()
-  {
-    vao.bind();
-    vbo.set(vertices);
-    vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, x)));
-    vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
-  }
+  void setBuffer();
 
-  void generateTerrain()
-  {
-    tree.clear();
+  void generateTerrain();
 
-    auto start = std::chrono::high_resolution_clock::now(); // Start timing
+  void fill();
 
-    noise::module::Perlin perlin;
-    perlin.SetSeed(static_cast<int>(std::time(0)));
-
-    utils::NoiseMap heightMap;
-    utils::NoiseMapBuilderPlane heightMapBuilder;
-
-    heightMapBuilder.SetSourceModule(perlin);
-    heightMapBuilder.SetDestNoiseMap(heightMap);
-    heightMapBuilder.SetDestSize(terrain.destWidth, terrain.destHeight);
-    heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
-    heightMapBuilder.Build();
-
-    auto end = std::chrono::high_resolution_clock::now(); // End timing
-
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "Heightmap generation took: " << duration.count() << " seconds\n";
-
-    auto start2 = std::chrono::high_resolution_clock::now(); // Start timing
-
-    for (int z = 0; z < tree.getSize(); ++z)
-    {
-      for (int x = 0; x < tree.getSize(); ++x)
-      {
-        float n = heightMap.GetValue(x, z);
-        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * ((tree.getSize()) / 2)));
-        for (size_t y = 0; y < height; y++)
-          tree.set(x, y, z, Voxel::Type::GRASS);
-      }
-    }
-
-    auto end2 = std::chrono::high_resolution_clock::now(); // End timing
-
-    std::chrono::duration<double> duration2 = end2 - start2;
-    std::cout << "Inserting took: " << duration2.count() << " seconds\n";
-
-    auto start1 = std::chrono::high_resolution_clock::now(); // Start timing
-    tree.greedyMesh(vertices);
-    auto end1 = std::chrono::high_resolution_clock::now(); // End timing
-
-    std::chrono::duration<double> duration1 = end1 - start1;
-    std::cout << "Greedy meshing took: " << duration1.count() << " seconds\n";
-
-    setBuffer();
-  }
-
-  void fill()
-  {
-    tree.clear();
-
-    const int size = tree.getSize();
-
-    for (size_t x = 0; x < size; x++)
-      for (size_t y = 0; y < size; y++)
-        for (size_t z = 0; z < size; z++)
-          tree.set(x, y, z, Voxel::Type::GRASS);
-
-    tree.greedyMesh(vertices);
-
-    setBuffer();
-  }
-
-  void fillSphere()
-  {
-    tree.clear();
-
-    const unsigned int size = tree.getSize();
-    const glm::ivec3 center(size / 2);
-    int radius = std::min({center.x, center.y, center.z}) - 1.0f;
-
-    auto start1 = std::chrono::high_resolution_clock::now();
-
-    for (int x = 0; x < size; x++)
-      for (int y = 0; y < size; y++)
-        for (int z = 0; z < size; z++)
-        {
-          int dx = x - center.x;
-          int dy = y - center.y;
-          int dz = z - center.z;
-
-          int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-          if (distance <= radius)
-            tree.set(x, y, z, Voxel::Type::GRASS);
-        }
-
-    auto end1 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration1 = end1 - start1;
-    std::cout << "Inserting took: " << duration1.count() << " seconds\n";
-
-    auto start2 = std::chrono::high_resolution_clock::now();
-    tree.greedyMesh(vertices);
-
-    auto end2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration2 = end2 - start2;
-    std::cout << "Greedy Meshing took: " << duration2.count() << " seconds\n";
-
-    setBuffer();
-  }
+  void fillSphere();
 };
