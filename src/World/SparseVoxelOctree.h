@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <execution>
 
-#include "Voxel.h"
-#include "Utility.h"
 #include "Engine/Types.h"
 #include "Debug.h"
 
@@ -17,6 +15,13 @@
 
 namespace Voxel
 {
+  enum class Type : unsigned char
+  {
+    NONE = 0,
+    GRASS = 1,
+    DIRT = 2
+  };
+
   class SparseVoxelOctree
   {
 

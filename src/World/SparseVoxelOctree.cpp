@@ -67,8 +67,6 @@ void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, Type type, i
   int cy = y % half;
   int cz = z % half;
 
-  // std::cout << "set: Size: " << size << " Half: " << half << " Pos: " << cx << " " << cy << " " << cz << std::endl;
-
   this->set(node->children[index], cx, cy, cz, type, half);
 
   if (!node->children[0])
@@ -107,9 +105,6 @@ Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(Node *node, int x,
   int cy = y % half;
   int cz = z % half;
 
-  // std::cout << "get: Depth: " << (int)node->depth << " Size: " << size << " Half: " << half
-  //           << " Pos: " << cx << " " << cy << " " << cz << std::endl;
-
   return get(node->children[index], cx, cy, cz, half);
 }
 
@@ -117,6 +112,9 @@ void Voxel::SparseVoxelOctree::clear(Node *node)
 {
   if (!node)
     return;
+
+  node->type = Voxel::Type::NONE;
+  node->depth = 0;
 
   for (int i = 0; i < 8; i++)
   {
