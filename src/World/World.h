@@ -40,7 +40,7 @@ class World
 private:
   Buffer vbo;
   VertexArray vao;
-  Voxel::SparseVoxelOctree tree{256};
+  Voxel::SparseVoxelOctree tree{128};
   std::vector<Vertex> vertices;
 
 public:
@@ -124,12 +124,14 @@ public:
     tree.clear();
 
     const int size = tree.getSize();
-    for (size_t z = 0; z < size; z++)
-      for (size_t x = 0; x < size; x++)
-        for (size_t y = 0; y < size; y++)
+
+    for (size_t x = 0; x < size; x++)
+      for (size_t y = 0; y < size; y++)
+        for (size_t z = 0; z < size; z++)
           tree.set(x, y, z, Voxel::Type::GRASS);
 
     tree.greedyMesh(vertices);
+
     setBuffer();
   }
 
@@ -143,9 +145,9 @@ public:
 
     auto start1 = std::chrono::high_resolution_clock::now();
 
-    for (size_t z = 0; z < size; z++)
-      for (size_t x = 0; x < size; x++)
-        for (size_t y = 0; y < size; y++)
+    for (int x = 0; x < size; x++)
+      for (int y = 0; y < size; y++)
+        for (int z = 0; z < size; z++)
         {
           int dx = x - center.x;
           int dy = y - center.y;

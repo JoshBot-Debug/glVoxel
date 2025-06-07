@@ -380,47 +380,6 @@ public:
             layers[layerIndex / chunkSize] |= (1ULL << (layerIndex % chunkSize));
           }
 
-    // for (uint8_t x = 0; x < chunkSize; x++)
-    // {
-    //   for (uint8_t y = 0; y < chunkSize; y++)
-    //   {
-    //     for (uint8_t z = 0; z < chunkSize;)
-    //     {
-    //       Voxel::SparseVoxelOctree::Node *node = tree->get(x + originX, y + originY, z + originZ);
-
-    //       if (!node || !(int)node->type)
-    //       {
-    //         z++;
-    //         continue;
-    //       }
-
-    //       int size = 1 << (tree->getMaxDepth() - node->depth);
-
-    //       for (uint8_t dx = 0; dx < size; dx++)
-    //         for (uint8_t dy = 0; dy < size; dy++)
-    //           for (uint8_t dz = 0; dz < size; dz++)
-    //           {
-    //             uint8_t fx = x + dx;
-    //             uint8_t fy = y + dy;
-    //             uint8_t fz = z + dz;
-
-    //             if (fx >= originX + chunkSize || fy >= originY + chunkSize || fz >= originZ + chunkSize)
-    //               continue; // Clamp to current chunk
-
-    //             const unsigned int rowIndex = fx + (chunkSize * (fy + (chunkSize * fz)));
-    //             const unsigned int columnIndex = fy + (chunkSize * (fx + (chunkSize * fz)));
-    //             const unsigned int layerIndex = fz + (chunkSize * (fy + (chunkSize * fx)));
-
-    //             rows[rowIndex / chunkSize] |= (1ULL << (rowIndex % chunkSize));
-    //             columns[columnIndex / chunkSize] |= (1ULL << (columnIndex % chunkSize));
-    //             layers[layerIndex / chunkSize] |= (1ULL << (layerIndex % chunkSize));
-    //           }
-
-    //       z += size;
-    //     }
-    //   }
-    // }
-
     /**
      * Here we capture the padding bit
      * Every chunk we need to get the neighbour chunks and check

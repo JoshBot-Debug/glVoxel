@@ -24,6 +24,11 @@ int Voxel::SparseVoxelOctree::getMaxDepth()
   return maxDepth;
 }
 
+Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::getRoot()
+{
+  return root;
+}
+
 void Voxel::SparseVoxelOctree::set(glm::vec3 position, Type type)
 {
   set(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<int>(position.z), type);
@@ -69,19 +74,19 @@ void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, Type type, i
   if (!node->children[0])
     return;
 
-  // Type firstType = node->children[0]->type;
+  Type firstType = node->children[0]->type;
 
-  // for (int i = 0; i < 8; i++)
-  //   if (!node->children[i] || node->children[i]->type != firstType)
-  //     return;
+  for (int i = 0; i < 8; i++)
+    if (!node->children[i] || node->children[i]->type != firstType || node->children[i]->children[0] != nullptr)
+      return;
 
-  // for (int i = 0; i < 8; i++)
-  // {
-  //   delete node->children[i];
-  //   node->children[i] = nullptr;
-  // }
+  for (int i = 0; i < 8; i++)
+  {
+    delete node->children[i];
+    node->children[i] = nullptr;
+  }
 
-  // node->type = firstType;
+  node->type = firstType;
 }
 
 Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(Node *node, int x, int y, int z, int size)
@@ -146,4 +151,25 @@ void Voxel::SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices)
 
         GreedyMesh::SparseVoxelTree(this, vertices, originX, originY, originZ, chunkSize, chunkSize * chunkSize);
       }
+
+  std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
+  std::cout << "Memory (MB): " << (double)getTotalMemoryUsage() / 1000000.0 << std::endl;
+}
+
+const size_t Voxel::SparseVoxelOctree::getMemoryUsage(Node *node) const
+{
+  if (!node)
+    return 0;
+
+  size_t size = sizeof(SparseVoxelOctree::Node);
+
+  for (int i = 0; i < 8; ++i)
+    size += getMemoryUsage(node->children[i]);
+
+  return size;
+}
+
+const size_t Voxel::SparseVoxelOctree::getTotalMemoryUsage() const
+{
+  return sizeof(SparseVoxelOctree) + getMemoryUsage(root);
 }

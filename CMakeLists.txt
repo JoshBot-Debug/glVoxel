@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(glVoxel)
 
-option(ENABLE_AVX256 "Enable AVX-256 instructions" OFF)
+option(ENABLE_AVX256 "Enable AVX-256 instructions" ON)
+option(ENABLE_MULTI_THREADING "Enable multithreaded voxel processing with OpenMP" ON)
 
 if(ENABLE_AVX256)
   add_compile_options(-mavx2)
@@ -17,7 +18,6 @@ find_package(glfw3 REQUIRED)
 find_library(NOISE_LIB noise PATHS /usr/local/lib REQUIRED)
 find_library(NOISEUTILS_LIB noiseutils PATHS /usr/local/lib REQUIRED)
 find_package(TBB REQUIRED)
-find_package(OpenMP REQUIRED)
 
 # Collect all source files (.cpp files)
 file(GLOB_RECURSE SOURCES_FILES
@@ -28,6 +28,19 @@ file(GLOB_RECURSE SOURCES_FILES
 # Include all source files (.cpp files)
 add_executable(glVoxel ${SOURCES_FILES})
 
+# Enable multi threading via omp
+if(ENABLE_MULTI_THREADING)
+  find_package(OpenMP REQUIRED)
+  if(OpenMP_FOUND)
+    target_link_libraries(glVoxel PRIVATE OpenMP::OpenMP_CXX)
+    target_compile_definitions(glVoxel PRIVATE ENABLE_MULTI_THREADING)
+    message(STATUS "OpenMP multithreading is ENABLED.")
+  else()
+    message(WARNING "OpenMP requested but not found.")
+  endif()
+else()
+  message(STATUS "Multithreading is DISABLED.")
+endif()
 
 # Specify include directories. (header files)
 target_include_directories(glVoxel PRIVATE 
@@ -50,7 +63,6 @@ target_link_libraries(glVoxel PRIVATE
   glfw
   assimp
   TBB::tbb
-  OpenMP::OpenMP_CXX
   ${NOISE_LIB}
   ${NOISEUTILS_LIB}
   ${STATIC_LIB}

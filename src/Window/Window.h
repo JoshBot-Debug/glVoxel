@@ -33,7 +33,7 @@ class Window : Scene
 private:
   GLFWwindow *window;
 
-  const WindowOptions &options;
+  WindowOptions options;
 
   static glm::vec2 dimensions;
 
