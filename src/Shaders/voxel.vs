@@ -2,9 +2,11 @@
 
 out vec3 f_Position;
 out vec3 f_Normal;
+flat out int f_VoxelType;
 
 layout(location=0)in vec3 in_Position;
 layout(location=1)in int in_Normal;
+layout(location=2)in int in_VoxelType;
 
 uniform mat4 u_View;
 uniform mat4 u_Projection;
@@ -22,6 +24,7 @@ void main()
 { 
   f_Normal=NORMALS[int(in_Normal)];
   f_Position=in_Position;
+  f_VoxelType=in_VoxelType;
   
   gl_Position=u_Projection*u_View*vec4(in_Position,1.);
 }

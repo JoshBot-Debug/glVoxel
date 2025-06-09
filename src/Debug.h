@@ -42,8 +42,8 @@ inline void Benchmark(const std::string &functionName, const std::function<void(
 inline void EndTimer(std::chrono::_V2::system_clock::time_point startTime, const std::string &name)
 {
   auto end = std::chrono::high_resolution_clock::now(); // End timing
-  std::chrono::duration<double> duration = end - startTime;
-  std::cout << name << ": " << duration.count() << " seconds\n";
+  std::chrono::duration<double, std::milli> duration = end - startTime;
+  std::cout << name << ": " << duration.count() << " ms\n";
 }
 
 #else

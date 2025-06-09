@@ -47,6 +47,7 @@ struct Vertex
 
   Vertex() = default;
   Vertex(float x, float y, float z, int normal) : x(x), y(y), z(z), normal(normal) {}
+  Vertex(float x, float y, float z, int normal, int voxelType) : x(x), y(y), z(z), normal(normal), voxelType(voxelType) {}
 
   bool operator==(const Vertex &other) const
   {

@@ -11,15 +11,21 @@ struct TerrainProperties
   float lowerZBound = 0.0;
   float upperZBound = 2.0;
 
-  float frequency = 0.5;
+  float frequency = 1.0;
   float persistence = 0.4;
-  float octaveCount = 3.0;
+  int octaveCount = 3.0;
+  int maxHeight = 0;
+  int seed = 0;
 
-  float scale = 0.3;
+  float scale = 0.6;
   float bias = -0.4;
 
   int destWidth;
   int destHeight;
+
+  float stoneThreshold = 0.20f;
+  float dirtThreshold = 0.30f;
+  float grassThreshold = 0.5f;
 
   TerrainProperties(int destWidth, int destHeight) : destWidth(destWidth), destHeight(destHeight) {}
 };
@@ -35,7 +41,7 @@ class World
 private:
   Buffer vbo;
   VertexArray vao;
-  Voxel::SparseVoxelOctree tree{128};
+  Voxel::SparseVoxelOctree tree{256};
   std::vector<Vertex> vertices;
 
 public:

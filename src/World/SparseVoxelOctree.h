@@ -21,7 +21,8 @@ namespace Voxel
     GRASS = 1,
     DIRT = 2,
     STONE = 3,
-    SNOW = 4
+    SNOW = 4,
+    MAX_VALUE = 5,
   };
 
   class SparseVoxelOctree
@@ -31,7 +32,7 @@ namespace Voxel
     struct Node
     {
       uint8_t depth = 0;
-      Type type = Type::NONE;
+      Type voxelType = Type::NONE;
       Node *children[8] = {nullptr};
 
       Node() = default;
@@ -42,8 +43,9 @@ namespace Voxel
     int size;
     int maxDepth;
     Node *root;
+    Type lockedType = Type::NONE;
 
-    void set(Node *node, int x, int y, int z, Type type, int size);
+    void set(Node *node, int x, int y, int z, Type voxelType, int size);
     Node *get(Node *node, int x, int y, int z, int size);
     void clear(Node *node);
 
@@ -66,6 +68,9 @@ namespace Voxel
 
     void clear();
     void greedyMesh(std::vector<Vertex> &vertices);
+
+    void lock(Type type);
+    void unlock();
 
     const size_t getTotalMemoryUsage() const;
   };

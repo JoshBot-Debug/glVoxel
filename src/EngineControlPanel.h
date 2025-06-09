@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <noise/noise.h>
 
 #include "imgui.h"
 
@@ -103,12 +104,18 @@ public:
     ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, 256);
     ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, 256);
 
+    ImGui::DragInt("Seed", &world->terrain.seed);
     ImGui::DragFloat("Scale", &world->terrain.scale, 0.01f);
     ImGui::DragFloat("Bias", &world->terrain.bias, 0.01f);
 
     ImGui::DragFloat("Frequency", &world->terrain.frequency, 0.01f);
     ImGui::DragFloat("Persistence", &world->terrain.persistence, 0.01f);
-    ImGui::DragFloat("Octave Count", &world->terrain.octaveCount, 0.01f);
+    ImGui::DragInt("Octave Count", &world->terrain.octaveCount, 1.0f, 1, noise::module::PERLIN_MAX_OCTAVE);
+    ImGui::DragInt("Max Height", &world->terrain.maxHeight);
+
+    ImGui::DragFloat("Stone Threshold", &world->terrain.stoneThreshold, 0.01f, 0.01f, 1.0f);
+    ImGui::DragFloat("Dirt Threshold", &world->terrain.dirtThreshold, 0.01f, 0.01f, 1.0f);
+    ImGui::DragFloat("Grass Threshold", &world->terrain.grassThreshold, 0.01f, 0.01f, 1.0f);
 
     ImGui::DragFloat("Lower X", &world->terrain.lowerXBound, 0.01f);
     ImGui::DragFloat("Upper X", &world->terrain.upperXBound, 0.01f);

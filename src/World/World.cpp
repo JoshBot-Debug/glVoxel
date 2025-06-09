@@ -33,11 +33,16 @@ const Voxel::SparseVoxelOctree &World::getTree() const
 void World::generateTerrain()
 {
   tree.clear();
+  vertices.clear();
 
   auto t1 = START_TIMER;
 
   noise::module::Perlin perlin;
-  perlin.SetSeed(static_cast<int>(std::time(0)));
+  terrain.maxHeight = tree.getSize();
+  if (terrain.seed == 0)
+    perlin.SetSeed(static_cast<int>(std::time(0)));
+  else
+    perlin.SetSeed(terrain.seed);
   perlin.SetFrequency(terrain.frequency);
   perlin.SetPersistence(terrain.persistence);
   perlin.SetOctaveCount(terrain.octaveCount);
@@ -61,28 +66,36 @@ void World::generateTerrain()
   auto t2 = START_TIMER;
 
   const int size = tree.getSize();
+  int stoneLimit = static_cast<int>(size * terrain.stoneThreshold);
+  int dirtLimit = static_cast<int>(size * terrain.dirtThreshold);
+  int grassLimit = static_cast<int>(size * terrain.grassThreshold);
 
   for (int z = 0; z < size; ++z)
     for (int x = 0; x < size; ++x)
     {
       float n = heightMap.GetValue(x, z);
       unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
+
       for (size_t y = 0; y < height; y++)
       {
         Voxel::Type type;
 
-        if (y < height - (size / 16))
+        if (y < stoneLimit)
+        {
           type = Voxel::Type::STONE;
-        else if (y < height - (size / 64))
+        }
+        else if (y < dirtLimit)
+        {
           type = Voxel::Type::DIRT;
+        }
+        else if (y < grassLimit)
+        {
+          type = Voxel::Type::GRASS;
+        }
         else
         {
-          if (height >= (size * 0.75f))
-            type = Voxel::Type::SNOW;
-          else
-            type = Voxel::Type::GRASS;
+          type = Voxel::Type::SNOW;
         }
-
         tree.set(x, y, z, type);
       }
     }
@@ -90,19 +103,23 @@ void World::generateTerrain()
   END_TIMER(t2, "tree.set()");
 
   auto t3 = START_TIMER;
-  tree.greedyMesh(vertices);
-  END_TIMER(t3, "tree.greedyMesh()");
 
-  auto t4 = START_TIMER;
-  for (Vertex &vertex : vertices)
+  for (uint8_t i = 1; i < (uint8_t)Voxel::Type::MAX_VALUE; i++)
   {
-    auto node = tree.get(vertex.x, vertex.y, vertex.z);
-    if (node != nullptr)
-      vertex.voxelType = static_cast<int>(node->type);
-    else
-      vertex.voxelType = 0;
+    std::vector<Vertex> tVertices;
+
+    tree.lock((Voxel::Type)i);
+    tree.greedyMesh(tVertices);
+
+    for (auto &vertex : tVertices)
+    {
+      vertex.voxelType = static_cast<int>(i);
+      vertices.push_back(vertex);
+    }
   }
-  END_TIMER(t4, "set voxel information()");
+
+  tree.unlock();
+  END_TIMER(t3, "tree.greedyMesh()");
 
   setBuffer();
 }
@@ -110,6 +127,7 @@ void World::generateTerrain()
 void World::fill()
 {
   tree.clear();
+  vertices.clear();
 
   const int size = tree.getSize();
 
@@ -131,6 +149,7 @@ void World::fill()
 void World::fillSphere()
 {
   tree.clear();
+  vertices.clear();
 
   const unsigned int size = tree.getSize();
   const glm::ivec3 center(size / 2);
