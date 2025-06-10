@@ -87,6 +87,7 @@ void World::generateTerrain()
 
   END_TIMER(t1, "Heightmap generation");
 
+  auto tt = START_TIMER;
   auto t2 = START_TIMER;
 
   const int size = tree.getSize();
@@ -94,6 +95,7 @@ void World::generateTerrain()
   int dirtLimit = static_cast<int>(size * terrain.dirtThreshold);
   int grassLimit = static_cast<int>(size * terrain.grassThreshold);
 
+  // #pragma omp parallel for collapse(2)
   for (int z = 0; z < size; ++z)
     for (int x = 0; x < size; ++x)
     {
@@ -128,16 +130,17 @@ void World::generateTerrain()
 
   auto t3 = START_TIMER;
 
-  std::vector<Voxel::Voxel *> filters = {
-      new Voxel::Voxel{1, 0},
-      new Voxel::Voxel{2, 0},
-      new Voxel::Voxel{3, 0},
-      new Voxel::Voxel{4, 0},
-  };
+  const int colors = 4;
+  std::vector<Voxel::Voxel *> filters;
+  filters.reserve(colors);
+
+  for (int i = 1; i <= colors; ++i)
+    filters.push_back(new Voxel::Voxel{i, 0});
 
   std::vector<std::vector<Vertex>> tVertices;
   tVertices.resize(filters.size());
 
+#pragma omp parallel for
   for (int i = 0; i < filters.size(); i++)
     tree.greedyMesh(tVertices[i], filters[i]);
 
@@ -150,14 +153,22 @@ void World::generateTerrain()
     {
       iv[j].color = filter->color;
       iv[j].material = filter->material;
-      vertices.push_back(iv[j]);
     }
+
+    vertices.insert(vertices.end(),
+                    std::make_move_iterator(iv.begin()),
+                    std::make_move_iterator(iv.end()));
 
     delete filters[i];
     filters[i] = nullptr;
   }
 
   END_TIMER(t3, "tree.greedyMesh()");
+
+  END_TIMER(tt, "Total Time");
+
+  std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
+  std::cout << "Memory (MB): " << (double)tree.getTotalMemoryUsage() / 1000000.0 << std::endl;
 
   setBuffer();
 }

@@ -213,11 +213,15 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
   uint64_t columns[maskLength] = {};
   uint64_t layers[maskLength] = {};
 
+  bool hasVoxels = false;
+
   for (int x = 0; x < chunkSize; x++)
     for (int y = 0; y < chunkSize; y++)
       for (int z = 0; z < chunkSize; z++)
         if (tree->get(x + originX, y + originY, z + originZ, filter))
         {
+          hasVoxels = true;
+
           const unsigned int rowIndex = x + (chunkSize * (y + (chunkSize * z)));
           const unsigned int columnIndex = y + (chunkSize * (x + (chunkSize * z)));
           const unsigned int layerIndex = z + (chunkSize * (y + (chunkSize * x)));
@@ -226,6 +230,9 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
           columns[columnIndex / chunkSize] |= (1ULL << (columnIndex % chunkSize));
           layers[layerIndex / chunkSize] |= (1ULL << (layerIndex % chunkSize));
         }
+
+  if (!hasVoxels)
+    return;
 
   /**
    * Cull meshing, ~0.13ms slower than greedy meshing

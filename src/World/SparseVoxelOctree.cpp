@@ -102,7 +102,7 @@ Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(Node *node, int x,
 
   int index = ((x >= half) << 2) | ((y >= half) << 1) | (z >= half);
 
-  return get(node->children[index], x % half, y % half, z % half, half);
+  return get(node->children[index], x % half, y % half, z % half, half, filter);
 }
 
 void Voxel::SparseVoxelOctree::clear(Node *node)
@@ -132,24 +132,10 @@ void Voxel::SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices, Voxel *
   const int chunkSize = 32;
   const int chunksPerAxis = size / chunkSize;
 
-  std::vector<std::vector<Vertex>> tVertices;
-
-  int maxThreads = omp_get_max_threads();
-  tVertices.resize(maxThreads);
-
-#pragma omp parallel for collapse(3)
   for (int cz = 0; cz < chunksPerAxis; cz++)
     for (int cy = 0; cy < chunksPerAxis; cy++)
       for (int cx = 0; cx < chunksPerAxis; cx++)
-        GreedyMesh::SparseVoxelTree(this, tVertices[omp_get_thread_num()], cx * chunkSize, cy * chunkSize, cz * chunkSize, chunkSize, chunkSize * chunkSize, filter);
-
-  for (auto &v : tVertices)
-    vertices.insert(vertices.end(),
-                    std::make_move_iterator(v.begin()),
-                    std::make_move_iterator(v.end()));
-
-  std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
-  std::cout << "Memory (MB): " << (double)getTotalMemoryUsage() / 1000000.0 << std::endl;
+        GreedyMesh::SparseVoxelTree(this, vertices, cx * chunkSize, cy * chunkSize, cz * chunkSize, chunkSize, chunkSize * chunkSize, filter);
 }
 
 const size_t Voxel::SparseVoxelOctree::getMemoryUsage(Node *node) const
