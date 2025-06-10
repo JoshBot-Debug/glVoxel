@@ -32,11 +32,11 @@ World::World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
 
 void World::draw(Shader &shader)
 {
-  vao.bind();
-  glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
-
   colorPalette.bind(0);
   shader.setUniform1i("colorPalette", 0);
+
+  vao.bind();
+  glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
 }
 
 void World::setBuffer()
