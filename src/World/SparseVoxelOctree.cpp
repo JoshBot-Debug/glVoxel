@@ -31,14 +31,14 @@ Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::getRoot()
   return root;
 }
 
-void Voxel::SparseVoxelOctree::set(glm::vec3 position, Type voxelType)
+void Voxel::SparseVoxelOctree::set(glm::vec3 position, int color)
 {
-  set(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<int>(position.z), voxelType);
+  set(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<int>(position.z), color);
 }
 
-void Voxel::SparseVoxelOctree::set(int x, int y, int z, Type voxelType)
+void Voxel::SparseVoxelOctree::set(int x, int y, int z, int color)
 {
-  set(root, x, y, z, voxelType, size);
+  set(root, x, y, z, color, size);
 }
 
 Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(glm::vec3 position)
@@ -51,11 +51,11 @@ Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(int x, int y, int 
   return get(root, x, y, z, size);
 }
 
-void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, Type voxelType, int size)
+void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, int color, int size)
 {
   if (size == 1)
   {
-    node->voxelType = voxelType;
+    node->color = color;
     return;
   }
 
@@ -66,15 +66,15 @@ void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, Type voxelTy
   if (!node->children[index])
     node->children[index] = new Node{(uint8_t)(maxDepth - std::log2(half))};
 
-  this->set(node->children[index], x % half, y % half, z % half, voxelType, half);
+  this->set(node->children[index], x % half, y % half, z % half, color, half);
 
   if (!node->children[0])
     return;
 
-  Type firstType = node->children[0]->voxelType;
+  Node firstNode = *node->children[0];
 
   for (int i = 0; i < 8; i++)
-    if (!node->children[i] || node->children[i]->voxelType != firstType || node->children[i]->children[0] != nullptr)
+    if (!node->children[i] || node->children[i]->color != firstNode.color || node->children[i]->children[0] != nullptr)
       return;
 
   for (int i = 0; i < 8; i++)
@@ -83,24 +83,20 @@ void Voxel::SparseVoxelOctree::set(Node *node, int x, int y, int z, Type voxelTy
     node->children[i] = nullptr;
   }
 
-  node->voxelType = firstType;
+  node->color = firstNode.color;
+  node->material = firstNode.material;
 }
 
 Voxel::SparseVoxelOctree::Node *Voxel::SparseVoxelOctree::get(Node *node, int x, int y, int z, int size)
 {
-  if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
+  if (!node || x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
     return nullptr;
 
-  if (!node)
-    return nullptr;
-
-  if ((uint8_t)node->voxelType)
-  {
-    if ((uint8_t)lockedType && node->voxelType != lockedType)
+  if ((uint8_t)node->color)
+    if ((uint8_t)lockedColor && node->color != lockedColor)
       return nullptr;
     else
       return node;
-  }
 
   int half = size / 2;
 
@@ -114,8 +110,9 @@ void Voxel::SparseVoxelOctree::clear(Node *node)
   if (!node)
     return;
 
-  node->voxelType = Voxel::Type::NONE;
   node->depth = 0;
+  node->color = 0;
+  node->material = 0;
 
   for (int i = 0; i < 8; i++)
   {
@@ -138,7 +135,6 @@ void Voxel::SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices)
   const int chunkSize = 32;
   const int chunksPerAxis = size / chunkSize;
 
-  // Thread-safe: each thread gets its own local vector
   std::vector<std::vector<Vertex>> tVertices;
 
   int maxThreads = omp_get_max_threads();
@@ -150,22 +146,23 @@ void Voxel::SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices)
       for (int cx = 0; cx < chunksPerAxis; cx++)
         GreedyMesh::SparseVoxelTree(this, tVertices[omp_get_thread_num()], cx * chunkSize, cy * chunkSize, cz * chunkSize, chunkSize, chunkSize * chunkSize);
 
-  for (const auto &v : tVertices)
-    vertices.insert(vertices.end(), v.begin(), v.end());
+  for (auto &v : tVertices)
+    vertices.insert(vertices.end(),
+                    std::make_move_iterator(v.begin()),
+                    std::make_move_iterator(v.end()));
 
-  // Merge them with vertices here
   std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
   std::cout << "Memory (MB): " << (double)getTotalMemoryUsage() / 1000000.0 << std::endl;
 }
 
-void Voxel::SparseVoxelOctree::lock(Voxel::Type type)
+void Voxel::SparseVoxelOctree::lock(int color)
 {
-  lockedType = type;
+  lockedColor = color;
 }
 
 void Voxel::SparseVoxelOctree::unlock()
 {
-  lockedType = Type::NONE;
+  lockedColor = 0;
 }
 
 const size_t Voxel::SparseVoxelOctree::getMemoryUsage(Node *node) const

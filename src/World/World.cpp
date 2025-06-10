@@ -21,8 +21,9 @@ void World::setBuffer()
   vao.bind();
   vbo.set(vertices);
   vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, x)));
-  vao.set(1, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
-  vao.set(2, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, voxelType)));
+  vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, nx)));
+  vao.set(2, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, color)));
+  vao.set(3, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, material)));
 }
 
 const Voxel::SparseVoxelOctree &World::getTree() const
@@ -78,25 +79,25 @@ void World::generateTerrain()
 
       for (size_t y = 0; y < height; y++)
       {
-        Voxel::Type type;
+        int color;
 
         if (y < stoneLimit)
         {
-          type = Voxel::Type::STONE;
+          color = 3;
         }
         else if (y < dirtLimit)
         {
-          type = Voxel::Type::DIRT;
+          color = 2;
         }
         else if (y < grassLimit)
         {
-          type = Voxel::Type::GRASS;
+          color = 1;
         }
         else
         {
-          type = Voxel::Type::SNOW;
+          color = 4;
         }
-        tree.set(x, y, z, type);
+        tree.set(x, y, z, color);
       }
     }
 
@@ -104,16 +105,17 @@ void World::generateTerrain()
 
   auto t3 = START_TIMER;
 
-  for (uint8_t i = 1; i < (uint8_t)Voxel::Type::MAX_VALUE; i++)
+  for (int i = 1; i < 5; i++)
   {
     std::vector<Vertex> tVertices;
 
-    tree.lock((Voxel::Type)i);
+    tree.lock(i);
     tree.greedyMesh(tVertices);
 
+    std::cout << tVertices.size() << std::endl;
     for (auto &vertex : tVertices)
     {
-      vertex.voxelType = static_cast<int>(i);
+      vertex.color = i;
       vertices.push_back(vertex);
     }
   }
@@ -135,7 +137,7 @@ void World::fill()
   for (size_t x = 0; x < size; x++)
     for (size_t y = 0; y < size; y++)
       for (size_t z = 0; z < size; z++)
-        tree.set(x, y, z, Voxel::Type::GRASS);
+        tree.set(x, y, z, 1);
 
   END_TIMER(t1, "tree.set()");
 
@@ -168,7 +170,7 @@ void World::fillSphere()
         int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
         if (distance <= radius)
-          tree.set(x, y, z, Voxel::Type::GRASS);
+          tree.set(x, y, z, 1);
       }
 
   END_TIMER(t1, "tree.set()");

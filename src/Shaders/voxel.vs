@@ -2,29 +2,23 @@
 
 out vec3 f_Position;
 out vec3 f_Normal;
-flat out int f_VoxelType;
+flat out int f_ColorIndex;
+flat out int f_MaterialIndex;
 
 layout(location=0)in vec3 in_Position;
-layout(location=1)in int in_Normal;
-layout(location=2)in int in_VoxelType;
+layout(location=1)in vec3 in_Normal;
+layout(location=2)in int in_ColorIndex;
+layout(location=3)in int in_MaterialIndex;
 
 uniform mat4 u_View;
 uniform mat4 u_Projection;
 
-const vec3 NORMALS[6] = vec3[](
-  vec3(0.0, 1.0, 0.0),  // TOP
-  vec3(0.0, -1.0, 0.0), // BOTTOM
-  vec3(0.0, 0.0, -1.0), // FRONT
-  vec3(0.0, 0.0, 1.0),  // BACK
-  vec3(-1.0, 0.0, 0.0), // LEFT
-  vec3(1.0, 0.0, 0.0)   // RIGHT
-);
-
 void main()
 { 
-  f_Normal=NORMALS[int(in_Normal)];
+  f_Normal=in_Normal;
   f_Position=in_Position;
-  f_VoxelType=in_VoxelType;
+  f_ColorIndex=in_ColorIndex;
+  f_MaterialIndex=in_MaterialIndex;
   
   gl_Position=u_Projection*u_View*vec4(in_Position,1.);
 }

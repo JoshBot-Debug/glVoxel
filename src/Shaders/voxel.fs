@@ -17,7 +17,8 @@ struct Light{
 
 in vec3 f_Normal;
 in vec3 f_Position;
-flat in int f_VoxelType;
+flat in int f_ColorIndex;
+flat in int f_MaterialIndex;
 
 uniform vec3 u_CameraPosition;
 uniform Material u_Material;
@@ -27,13 +28,13 @@ void main()
 {
   vec3 voxelColor;
   
-  if(f_VoxelType==1){
+  if(f_ColorIndex==1){
     voxelColor=vec3(.1,.8,.1);// GRASS (green)
-  }else if(f_VoxelType==2){
+  }else if(f_ColorIndex==2){
     voxelColor=vec3(.55,.27,.07);// DIRT (brown)
-  }else if(f_VoxelType==3){
+  }else if(f_ColorIndex==3){
     voxelColor=vec3(.5,.5,.5);// STONE (gray)
-  }else if(f_VoxelType==4){
+  }else if(f_ColorIndex==4){
     voxelColor=vec3(1.,1.,1.);// SNOW (white)
   }else{
     voxelColor=vec3(1.,0.,1.);// Fallback magenta for debugging

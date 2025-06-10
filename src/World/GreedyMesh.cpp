@@ -213,9 +213,9 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
   uint64_t columns[maskLength] = {};
   uint64_t layers[maskLength] = {};
 
-  for (uint8_t x = 0; x < chunkSize; x++)
-    for (uint8_t y = 0; y < chunkSize; y++)
-      for (uint8_t z = 0; z < chunkSize; z++)
+  for (int x = 0; x < chunkSize; x++)
+    for (int y = 0; y < chunkSize; y++)
+      for (int z = 0; z < chunkSize; z++)
         if (tree->get(x + originX, y + originY, z + originZ))
         {
           const unsigned int rowIndex = x + (chunkSize * (y + (chunkSize * z)));
@@ -240,7 +240,7 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
    * if the bits at the 0 & 31st index are on. If so, we need to skip making
    * faces on that end.
    */
-  for (uint16_t i = 0; i < maskLength; i++)
+  for (int i = 0; i < maskLength; i++)
   {
     uint64_t &row = rows[i];
     uint64_t &column = columns[i];

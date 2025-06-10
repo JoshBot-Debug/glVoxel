@@ -42,16 +42,20 @@ struct Vertex
   float x;
   float y;
   float z;
-  int normal;
-  int voxelType;
+  float nx;
+  float ny;
+  float nz;
+  int color;
+  int material;
 
   Vertex() = default;
-  Vertex(float x, float y, float z, int normal) : x(x), y(y), z(z), normal(normal) {}
-  Vertex(float x, float y, float z, int normal, int voxelType) : x(x), y(y), z(z), normal(normal), voxelType(voxelType) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz, int color) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz, int color, int material) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color), material(material) {}
 
   bool operator==(const Vertex &other) const
   {
-    return x == other.x && y == other.y && z == other.z && normal == other.normal;
+    return x == other.x && y == other.y && z == other.z && nx == other.nx && ny == other.ny && nz == other.nz;
   }
 };
 
