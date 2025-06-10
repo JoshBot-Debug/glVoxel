@@ -8,12 +8,35 @@ World::World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
 {
   vao.generate();
   vbo.generate();
+
+  unsigned char colors[256 * 4]; // 256 colors * RGBA (4 bytes per pixel)
+
+  for (int i = 0; i < 256; ++i)
+  {
+    colors[i * 4 + 0] = i;
+    colors[i * 4 + 1] = 0;
+    colors[i * 4 + 2] = 255 - i;
+    colors[i * 4 + 3] = 255;
+  }
+
+  colorPalette.generateTexture();
+  colorPalette.bind();
+  colorPalette.setFilter(TextureFilter::NEAREST, TextureFilter::NEAREST);
+  colorPalette.setWrap(TextureWrap::CLAMP_TO_EDGE, TextureWrap::CLAMP_TO_EDGE, TextureWrap::CLAMP_TO_EDGE);
+  colorPalette.setData(colors);
+  colorPalette.setWidth(256);
+  colorPalette.setHeight(1);
+  colorPalette.setTexture(0, GL_RGBA8, GL_RGBA);
+  colorPalette.unbind();
 }
 
-void World::draw()
+void World::draw(Shader &shader)
 {
   vao.bind();
   glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
+
+  colorPalette.bind(0);
+  shader.setUniform1i("colorPalette", 0);
 }
 
 void World::setBuffer()
@@ -105,22 +128,35 @@ void World::generateTerrain()
 
   auto t3 = START_TIMER;
 
-  for (int i = 1; i < 5; i++)
+  std::vector<Voxel::Voxel *> filters = {
+      new Voxel::Voxel{1, 0},
+      new Voxel::Voxel{2, 0},
+      new Voxel::Voxel{3, 0},
+      new Voxel::Voxel{4, 0},
+  };
+
+  std::vector<std::vector<Vertex>> tVertices;
+  tVertices.resize(filters.size());
+
+  for (int i = 0; i < filters.size(); i++)
+    tree.greedyMesh(tVertices[i], filters[i]);
+
+  for (int i = 0; i < filters.size(); i++)
   {
-    std::vector<Vertex> tVertices;
+    Voxel::Voxel *filter = filters[i];
+    std::vector<Vertex> &iv = tVertices[i];
 
-    tree.lock(i);
-    tree.greedyMesh(tVertices);
-
-    std::cout << tVertices.size() << std::endl;
-    for (auto &vertex : tVertices)
+    for (int j = 0; j < iv.size(); j++)
     {
-      vertex.color = i;
-      vertices.push_back(vertex);
+      iv[j].color = filter->color;
+      iv[j].material = filter->material;
+      vertices.push_back(iv[j]);
     }
+
+    delete filters[i];
+    filters[i] = nullptr;
   }
 
-  tree.unlock();
   END_TIMER(t3, "tree.greedyMesh()");
 
   setBuffer();

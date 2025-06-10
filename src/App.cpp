@@ -4,7 +4,6 @@
 
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/Shader.h"
-#include "Engine/Texture2D.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -90,7 +89,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", controlPanel.light.ambient.x, controlPanel.light.ambient.y, controlPanel.light.ambient.z);
   shader.setUniform3f("u_Light.diffuse", controlPanel.light.diffuse.x, controlPanel.light.diffuse.y, controlPanel.light.diffuse.z);
 
-  world.draw();
+  world.draw(shader);
 
   controlPanel.draw();
 }

@@ -188,7 +188,7 @@ void GreedyMesh::CullMesh(const glm::ivec3 &offsetPosition, std::vector<Vertex> 
   }
 }
 
-void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Vertex> &vertices, int originX, int originY, int originZ, unsigned int chunkSize, unsigned int maskLength)
+void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Vertex> &vertices, int originX, int originY, int originZ, unsigned int chunkSize, unsigned int maskLength, Voxel::Voxel *filter)
 {
   glm::vec3 coord = {originX / chunkSize, originY / chunkSize, originZ / chunkSize};
 
@@ -216,7 +216,7 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
   for (int x = 0; x < chunkSize; x++)
     for (int y = 0; y < chunkSize; y++)
       for (int z = 0; z < chunkSize; z++)
-        if (tree->get(x + originX, y + originY, z + originZ))
+        if (tree->get(x + originX, y + originY, z + originZ, filter))
         {
           const unsigned int rowIndex = x + (chunkSize * (y + (chunkSize * z)));
           const unsigned int columnIndex = y + (chunkSize * (x + (chunkSize * z)));
@@ -253,22 +253,22 @@ void GreedyMesh::SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Ver
     int fast = i % chunkSize;
     int slow = (i / chunkSize) % chunkSize;
 
-    if (tree->get(originX + 32, fast + originY, slow + originZ))
+    if (tree->get(originX + 32, fast + originY, slow + originZ, filter))
       row |= (1ULL << 33);
 
-    if (tree->get(originX - 1, fast + originY, slow + originZ))
+    if (tree->get(originX - 1, fast + originY, slow + originZ, filter))
       row |= (1ULL << 0);
 
-    if (tree->get(fast + originX, originY + 32, slow + originZ))
+    if (tree->get(fast + originX, originY + 32, slow + originZ, filter))
       column |= (1ULL << 33);
 
-    if (tree->get(fast + originX, originY - 1, slow + originZ))
+    if (tree->get(fast + originX, originY - 1, slow + originZ, filter))
       column |= (1ULL << 0);
 
-    if (tree->get(slow + originX, fast + originY, originZ + 32))
+    if (tree->get(slow + originX, fast + originY, originZ + 32, filter))
       layer |= (1ULL << 33);
 
-    if (tree->get(slow + originX, fast + originY, originZ - 1))
+    if (tree->get(slow + originX, fast + originY, originZ - 1, filter))
       layer |= (1ULL << 0);
   }
 

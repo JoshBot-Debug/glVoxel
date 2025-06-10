@@ -3,6 +3,8 @@
 #include "World/SparseVoxelOctree.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
+#include "Engine/Texture2D.h"
+#include "Engine/Shader.h"
 
 struct TerrainProperties
 {
@@ -43,6 +45,7 @@ private:
   VertexArray vao;
   Voxel::SparseVoxelOctree tree{256};
   std::vector<Vertex> vertices;
+  Texture2D colorPalette;
 
 public:
   TerrainProperties terrain{tree.getSize(), tree.getSize()};
@@ -51,7 +54,7 @@ public:
 public:
   World();
 
-  void draw();
+  void draw(Shader &shader);
 
   void setBuffer();
 

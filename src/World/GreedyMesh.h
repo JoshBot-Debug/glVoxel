@@ -26,5 +26,5 @@ private:
   static void CullMesh(const glm::ivec3 &offsetPosition, std::vector<Vertex> &vertices, uint64_t (&columns)[], uint64_t (&rows)[], uint64_t (&layers)[], unsigned int chunkSize);
 
 public:
-  static void SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Vertex> &vertices, int originX, int originY, int originZ, unsigned int chunkSize, unsigned int maskLength);
+  static void SparseVoxelTree(Voxel::SparseVoxelOctree *tree, std::vector<Vertex> &vertices, int originX, int originY, int originZ, unsigned int chunkSize, unsigned int maskLength, Voxel::Voxel *filter = nullptr);
 };

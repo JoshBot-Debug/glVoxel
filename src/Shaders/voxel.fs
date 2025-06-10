@@ -24,8 +24,15 @@ uniform vec3 u_CameraPosition;
 uniform Material u_Material;
 uniform Light u_Light;
 
+uniform sampler2D colorPalette;
+
 void main()
 {
+  // float texelWidth=1./256.;
+  // float u_coord=(float(f_ColorIndex)+.5)*texelWidth;
+  // vec2 texCoord=vec2(u_coord,.5);
+  // vec4 voxelColor=texture(colorPalette,texCoord);
+  
   vec3 voxelColor;
   
   if(f_ColorIndex==1){
@@ -40,7 +47,7 @@ void main()
     voxelColor=vec3(1.,0.,1.);// Fallback magenta for debugging
   }
   
-  vec3 diffuseColor=voxelColor;
+  vec3 diffuseColor=voxelColor.rgb;
   
   // Ambient
   // vec3 ambient=u_Light.ambient*u_Material.diffuse;
