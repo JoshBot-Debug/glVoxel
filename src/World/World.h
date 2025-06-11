@@ -6,17 +6,14 @@
 #include "Engine/Texture2D.h"
 #include "Engine/Camera/PerspectiveCamera.h"
 
-struct TerrainProperties
-{
-  float lowerXBound = 0.0;
-  float upperXBound = 2.0;
-  float lowerZBound = 0.0;
-  float upperZBound = 2.0;
+#include <noise/noise.h>
+#include <noise/noiseutils.h>
 
+struct Terrain
+{
   float frequency = 1.0;
   float persistence = 0.4;
   int octaveCount = 3.0;
-  int maxHeight = 0;
   int seed = 50;
 
   float scale = 0.6;
@@ -29,7 +26,7 @@ struct TerrainProperties
   float dirtThreshold = 0.30f;
   float grassThreshold = 0.5f;
 
-  TerrainProperties(int destWidth, int destHeight) : destWidth(destWidth), destHeight(destHeight) {}
+  Terrain(int destWidth, int destHeight) : destWidth(destWidth), destHeight(destHeight) {}
 };
 
 enum class DrawMode : GLenum
@@ -43,14 +40,19 @@ class World
 private:
   Buffer vbo;
   VertexArray vao;
-  
+
   SparseVoxelOctree tree{256};
   std::vector<Vertex> vertices;
-  
+
   PerspectiveCamera *camera = nullptr;
 
+  noise::module::Perlin perlin;
+  noise::module::ScaleBias scaleBias;
+  utils::NoiseMapBuilderPlane heightMapBuilder;
+  utils::NoiseMap heightMap;
+
 public:
-  TerrainProperties terrain{tree.getSize(), tree.getSize()};
+  Terrain terrain{tree.getSize(), tree.getSize()};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
@@ -60,13 +62,13 @@ public:
 
   void setBuffer();
 
-  const SparseVoxelOctree &getTree() const;
-
-  void generateTerrain();
+  void generateChunk(int worldX, int worldZ);
 
   void fill();
 
   void fillSphere();
 
   void setCamera(PerspectiveCamera *camera);
+
+  void initialize();
 };

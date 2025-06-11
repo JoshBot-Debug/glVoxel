@@ -22,10 +22,7 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
 
   world.setCamera(&camera);
 
-  const SparseVoxelOctree &tree = world.getTree();
-  const int size = tree.getSize();
-
-  controlPanel.light.position = {0, size * 2, -(size / 2)};
+  controlPanel.light.position = {0, 512, -128};
 
   Shader &shader = resource.getShader();
   shader.create({

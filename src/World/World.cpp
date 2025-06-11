@@ -1,19 +1,30 @@
 #include "World.h"
 #include "Debug.h"
 
-#include <noise/noise.h>
-#include <noise/noiseutils.h>
-
 World::World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
 {
   vao.generate();
   vbo.generate();
+  initialize();
 }
 
-void World::draw()
+void World::initialize()
 {
-  vao.bind();
-  glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
+  if (terrain.seed == 0)
+    perlin.SetSeed(static_cast<int>(std::time(0)));
+  else
+    perlin.SetSeed(terrain.seed);
+  perlin.SetFrequency(terrain.frequency);
+  perlin.SetPersistence(terrain.persistence);
+  perlin.SetOctaveCount(terrain.octaveCount);
+
+  scaleBias.SetSourceModule(0, perlin);
+  scaleBias.SetScale(terrain.scale);
+  scaleBias.SetBias(terrain.bias);
+
+  heightMapBuilder.SetSourceModule(scaleBias);
+  heightMapBuilder.SetDestNoiseMap(heightMap);
+  heightMapBuilder.SetDestSize(terrain.destWidth, terrain.destHeight);
 }
 
 void World::setBuffer()
@@ -26,38 +37,17 @@ void World::setBuffer()
   vao.set(3, 1, VertexType::INT, false, sizeof(Vertex), (void *)(offsetof(Vertex, material)));
 }
 
-const SparseVoxelOctree &World::getTree() const
+void World::draw()
 {
-  return tree;
+  vao.bind();
+  glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
 }
 
-void World::generateTerrain()
+void World::generateChunk(int worldX, int worldZ)
 {
   tree.clear();
-  vertices.clear();
 
-  noise::module::Perlin perlin;
-  terrain.maxHeight = tree.getSize();
-  if (terrain.seed == 0)
-    perlin.SetSeed(static_cast<int>(std::time(0)));
-  else
-    perlin.SetSeed(terrain.seed);
-  perlin.SetFrequency(terrain.frequency);
-  perlin.SetPersistence(terrain.persistence);
-  perlin.SetOctaveCount(terrain.octaveCount);
-
-  noise::module::ScaleBias scaleBias;
-  scaleBias.SetSourceModule(0, perlin);
-  scaleBias.SetScale(terrain.scale);
-  scaleBias.SetBias(terrain.bias);
-
-  utils::NoiseMap heightMap;
-  utils::NoiseMapBuilderPlane heightMapBuilder;
-
-  heightMapBuilder.SetSourceModule(scaleBias);
-  heightMapBuilder.SetDestNoiseMap(heightMap);
-  heightMapBuilder.SetDestSize(terrain.destWidth, terrain.destHeight);
-  heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
+  heightMapBuilder.SetBounds(worldX + 1.0f, worldX + 2.0f, worldZ + 1.0f, worldZ + 2.0f);
   heightMapBuilder.Build();
 
   auto tt = START_TIMER;
@@ -81,7 +71,7 @@ void World::generateTerrain()
 
         if (y < stoneLimit)
         {
-          voxel->setColor(90, 90, 90, 255);
+          voxel->setColor(45, 45, 45, 255);
         }
         else if (y < dirtLimit)
         {
@@ -119,6 +109,8 @@ void World::generateTerrain()
 
     for (int j = 0; j < iv.size(); j++)
     {
+      iv[j].x += static_cast<float>(worldX * tree.getSize());
+      iv[j].z += static_cast<float>(worldZ * tree.getSize());
       iv[j].color = filter->color;
       iv[j].material = filter->material;
     }
@@ -132,8 +124,6 @@ void World::generateTerrain()
   END_TIMER(tt, "Total Time");
   std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
   std::cout << "Memory (MB): " << (double)tree.getTotalMemoryUsage() / 1000000.0 << std::endl;
-
-  setBuffer();
 }
 
 void World::fill()

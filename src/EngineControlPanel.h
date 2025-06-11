@@ -98,8 +98,23 @@ public:
 
     ImGui::SeparatorText("Terrain");
 
-    if (ImGui::Button("Generate terrain"))
-      world->generateTerrain();
+    if (ImGui::Button("Initialize World"))
+      world->initialize();
+
+    ImGui::Spacing();
+
+    if (ImGui::Button("Generate chunk"))
+    {
+      for (int x = -1; x < 2; x++)
+        for (int z = -1; z < 2; z++)
+          world->generateChunk(x, z);
+    }
+    ImGui::Spacing();
+
+    if (ImGui::Button("Set Buffer"))
+      world->setBuffer();
+
+    ImGui::Spacing();
 
     ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, 256);
     ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, 256);
@@ -111,16 +126,10 @@ public:
     ImGui::DragFloat("Frequency", &world->terrain.frequency, 0.01f);
     ImGui::DragFloat("Persistence", &world->terrain.persistence, 0.01f);
     ImGui::DragInt("Octave Count", &world->terrain.octaveCount, 1.0f, 1, noise::module::PERLIN_MAX_OCTAVE);
-    ImGui::DragInt("Max Height", &world->terrain.maxHeight);
 
     ImGui::DragFloat("Stone Threshold", &world->terrain.stoneThreshold, 0.01f, 0.01f, 1.0f);
     ImGui::DragFloat("Dirt Threshold", &world->terrain.dirtThreshold, 0.01f, 0.01f, 1.0f);
     ImGui::DragFloat("Grass Threshold", &world->terrain.grassThreshold, 0.01f, 0.01f, 1.0f);
-
-    ImGui::DragFloat("Lower X", &world->terrain.lowerXBound, 0.01f);
-    ImGui::DragFloat("Upper X", &world->terrain.upperXBound, 0.01f);
-    ImGui::DragFloat("Lower Z", &world->terrain.lowerZBound, 0.01f);
-    ImGui::DragFloat("Upper Z", &world->terrain.upperZBound, 0.01f);
 
     ImGui::SeparatorText("Material");
 
