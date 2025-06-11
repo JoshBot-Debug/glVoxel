@@ -14,13 +14,19 @@ void VertexArray::generate()
 
 void VertexArray::set(unsigned int index, unsigned int size, VertexType type, bool normalized, size_t stride, const void *pointer) const
 {
-  glVertexAttribPointer(index, size, (unsigned int)type, normalized ? GL_TRUE : GL_FALSE, stride, pointer);
+  if (type == VertexType::INT || type == VertexType::UNSIGNED_INT)
+    glVertexAttribIPointer(index, size, (unsigned int)type, stride, pointer);
+  else
+    glVertexAttribPointer(index, size, (unsigned int)type, normalized ? GL_TRUE : GL_FALSE, stride, pointer);
   glEnableVertexAttribArray(index);
 }
 
 void VertexArray::set(unsigned int index, unsigned int size, VertexType type, bool normalized, size_t stride, const void *pointer, unsigned int divisor) const
 {
-  glVertexAttribPointer(index, size, (unsigned int)type, normalized ? GL_TRUE : GL_FALSE, stride, pointer);
+  if (type == VertexType::INT || type == VertexType::UNSIGNED_INT)
+    glVertexAttribIPointer(index, size, (unsigned int)type, stride, pointer);
+  else
+    glVertexAttribPointer(index, size, (unsigned int)type, normalized ? GL_TRUE : GL_FALSE, stride, pointer);
   glEnableVertexAttribArray(index);
   glVertexAttribDivisor(index, divisor);
 }

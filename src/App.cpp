@@ -16,14 +16,16 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
   controlPanel.setResourceManager(&resource);
   controlPanel.setWorld(&world);
 
-  camera.setPosition(-21.0f, 11.0f, -41.0f);
-  camera.setRotation(0.0f, 133.0f, 0.0f);
+  camera.setPosition(-75.0f, 175.0f, -135.0f);
+  camera.setRotation(-20.0f, 130.0f, 0.0f);
   camera.setProjection(45, 0.01f, 10000.0f);
 
-  const Voxel::SparseVoxelOctree &tree = world.getTree();
+  world.setCamera(&camera);
+
+  const SparseVoxelOctree &tree = world.getTree();
   const int size = tree.getSize();
 
-  controlPanel.light.position = {(size / 2), (size / 2) + (size / 4), -(size / 2)};
+  controlPanel.light.position = {0, size * 2, -(size / 2)};
 
   Shader &shader = resource.getShader();
   shader.create({
@@ -31,7 +33,7 @@ App::App() : Window({.title = "glVoxel", .width = 800, .height = 600, .enableDep
       .vertex = "src/Shaders/voxel.vs",
       .fragment = "src/Shaders/voxel.fs",
   });
-  
+
   shader.create({
       .name = "skybox",
       .vertex = "src/Shaders/skybox.vs",
@@ -89,7 +91,7 @@ void App::onDraw()
   shader.setUniform3f("u_Light.ambient", controlPanel.light.ambient.x, controlPanel.light.ambient.y, controlPanel.light.ambient.z);
   shader.setUniform3f("u_Light.diffuse", controlPanel.light.diffuse.x, controlPanel.light.diffuse.y, controlPanel.light.diffuse.z);
 
-  world.draw(shader);
+  world.draw();
 
   controlPanel.draw();
 }

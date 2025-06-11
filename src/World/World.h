@@ -1,10 +1,10 @@
 #pragma once
 
-#include "World/SparseVoxelOctree.h"
+#include "World/Octree/SparseVoxelOctree.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Texture2D.h"
-#include "Engine/Shader.h"
+#include "Engine/Camera/PerspectiveCamera.h"
 
 struct TerrainProperties
 {
@@ -17,7 +17,7 @@ struct TerrainProperties
   float persistence = 0.4;
   int octaveCount = 3.0;
   int maxHeight = 0;
-  int seed = 0;
+  int seed = 50;
 
   float scale = 0.6;
   float bias = -0.4;
@@ -43,9 +43,11 @@ class World
 private:
   Buffer vbo;
   VertexArray vao;
-  Voxel::SparseVoxelOctree tree{256};
+  
+  SparseVoxelOctree tree{256};
   std::vector<Vertex> vertices;
-  Texture2D colorPalette;
+  
+  PerspectiveCamera *camera = nullptr;
 
 public:
   TerrainProperties terrain{tree.getSize(), tree.getSize()};
@@ -54,15 +56,17 @@ public:
 public:
   World();
 
-  void draw(Shader &shader);
+  void draw();
 
   void setBuffer();
 
-  const Voxel::SparseVoxelOctree &getTree() const;
+  const SparseVoxelOctree &getTree() const;
 
   void generateTerrain();
 
   void fill();
 
   void fillSphere();
+
+  void setCamera(PerspectiveCamera *camera);
 };

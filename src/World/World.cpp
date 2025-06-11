@@ -8,33 +8,10 @@ World::World() : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
 {
   vao.generate();
   vbo.generate();
-
-  unsigned char colors[256 * 4]; // 256 colors * RGBA (4 bytes per pixel)
-
-  for (int i = 0; i < 256; ++i)
-  {
-    colors[i * 4 + 0] = i;
-    colors[i * 4 + 1] = 0;
-    colors[i * 4 + 2] = 255 - i;
-    colors[i * 4 + 3] = 255;
-  }
-
-  colorPalette.generateTexture();
-  colorPalette.bind();
-  colorPalette.setFilter(TextureFilter::NEAREST, TextureFilter::NEAREST);
-  colorPalette.setWrap(TextureWrap::CLAMP_TO_EDGE, TextureWrap::CLAMP_TO_EDGE, TextureWrap::CLAMP_TO_EDGE);
-  colorPalette.setData(colors);
-  colorPalette.setWidth(256);
-  colorPalette.setHeight(1);
-  colorPalette.setTexture(0, GL_RGBA8, GL_RGBA);
-  colorPalette.unbind();
 }
 
-void World::draw(Shader &shader)
+void World::draw()
 {
-  colorPalette.bind(0);
-  shader.setUniform1i("colorPalette", 0);
-
   vao.bind();
   glDrawArrays(static_cast<GLenum>(drawMode), 0, vertices.size());
 }
@@ -45,11 +22,11 @@ void World::setBuffer()
   vbo.set(vertices);
   vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, x)));
   vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, nx)));
-  vao.set(2, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, color)));
-  vao.set(3, 1, VertexType::FLOAT, false, sizeof(Vertex), (void *)(offsetof(Vertex, material)));
+  vao.set(2, 1, VertexType::INT, false, sizeof(Vertex), (void *)(offsetof(Vertex, color)));
+  vao.set(3, 1, VertexType::INT, false, sizeof(Vertex), (void *)(offsetof(Vertex, material)));
 }
 
-const Voxel::SparseVoxelOctree &World::getTree() const
+const SparseVoxelOctree &World::getTree() const
 {
   return tree;
 }
@@ -58,8 +35,6 @@ void World::generateTerrain()
 {
   tree.clear();
   vertices.clear();
-
-  auto t1 = START_TIMER;
 
   noise::module::Perlin perlin;
   terrain.maxHeight = tree.getSize();
@@ -85,8 +60,6 @@ void World::generateTerrain()
   heightMapBuilder.SetBounds(terrain.lowerXBound, terrain.upperXBound, terrain.lowerZBound, terrain.upperZBound);
   heightMapBuilder.Build();
 
-  END_TIMER(t1, "Heightmap generation");
-
   auto tt = START_TIMER;
   auto t2 = START_TIMER;
 
@@ -95,7 +68,7 @@ void World::generateTerrain()
   int dirtLimit = static_cast<int>(size * terrain.dirtThreshold);
   int grassLimit = static_cast<int>(size * terrain.grassThreshold);
 
-  // #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
   for (int z = 0; z < size; ++z)
     for (int x = 0; x < size; ++x)
     {
@@ -104,25 +77,25 @@ void World::generateTerrain()
 
       for (size_t y = 0; y < height; y++)
       {
-        int color;
+        Voxel *voxel = new Voxel();
 
         if (y < stoneLimit)
         {
-          color = 3;
+          voxel->setColor(90, 90, 90, 255);
         }
         else if (y < dirtLimit)
         {
-          color = 2;
+          voxel->setColor(101, 67, 33, 255);
         }
         else if (y < grassLimit)
         {
-          color = 1;
+          voxel->setColor(34, 139, 34, 255);
         }
         else
         {
-          color = 4;
+          voxel->setColor(255, 255, 255, 255);
         }
-        tree.set(x, y, z, color);
+        tree.set(x, y, z, voxel);
       }
     }
 
@@ -130,23 +103,18 @@ void World::generateTerrain()
 
   auto t3 = START_TIMER;
 
-  const int colors = 4;
-  std::vector<Voxel::Voxel *> filters;
-  filters.reserve(colors);
-
-  for (int i = 1; i <= colors; ++i)
-    filters.push_back(new Voxel::Voxel{i, 0});
+  std::vector<Voxel> filters = tree.getUniqueVoxels();
 
   std::vector<std::vector<Vertex>> tVertices;
   tVertices.resize(filters.size());
 
 #pragma omp parallel for
   for (int i = 0; i < filters.size(); i++)
-    tree.greedyMesh(tVertices[i], filters[i]);
+    tree.greedyMesh(tVertices[i], &filters[i]);
 
   for (int i = 0; i < filters.size(); i++)
   {
-    Voxel::Voxel *filter = filters[i];
+    Voxel *filter = &filters[i];
     std::vector<Vertex> &iv = tVertices[i];
 
     for (int j = 0; j < iv.size(); j++)
@@ -158,15 +126,10 @@ void World::generateTerrain()
     vertices.insert(vertices.end(),
                     std::make_move_iterator(iv.begin()),
                     std::make_move_iterator(iv.end()));
-
-    delete filters[i];
-    filters[i] = nullptr;
   }
 
   END_TIMER(t3, "tree.greedyMesh()");
-
   END_TIMER(tt, "Total Time");
-
   std::cout << "Voxels (Million): " << (double)(size * size * size) / 1000000.0 << std::endl;
   std::cout << "Memory (MB): " << (double)tree.getTotalMemoryUsage() / 1000000.0 << std::endl;
 
@@ -184,7 +147,7 @@ void World::fill()
   for (size_t x = 0; x < size; x++)
     for (size_t y = 0; y < size; y++)
       for (size_t z = 0; z < size; z++)
-        tree.set(x, y, z, 1);
+        tree.set(x, y, z, new Voxel());
 
   END_TIMER(t1, "tree.set()");
 
@@ -217,7 +180,7 @@ void World::fillSphere()
         int distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
         if (distance <= radius)
-          tree.set(x, y, z, 1);
+          tree.set(x, y, z, new Voxel());
       }
 
   END_TIMER(t1, "tree.set()");
@@ -227,4 +190,9 @@ void World::fillSphere()
   END_TIMER(t1, "tree.greedyMesh()");
 
   setBuffer();
+}
+
+void World::setCamera(PerspectiveCamera *camera)
+{
+  this->camera = camera;
 }
