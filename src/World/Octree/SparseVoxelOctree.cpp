@@ -93,12 +93,56 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int s
   node->voxel = new Voxel(firstVoxel.color, firstVoxel.material);
 }
 
+inline int floorDiv(int a, int b)
+{
+  return (a >= 0) ? (a / b) : ((a - b + 1) / b);
+}
+
+inline int mod(int a, int b)
+{
+  int r = a % b;
+  return (r < 0) ? r + b : r;
+}
+
 Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size, int maxDepth, Voxel *filter)
 {
-  if (!node || x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
-  {
-    // This is where I need to get the voxel from the neighbour SVO if one exists
+  if (!node)
     return nullptr;
+
+  // out of bounds, need to check the neighbour svo chunk
+  if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
+  {
+
+    // std::cout << std::dec;
+    // if (y < 0 || y >= size)
+    //   return nullptr;
+
+    // if (chunkCoord.x != 0)
+    //   return nullptr;
+
+    // This is where I need to get the voxel from the neighbour SVO if one exists
+
+    const glm::ivec2 nPos = {floorDiv(x, this->size) + chunkCoord.x, floorDiv(z, this->size) + chunkCoord.y};
+
+    // std::cout << "Find Voxel: " << (int)x << " " << (int)y << " " << (int)z << std::endl;
+    // std::cout << "Neighbour Coord: " << (int)nPos.x << " " << (int)nPos.y << std::endl;
+    // std::cout << "My Coord: " << (int)chunkCoord.x << " " << (int)chunkCoord.y << std::endl;
+
+    auto it = neighbours.find(nPos);
+
+    if (it == neighbours.end() || it->second == nullptr)
+      return nullptr;
+
+    SparseVoxelOctree *neighbour = it->second;
+
+    const glm::vec3 localCoord = {
+        mod(x, this->size),
+        y,
+        mod(z, this->size)};
+
+    // std::cout << "Neighbour Voxel: " << (int)localCoord.x << " " << (int)localCoord.y << " " << (int)localCoord.z << std::endl;
+    
+    return neighbour->get(localCoord, -1, filter);
   }
 
   if (node->voxel)
@@ -167,4 +211,33 @@ const size_t SparseVoxelOctree::getTotalMemoryUsage() const
 std::vector<Voxel> SparseVoxelOctree::getUniqueVoxels()
 {
   return uniqueVoxels;
+}
+
+void SparseVoxelOctree::setNeighbours(const glm::ivec2 &chunkPosition, std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> &chunks)
+{
+  chunkCoord = chunkPosition;
+
+  static const std::vector<glm::ivec2> directions = {
+      {0, -1}, // N
+      {1, -1}, // NE
+      {1, 0},  // E
+      {1, 1},  // SE
+      {0, 1},  // S
+      {-1, 1}, // SW
+      {-1, 0}, // W
+      {-1, -1} // NW
+  };
+
+  neighbours.clear();
+  neighbours.reserve(directions.size());
+
+  for (const auto &dir : directions)
+  {
+    glm::ivec2 neighborPosition = chunkPosition + dir;
+    auto it = chunks.find(neighborPosition);
+    if (it != chunks.end())
+      neighbours[neighborPosition] = &it->second;
+    else
+      neighbours[neighborPosition] = nullptr;
+  }
 }

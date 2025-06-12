@@ -12,9 +12,40 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
   this->heightMap = heightMap;
 
   const std::vector<glm::ivec2> coords = getChunkPositionsInRadius(getChunkPosition(position));
+  // const std::vector<glm::ivec2> coords = {
+  //     {0, 0},
+  //     {1, 0}};
 
-  for (size_t i = 0; i < coords.size(); i++)
-    chunkFutures.push_back(std::async(std::launch::async, &VoxelManager::generateChunk, this, coords[i]));
+  // for (const auto &coord : coords)
+  //   generateChunk(coord);
+
+  // for (size_t i = 0; i < coords.size(); i++)
+  // {
+  //   SparseVoxelOctree &tree = chunks[coords[i]];
+  //   tree.setNeighbours(coords[i], chunks);
+  // }
+
+  // for (const auto &coord : coords)
+  //   meshChunk(coord);
+
+  for (const auto &coord : coords)
+    futures.push_back(std::async(std::launch::async, &VoxelManager::generateChunk, this, coord));
+
+  std::thread([this, coords = coords, futures = std::move(futures)]() mutable
+              {
+                for (auto &f : futures) f.get();
+
+                for (size_t i = 0; i < coords.size(); i++)
+                {
+                  SparseVoxelOctree &tree = chunks[coords[i]];
+                  tree.setNeighbours(coords[i], chunks);
+                }
+
+                futures.clear();
+
+                for (const auto &coord : coords)
+                  futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord)); })
+      .detach();
 }
 
 void VoxelManager::update(const glm::vec3 &position)
@@ -40,7 +71,8 @@ const glm::ivec2 VoxelManager::getChunkPosition(const glm::vec3 &position) const
 
 void VoxelManager::generateChunk(const glm::ivec2 &coord)
 {
-  SparseVoxelOctree &tree = chunks[coord];
+  auto [it, inserted] = chunks.try_emplace(coord, chunkSize);
+  SparseVoxelOctree &tree = it->second;
 
   tree.clear();
 
@@ -54,6 +86,18 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
   for (int z = 0; z < size; ++z)
     for (int x = 0; x < size; ++x)
     {
+      // for (int y = 0; y < size; ++y)
+      // {
+      //   Voxel *voxel = new Voxel();
+      //   // voxel->setColor(34, 139, 34, 255);
+      //   if (y > 16)
+      //     voxel->setColor(34, 139, 34, 255);
+      //   else if (y < 8)
+      //     voxel->setColor(101, 67, 33, 255);
+      //   else
+      //     voxel->setColor(255, 255, 255, 255);
+      //   tree.set(x, y, z, voxel);
+      // }
       float n = map.GetValue(x, z);
       unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
 
@@ -72,6 +116,11 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
         tree.set(x, y, z, voxel);
       }
     }
+}
+
+void VoxelManager::meshChunk(const glm::ivec2 &coord)
+{
+  SparseVoxelOctree &tree = chunks[coord];
 
   std::vector<Voxel> filters = tree.getUniqueVoxels();
 

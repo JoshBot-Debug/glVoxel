@@ -9,6 +9,7 @@
 #include <execution>
 
 #include "Engine/Types.h"
+#include "World/Common.h"
 #include "Debug.h"
 #include "Voxel.h"
 #include "Node.h"
@@ -20,8 +21,10 @@ class SparseVoxelOctree
 private:
   int size;
   int maxDepth;
+  glm::ivec2 chunkCoord{0, 0};
   Node *root;
   std::vector<Voxel> uniqueVoxels;
+  std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal> neighbours;
 
   void set(Node *node, int x, int y, int z, Voxel *voxel, int size);
   Node *get(Node *node, int x, int y, int z, int size, int lod = -1, Voxel *filter = nullptr);
@@ -50,4 +53,6 @@ public:
   const size_t getTotalMemoryUsage() const;
 
   std::vector<Voxel> getUniqueVoxels();
+
+  void setNeighbours(const glm::ivec2 &chunkPosition, std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> &chunks);
 };

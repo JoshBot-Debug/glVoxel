@@ -18,10 +18,10 @@ private:
   HeightMap *heightMap;
 
   std::mutex verticesMutex;
-  std::vector<std::future<void>> chunkFutures;
-
+  std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> chunks;
 
+  void meshChunk(const glm::ivec2 &coord);
   void generateChunk(const glm::ivec2 &coord);
 
 public:

@@ -32,6 +32,22 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
       const uint64_t paddingMask = bits[(chunkSize * (a + (chunkSize * b))) / chunkSize];
 
       /**
+       * Mask that turns off the 0 & 63rd bit so that we can use it to get the index
+       * of the outer most bits (the faces that face the outside)
+       */
+      uint64_t indexMask = paddingMask & ~(1ULL << 0) & ~(1ULL << 63);
+
+      /**
+       * The first bit that is on on the left/top/front
+       */
+      int msbIndex = (indexMask == 0) ? 63 : 63 - __builtin_clzll(indexMask);
+
+      /**
+       * The first bit that is on on the right/bottom/back
+       */
+      int lsbIndex = (indexMask == 0) ? 0 : __builtin_ctzll(indexMask);
+
+      /**
        * Shift right to remove the MSB padding bit and extract the following 32bits into a new mask
        * This is the actual mask we will use for the height and width
        */
@@ -52,19 +68,27 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
       /**
        * Check the padding mask, if the bit at 0 index is on
        * turn off the MSB of the start mask
+       *
+       * If bit 0 of paddingMask is set, then clear bit 0 of endMask.
+       * if ((paddingMask >> 0) & 1)
+       *   startMask &= ~(1ULL << 0);
        */
       if ((paddingMask >> 0) & 1)
-        startMask &= ~(1ULL << 0);
+        startMask &= ~(1ULL << (lsbIndex - 1));
 
       /**
-       * Check the padding mask, if the bit at 33 index is on
+       * Check the padding mask, if the bit at 63 index is on
        * turn off the LSB of the end mask
        *
        * This is done in order to not set the height & width of the face at the end of the chunk if the neighbour is the same
        * To avoid creating faces inbetween chunks
+       *
+       * If bit 63 of paddingMask is set, then clear bit 31 of endMask.
+       * if ((paddingMask >> 63) & 1)
+       *   endMask &= ~(1ULL << 31);
        */
-      if ((paddingMask >> 33) & 1)
-        endMask &= ~(1ULL << 31);
+      if ((paddingMask >> 63) & 1)
+        endMask &= ~(1ULL << (msbIndex - 1));
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart, chunkSize);
       SetWidthHeight(a, b, endMask, widthEnd, heightEnd, chunkSize);
@@ -260,22 +284,28 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices, 
     int fast = i % chunkSize;
     int slow = (i / chunkSize) % chunkSize;
 
-    if (tree->get(originX + 32, fast + originY, slow + originZ, -1, filter))
-      row |= (1ULL << 33);
+    int rowMSBIndex = ((row == 0) ? -1 : 63 - __builtin_clzll(row) + 1);
+    if (rowMSBIndex > 0 && tree->get(originX + rowMSBIndex, fast + originY, slow + originZ))
+      row |= (1ULL << 63);
 
-    if (tree->get(originX - 1, fast + originY, slow + originZ, -1, filter))
+    int rowLSBIndex = ((row == 0) ? -1 : __builtin_ctzll(row) - 1);
+    if (tree->get((originX + rowLSBIndex) - 1, fast + originY, slow + originZ))
       row |= (1ULL << 0);
 
-    if (tree->get(fast + originX, originY + 32, slow + originZ, -1, filter))
-      column |= (1ULL << 33);
+    int columnMSBIndex = ((column == 0) ? -1 : 63 - __builtin_clzll(column) + 1);
+    if (tree->get(fast + originX, originY + columnMSBIndex, slow + originZ))
+      column |= (1ULL << 63);
 
-    if (tree->get(fast + originX, originY - 1, slow + originZ, -1, filter))
+    int columnLSBIndex = ((column == 0) ? -1 : __builtin_ctzll(column) - 1);
+    if (tree->get(fast + originX, (originY + columnLSBIndex) - 1, slow + originZ))
       column |= (1ULL << 0);
 
-    if (tree->get(slow + originX, fast + originY, originZ + 32, -1, filter))
-      layer |= (1ULL << 33);
+    int layerMSBIndex = ((layer == 0) ? -1 : 63 - __builtin_clzll(layer) + 1);
+    if (tree->get(slow + originX, fast + originY, originZ + layerMSBIndex))
+      layer |= (1ULL << 63);
 
-    if (tree->get(slow + originX, fast + originY, originZ - 1, -1, filter))
+    int layerLSBIndex = ((layer == 0) ? -1 : __builtin_ctzll(layer) - 1);
+    if (tree->get(slow + originX, fast + originY, (originZ + layerLSBIndex) - 1))
       layer |= (1ULL << 0);
   }
 
