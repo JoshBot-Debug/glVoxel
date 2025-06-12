@@ -96,7 +96,10 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int s
 Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size, int maxDepth, Voxel *filter)
 {
   if (!node || x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
+  {
+    // This is where I need to get the voxel from the neighbour SVO if one exists
     return nullptr;
+  }
 
   if (node->voxel)
   {
