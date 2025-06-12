@@ -14,13 +14,6 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "World/World.h"
 
-struct Material
-{
-  glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
-  glm::vec3 specular = glm::vec3(0.05f, 0.05f, 0.05f);
-  float shininess = 8.0f;
-};
-
 struct Light
 {
   glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -41,7 +34,6 @@ private:
 
 public:
   Light light;
-  Material material;
 
   std::vector<unsigned int> indices;
 
@@ -90,25 +82,25 @@ public:
 
     ImGui::SeparatorText("Primitives");
 
-    if (ImGui::Button("Generate sphere"))
-      world->fillSphere();
+    // if (ImGui::Button("Generate sphere"))
+    //   world->fillSphere();
 
-    if (ImGui::Button("Generate cube"))
-      world->fill();
+    // if (ImGui::Button("Generate cube"))
+    //   world->fill();
 
     ImGui::SeparatorText("Terrain");
 
-    if (ImGui::Button("Initialize World"))
-      world->initialize();
+    if (ImGui::Button("Initialize Height Map"))
+      world->heightMap.initialize();
 
     ImGui::Spacing();
 
-    if (ImGui::Button("Generate chunk"))
-    {
-      for (int x = -1; x < 2; x++)
-        for (int z = -1; z < 2; z++)
-          world->generateChunk(x, z);
-    }
+    // if (ImGui::Button("Generate chunk"))
+    // {
+    //   for (int x = -0; x < 1; x++)
+    //     for (int z = -0; z < 1; z++)
+    //       world->generateChunk(x, z);
+    // }
     ImGui::Spacing();
 
     if (ImGui::Button("Set Buffer"))
@@ -116,32 +108,17 @@ public:
 
     ImGui::Spacing();
 
-    ImGui::DragInt("Destination map width", &world->terrain.destWidth, 1.0f, 256);
-    ImGui::DragInt("Destination map height", &world->terrain.destHeight, 1.0f, 256);
+    ImGui::DragInt("Seed", &world->heightMap.terrain.seed);
+    ImGui::DragFloat("Scale", &world->heightMap.terrain.scale, 0.01f);
+    ImGui::DragFloat("Bias", &world->heightMap.terrain.bias, 0.01f);
 
-    ImGui::DragInt("Seed", &world->terrain.seed);
-    ImGui::DragFloat("Scale", &world->terrain.scale, 0.01f);
-    ImGui::DragFloat("Bias", &world->terrain.bias, 0.01f);
+    ImGui::DragFloat("Frequency", &world->heightMap.terrain.frequency, 0.01f);
+    ImGui::DragFloat("Persistence", &world->heightMap.terrain.persistence, 0.01f);
+    ImGui::DragInt("Octave Count", &world->heightMap.terrain.octaveCount, 1.0f, 1, noise::module::PERLIN_MAX_OCTAVE);
 
-    ImGui::DragFloat("Frequency", &world->terrain.frequency, 0.01f);
-    ImGui::DragFloat("Persistence", &world->terrain.persistence, 0.01f);
-    ImGui::DragInt("Octave Count", &world->terrain.octaveCount, 1.0f, 1, noise::module::PERLIN_MAX_OCTAVE);
-
-    ImGui::DragFloat("Stone Threshold", &world->terrain.stoneThreshold, 0.01f, 0.01f, 1.0f);
-    ImGui::DragFloat("Dirt Threshold", &world->terrain.dirtThreshold, 0.01f, 0.01f, 1.0f);
-    ImGui::DragFloat("Grass Threshold", &world->terrain.grassThreshold, 0.01f, 0.01f, 1.0f);
-
-    ImGui::SeparatorText("Material");
-
-    ImGui::DragFloat("Diffuse X", &material.diffuse.x, 0.01f, 0.0f);
-    ImGui::DragFloat("Diffuse Y", &material.diffuse.y, 0.01f, 0.0f);
-    ImGui::DragFloat("Diffuse Z", &material.diffuse.z, 0.01f, 0.0f);
-
-    ImGui::DragFloat("Specular X", &material.specular.x, 0.01f, 0.0f);
-    ImGui::DragFloat("Specular Y", &material.specular.y, 0.01f, 0.0f);
-    ImGui::DragFloat("Specular Z", &material.specular.z, 0.01f, 0.0f);
-
-    ImGui::DragFloat("Shininess", &material.shininess, 0.1f, 0.0f, 128.0f);
+    ImGui::DragFloat("Stone Threshold", &world->heightMap.terrain.stoneThreshold, 0.01f, 0.01f, 1.0f);
+    ImGui::DragFloat("Dirt Threshold", &world->heightMap.terrain.dirtThreshold, 0.01f, 0.01f, 1.0f);
+    ImGui::DragFloat("Grass Threshold", &world->heightMap.terrain.grassThreshold, 0.01f, 0.01f, 1.0f);
 
     ImGui::SeparatorText("Light");
 

@@ -279,6 +279,9 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices, 
       layer |= (1ULL << 0);
   }
 
+  columns[0] |= (1ULL << 0);
+  columns[maskLength - 1] |= (1ULL << 33);
+
   uint32_t widthStart[maskLength] = {};
   uint32_t heightStart[maskLength] = {};
 
