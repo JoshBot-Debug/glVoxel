@@ -100,7 +100,6 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
       vertices.insert(vertices.end(),
                       std::make_move_iterator(iv.begin()),
                       std::make_move_iterator(iv.end()));
-                      lock.
     }
   }
 }

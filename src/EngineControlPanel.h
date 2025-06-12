@@ -14,6 +14,13 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "World/World.h"
 
+struct Material
+{
+  glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
+  glm::vec3 specular = glm::vec3(0.05f, 0.05f, 0.05f);
+  float shininess = 8.0f;
+};
+
 struct Light
 {
   glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -34,6 +41,7 @@ private:
 
 public:
   Light light;
+  Material material;
 
   std::vector<unsigned int> indices;
 
@@ -119,6 +127,18 @@ public:
     ImGui::DragFloat("Stone Threshold", &world->heightMap.terrain.stoneThreshold, 0.01f, 0.01f, 1.0f);
     ImGui::DragFloat("Dirt Threshold", &world->heightMap.terrain.dirtThreshold, 0.01f, 0.01f, 1.0f);
     ImGui::DragFloat("Grass Threshold", &world->heightMap.terrain.grassThreshold, 0.01f, 0.01f, 1.0f);
+
+    ImGui::SeparatorText("Material");
+
+    ImGui::DragFloat("Diffuse X", &material.diffuse.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Diffuse Y", &material.diffuse.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Diffuse Z", &material.diffuse.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Specular X", &material.specular.x, 0.01f, 0.0f);
+    ImGui::DragFloat("Specular Y", &material.specular.y, 0.01f, 0.0f);
+    ImGui::DragFloat("Specular Z", &material.specular.z, 0.01f, 0.0f);
+
+    ImGui::DragFloat("Shininess", &material.shininess, 0.1f, 0.0f, 128.0f);
 
     ImGui::SeparatorText("Light");
 

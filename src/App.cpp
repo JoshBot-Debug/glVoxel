@@ -78,6 +78,10 @@ void App::onDraw()
 
   shader.setUniform3f("u_CameraPosition", camera.position);
 
+  shader.setUniform3f("u_Material.diffuse", controlPanel.material.diffuse.x, controlPanel.material.diffuse.y, controlPanel.material.diffuse.z);
+  shader.setUniform3f("u_Material.specular", controlPanel.material.specular.x, controlPanel.material.specular.y, controlPanel.material.specular.z);
+  shader.setUniform1f("u_Material.shininess", controlPanel.material.shininess);
+
   /**
    * Light
    */
