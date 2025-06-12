@@ -23,7 +23,7 @@ private:
   Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
   VertexArray vao;
 
-  VoxelManager voxels{256, 1};
+  VoxelManager voxels{256, 2};
 
   PerspectiveCamera *camera = nullptr;
 

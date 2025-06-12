@@ -5,6 +5,8 @@
 #include <mutex>
 #include <noise/noiseutils.h>
 
+#include <unordered_set>
+
 VoxelManager::VoxelManager(int chunkSize, int chunkRadius, float worldStep) : chunkSize(chunkSize), chunkRadius(chunkRadius), worldStep(worldStep) {}
 
 void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
@@ -35,7 +37,46 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
 
 void VoxelManager::update(const glm::vec3 &position)
 {
-  const glm::ivec2 target = getChunkPosition(position);
+  const glm::ivec2 chunkPosition = getChunkPosition(position);
+  const std::vector<glm::ivec2> coords = getChunkPositionsInRadius(chunkPosition);
+
+  // std::cout << chunkPosition.x << " " << chunkPosition.y << std::endl;
+  // for(const auto &coord : coords)
+  // {
+  //   std::cout << coord.x << " " << coord.y << std::endl;
+  // }
+  // const std::unordered_set<glm::ivec2, IVec2Hash, IVec2Equal> coordSet(coords.begin(), coords.end());
+
+  // for (auto it = chunks.begin(); it != chunks.end();)
+  // {
+  //   if (coordSet.find(it->first) == coordSet.end())
+  //   {
+  //     std::cout << "Not found: " << it->first.x << " " << it->first.y << std::endl;
+  //     // it = chunks.erase(it); // Not in radius, remove
+  //     break;
+  //   }
+  //   else
+  //     ++it;
+  // }
+
+  // for (const auto &coord : coords)
+  //   futures.push_back(std::async(std::launch::async, &VoxelManager::generateChunk, this, coord));
+
+  // std::thread([this, coords = coords, futures = std::move(futures)]() mutable
+  //             {
+  //               for (auto &f : futures) f.get();
+
+  //               for (size_t i = 0; i < coords.size(); i++)
+  //               {
+  //                 SparseVoxelOctree &tree = chunks[coords[i]];
+  //                 tree.setNeighbours(coords[i], chunks);
+  //               }
+
+  //               futures.clear();
+
+  //               for (const auto &coord : coords)
+  //                 futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord)); })
+  //     .detach();
 }
 
 const std::vector<glm::ivec2> VoxelManager::getChunkPositionsInRadius(const glm::ivec2 &center) const
