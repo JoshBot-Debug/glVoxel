@@ -9,6 +9,12 @@
 
 VoxelManager::VoxelManager(int chunkSize, int chunkRadius, float worldStep) : chunkSize(chunkSize), chunkRadius(chunkRadius), worldStep(worldStep) {}
 
+VoxelManager::~VoxelManager()
+{
+  for (Voxel *voxel : voxelPalette)
+    delete voxel;
+}
+
 void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
 {
   this->heightMap = heightMap;
@@ -20,6 +26,7 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
 
   std::thread([this, coords = coords, futures = std::move(futures)]() mutable
               {
+                auto t1 = START_TIMER;
                 for (auto &f : futures) f.get();
 
                 for (size_t i = 0; i < coords.size(); i++)
@@ -31,7 +38,14 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
                 futures.clear();
 
                 for (const auto &coord : coords)
-                  futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord)); })
+                  futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord));
+                
+                for (auto &f : futures) f.get();
+
+                std::cout << "Chunks: " << coords.size() << std::endl;
+                std::cout << "Size: " << chunkSize << std::endl;
+                END_TIMER(t1, "Chunks"); })
+
       .detach();
 }
 
@@ -115,20 +129,15 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
       float n = map.GetValue(x, z);
       unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
 
-      for (size_t y = 0; y < height; y++)
-      {
-        Voxel *voxel = new Voxel();
-
+      for (int y = 0; y < height; ++y)
         if (y < stoneLimit)
-          voxel->setColor(45, 45, 45, 255);
+          tree.set(x, y, z, voxelPalette[VoxelPalette::STONE]);
         else if (y < dirtLimit)
-          voxel->setColor(101, 67, 33, 255);
+          tree.set(x, y, z, voxelPalette[VoxelPalette::DIRT]);
         else if (y < grassLimit)
-          voxel->setColor(34, 139, 34, 255);
+          tree.set(x, y, z, voxelPalette[VoxelPalette::GRASS]);
         else
-          voxel->setColor(255, 255, 255, 255);
-        tree.set(x, y, z, voxel);
-      }
+          tree.set(x, y, z, voxelPalette[VoxelPalette::SNOW]);
     }
 }
 
@@ -136,18 +145,18 @@ void VoxelManager::meshChunk(const glm::ivec2 &coord)
 {
   SparseVoxelOctree &tree = chunks[coord];
 
-  std::vector<Voxel> filters = tree.getUniqueVoxels();
+  const std::vector<Voxel *> &filters = tree.getUniqueVoxels();
 
   std::vector<std::vector<Vertex>> tVertices;
   tVertices.resize(filters.size());
 
 #pragma omp parallel for
   for (int i = 0; i < filters.size(); i++)
-    tree.greedyMesh(tVertices[i], &filters[i]);
+    tree.greedyMesh(tVertices[i], filters[i]);
 
   for (int i = 0; i < filters.size(); i++)
   {
-    Voxel *filter = &filters[i];
+    Voxel *filter = filters[i];
     std::vector<Vertex> &iv = tVertices[i];
 
     for (int j = 0; j < iv.size(); j++)

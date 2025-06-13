@@ -7,6 +7,7 @@ struct Voxel
   uint32_t material = 0;
 
   Voxel() = default;
+  Voxel(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   Voxel(uint32_t color);
   Voxel(uint32_t color, uint32_t material);
 

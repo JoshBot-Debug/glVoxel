@@ -1,8 +1,8 @@
-#include "SparseVoxelOctree.h"
 #include <cmath>
 #include <iostream>
+
+#include "SparseVoxelOctree.h"
 #include "World/GreedyMesh.h"
-#include <omp.h>
 
 SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8), root(new Node(0)) {}
 
@@ -49,16 +49,19 @@ Node *SparseVoxelOctree::get(int x, int y, int z, int maxDepth, Voxel *filter)
   return get(root, x, y, z, size, maxDepth, filter);
 }
 
+static inline Node NodeOut{0};
+
 void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int size)
 {
   if (size == 1)
   {
     node->voxel = voxel;
-    for (const Voxel &uVoxel : uniqueVoxels)
-      if (uVoxel == *voxel)
+
+    for (const Voxel *v : uniqueVoxels)
+      if (v == voxel)
         return;
 
-    uniqueVoxels.push_back({voxel->color, voxel->material});
+    uniqueVoxels.push_back(voxel);
     return;
   }
 
@@ -78,10 +81,10 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int s
    * If all 8 children exist and are of the same voxel type.
    * Delete all 8 children and set the parent voxel as their type.
    */
-  Voxel firstVoxel = *node->children[0]->voxel;
+  Voxel *firstVoxel = node->children[0]->voxel;
 
   for (int i = 0; i < 8; i++)
-    if (!node->children[i] || !node->children[i]->voxel || *node->children[i]->voxel != firstVoxel)
+    if (!node->children[i] || !node->children[i]->voxel || node->children[i]->voxel != firstVoxel)
       return;
 
   for (int i = 0; i < 8; i++)
@@ -90,7 +93,7 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int s
     node->children[i] = nullptr;
   }
 
-  node->voxel = new Voxel(firstVoxel.color, firstVoxel.material);
+  node->voxel = firstVoxel;
 }
 
 inline int floorDiv(int a, int b)
@@ -127,7 +130,7 @@ Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size, int maxD
         mod(x, this->size),
         y,
         mod(z, this->size)};
-    
+
     return neighbour->get(localCoord, -1, filter);
   }
 
@@ -194,7 +197,7 @@ const size_t SparseVoxelOctree::getTotalMemoryUsage() const
   return sizeof(SparseVoxelOctree) + getMemoryUsage(root);
 }
 
-std::vector<Voxel> SparseVoxelOctree::getUniqueVoxels()
+const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const
 {
   return uniqueVoxels;
 }

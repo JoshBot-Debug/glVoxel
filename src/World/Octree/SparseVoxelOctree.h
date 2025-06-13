@@ -23,7 +23,7 @@ private:
   int maxDepth;
   glm::ivec2 chunkCoord{0, 0};
   Node *root;
-  std::vector<Voxel> uniqueVoxels;
+  std::vector<Voxel *> uniqueVoxels;
   std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal> neighbours;
 
   void set(Node *node, int x, int y, int z, Voxel *voxel, int size);
@@ -52,7 +52,7 @@ public:
 
   const size_t getTotalMemoryUsage() const;
 
-  std::vector<Voxel> getUniqueVoxels();
+  const std::vector<Voxel *> &getUniqueVoxels() const;
 
   void setNeighbours(const glm::ivec2 &chunkPosition, std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> &chunks);
 };

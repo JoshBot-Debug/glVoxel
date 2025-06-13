@@ -21,7 +21,6 @@ bool Node::operator!=(const Node &other) const
 void Node::clear()
 {
   depth = 0;
-  delete voxel;
   voxel = nullptr;
 
   for (int i = 0; i < 8; i++)

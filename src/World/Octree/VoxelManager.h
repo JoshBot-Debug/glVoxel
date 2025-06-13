@@ -10,12 +10,26 @@
 
 class VoxelManager
 {
+  enum VoxelPalette
+  {
+    STONE = 0,
+    DIRT = 1,
+    GRASS = 2,
+    SNOW = 3,
+  };
+
 private:
   int chunkSize;
   int chunkRadius;
   float worldStep;
 
   HeightMap *heightMap;
+
+  std::vector<Voxel *> voxelPalette = {
+      new Voxel(45, 45, 45, 255),
+      new Voxel(101, 67, 33, 255),
+      new Voxel(34, 139, 34, 255),
+      new Voxel(255, 255, 255, 255)};
 
   std::mutex verticesMutex;
   std::vector<std::future<void>> futures;
@@ -29,6 +43,7 @@ public:
 
 public:
   VoxelManager(int chunkSize, int chunkRadius, float worldStep = 1.0f);
+  ~VoxelManager();
 
   void initialize(const glm::vec3 &position, HeightMap *heightMap);
 
