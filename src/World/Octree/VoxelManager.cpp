@@ -164,6 +164,22 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
   generateBlockChunks(dirtLimit, grassLimit, voxelPalette[VoxelPalette::GRASS]);
   generateBlockChunks(grassLimit, size, voxelPalette[VoxelPalette::SNOW]);
 
+  // for (int z = 0; z < size; ++z)
+  //   for (int x = 0; x < size; ++x)
+  //   {
+  //     float n = map.GetValue(x, z);
+  //     unsigned int y = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
+
+  //     if (y < stoneLimit)
+  //       tree.set(x, y, z, voxelPalette[VoxelPalette::STONE]);
+  //     else if (y < dirtLimit)
+  //       tree.set(x, y, z, voxelPalette[VoxelPalette::DIRT]);
+  //     else if (y < grassLimit)
+  //       tree.set(x, y, z, voxelPalette[VoxelPalette::GRASS]);
+  //     else
+  //       tree.set(x, y, z, voxelPalette[VoxelPalette::SNOW]);
+  //   }
+
   END_TIMER(t1, "generateChunk()");
 }
 

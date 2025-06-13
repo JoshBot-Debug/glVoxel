@@ -49,8 +49,6 @@ public:
 
   void update(const glm::vec3 &position);
 
-  const std::vector<Vertex> &getVertices() const;
-
   const std::vector<glm::ivec2> getChunkPositionsInRadius(const glm::ivec2 &center) const;
 
   const glm::ivec2 getChunkPosition(const glm::vec3 &position) const;

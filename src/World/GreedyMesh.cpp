@@ -21,7 +21,7 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
   for (uint8_t a = 0; a < chunkSize; a++)
     for (uint8_t b = 0; b < chunkSize; b++)
     {
-      /**
+        /**
        * Get the bitmask at index a,b
        * The padding mask has an extra bit as the LSB and MSB.
        * The MSB is the LSB of the pervious neighbour chunk
@@ -32,26 +32,20 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
       const uint64_t paddingMask = bits[(chunkSize * (a + (chunkSize * b))) / chunkSize];
 
       /**
-       * Mask that turns off the 0 & 63rd bit so that we can use it to get the index
-       * of the outer most bits (the faces that face the outside)
+       * Shift right to remove the LSB padding bit and extract the following 32bits into a new mask
+       * This is the actual mask we will use for the height and width
        */
-      uint64_t indexMask = paddingMask & ~(1ULL << 0) & ~(1ULL << 63);
+      const uint32_t mask = (paddingMask >> 1) & 0xFFFFFFFF;
 
       /**
        * The first bit that is on on the left/top/front
        */
-      int msbIndex = (indexMask == 0) ? 63 : 63 - __builtin_clzll(indexMask);
+      int msbIndex = (mask == 0) ? 31 : 31 - __builtin_clz(mask);
 
       /**
        * The first bit that is on on the right/bottom/back
        */
-      int lsbIndex = (indexMask == 0) ? 0 : __builtin_ctzll(indexMask);
-
-      /**
-       * Shift right to remove the MSB padding bit and extract the following 32bits into a new mask
-       * This is the actual mask we will use for the height and width
-       */
-      const uint32_t mask = (paddingMask >> 1) & 0xFFFFFFFF;
+      int lsbIndex = (mask == 0) ? 0 : __builtin_ctz(mask);
 
       /**
        * Remove all the bits other than the start face
@@ -74,7 +68,7 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
        *   startMask &= ~(1ULL << 0);
        */
       if ((paddingMask >> 0) & 1)
-        startMask &= ~(1ULL << (lsbIndex - 1));
+        startMask &= ~(1ULL << lsbIndex);
 
       /**
        * Check the padding mask, if the bit at 63 index is on
@@ -88,10 +82,82 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
        *   endMask &= ~(1ULL << 31);
        */
       if ((paddingMask >> 63) & 1)
-        endMask &= ~(1ULL << (msbIndex - 1));
+        endMask &= ~(1ULL << msbIndex);
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart, chunkSize);
       SetWidthHeight(a, b, endMask, widthEnd, heightEnd, chunkSize);
+
+      // /**
+      //  * Get the bitmask at index a,b
+      //  * The padding mask has an extra bit as the LSB and MSB.
+      //  * The MSB is the LSB of the pervious neighbour chunk
+      //  * The LSB is the MSB of the next neighbour chunk
+      //  * The first & last will always be a zero because there is no neighbour next to them.
+      //  * 0...1 => 1...1 => 1...0
+      //  */
+      // const uint64_t paddingMask = bits[(chunkSize * (a + (chunkSize * b))) / chunkSize];
+
+      // /**
+      //  * Mask that turns off the 0 & 63rd bit so that we can use it to get the index
+      //  * of the outer most bits (the faces that face the outside)
+      //  */
+      // uint64_t indexMask = paddingMask & ~(1ULL << 0) & ~(1ULL << 63);
+
+      // /**
+      //  * The first bit that is on on the left/top/front
+      //  */
+      // int msbIndex = (indexMask == 0) ? 63 : 63 - __builtin_clzll(indexMask);
+
+      // /**
+      //  * The first bit that is on on the right/bottom/back
+      //  */
+      // int lsbIndex = (indexMask == 0) ? 0 : __builtin_ctzll(indexMask);
+
+      // /**
+      //  * Shift right to remove the LSB padding bit and extract the following 32bits into a new mask
+      //  * This is the actual mask we will use for the height and width
+      //  */
+      // const uint32_t mask = (paddingMask >> 1) & 0xFFFFFFFF;
+
+      // /**
+      //  * Remove all the bits other than the start face
+      //  * 11100111100011 => 00100000100001
+      //  */
+      // uint32_t startMask = mask & ~(mask << 1);
+
+      // /**
+      //  * Likewise remove all the bits other than the end face
+      //  * 11100111100011 => 10000100000010
+      //  */
+      // uint32_t endMask = mask & ~(mask >> 1);
+
+      // /**
+      //  * Check the padding mask, if the bit at 0 index is on
+      //  * turn off the MSB of the start mask
+      //  *
+      //  * If bit 0 of paddingMask is set, then clear bit 0 of endMask.
+      //  * if ((paddingMask >> 0) & 1)
+      //  *   startMask &= ~(1ULL << 0);
+      //  */
+      // if ((paddingMask >> 0) & 1)
+      //   startMask &= ~(1ULL << (lsbIndex - 1));
+
+      // /**
+      //  * Check the padding mask, if the bit at 63 index is on
+      //  * turn off the LSB of the end mask
+      //  *
+      //  * This is done in order to not set the height & width of the face at the end of the chunk if the neighbour is the same
+      //  * To avoid creating faces inbetween chunks
+      //  *
+      //  * If bit 63 of paddingMask is set, then clear bit 31 of endMask.
+      //  * if ((paddingMask >> 63) & 1)
+      //  *   endMask &= ~(1ULL << 31);
+      //  */
+      // if ((paddingMask >> 63) & 1)
+      //   endMask &= ~(1ULL << (msbIndex - 1));
+
+      // SetWidthHeight(a, b, startMask, widthStart, heightStart, chunkSize);
+      // SetWidthHeight(a, b, endMask, widthEnd, heightEnd, chunkSize);
     }
 }
 
@@ -288,24 +354,24 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices, 
     if (rowMSBIndex > 0 && tree->get(originX + rowMSBIndex, fast + originY, slow + originZ))
       row |= (1ULL << 63);
 
-    int rowLSBIndex = ((row == 0) ? -1 : __builtin_ctzll(row) - 1);
-    if (tree->get((originX + rowLSBIndex) - 1, fast + originY, slow + originZ))
+    int rowLSBIndex = ((row == 0) ? -2 : __builtin_ctzll(row) - 2);
+    if (tree->get(originX + rowLSBIndex, fast + originY, slow + originZ))
       row |= (1ULL << 0);
 
     int columnMSBIndex = ((column == 0) ? -1 : 63 - __builtin_clzll(column) + 1);
     if (tree->get(fast + originX, originY + columnMSBIndex, slow + originZ))
       column |= (1ULL << 63);
 
-    int columnLSBIndex = ((column == 0) ? -1 : __builtin_ctzll(column) - 1);
-    if (tree->get(fast + originX, (originY + columnLSBIndex) - 1, slow + originZ))
+    int columnLSBIndex = ((column == 0) ? -2 : __builtin_ctzll(column) - 2);
+    if (tree->get(fast + originX, originY + columnLSBIndex, slow + originZ))
       column |= (1ULL << 0);
 
     int layerMSBIndex = ((layer == 0) ? -1 : 63 - __builtin_clzll(layer) + 1);
     if (tree->get(slow + originX, fast + originY, originZ + layerMSBIndex))
       layer |= (1ULL << 63);
 
-    int layerLSBIndex = ((layer == 0) ? -1 : __builtin_ctzll(layer) - 1);
-    if (tree->get(slow + originX, fast + originY, (originZ + layerLSBIndex) - 1))
+    int layerLSBIndex = ((layer == 0) ? -2 : __builtin_ctzll(layer) - 2);
+    if (tree->get(slow + originX, fast + originY, originZ + layerLSBIndex))
       layer |= (1ULL << 0);
   }
 

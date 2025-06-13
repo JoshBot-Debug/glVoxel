@@ -23,13 +23,13 @@ private:
   Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
   VertexArray vao;
 
-  VoxelManager voxels{256, 2};
+  VoxelManager voxels{128, 1};
 
   PerspectiveCamera *camera = nullptr;
 
 
 public:
-  HeightMap heightMap{256, 256};
+  HeightMap heightMap{128, 128};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
