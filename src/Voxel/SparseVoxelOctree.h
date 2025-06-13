@@ -16,7 +16,8 @@
 
 #include <fstream>
 
-class SparseVoxelOctree {
+class SparseVoxelOctree
+{
 private:
   int size;
   int maxDepth;
@@ -51,21 +52,17 @@ public:
   /**
    * Requires you to pass in a mask
    *
+   * const int size = 256;
    * uint64_t mask[size * size * (size / 64)] = {0};
    *
    * for (int z = 0; z < size; z++)
    *   for (int x = 0; x < size; x++)
-   *   {
-   *      float n = map.GetValue(x, z);
-   *      unsigned int height = static_cast<unsigned
-   * int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2))); for (int y
-   * = 0; y < height; y++)
+   *      for (int y= 0; y < size; y++)
    *      {
    *          int index = x + size * (z + size * y);
    *          if(blockIsGrass)
    *            mask[index / 64] |= 1UL << (index % 64);
    *      }
-   *   }
    *
    */
   void setBlock(uint64_t (&mask)[], Voxel *voxel);
