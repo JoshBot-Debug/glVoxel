@@ -1,12 +1,11 @@
-#include <iostream>
 #include "VoxelManager.h"
-#include "Debug.h"
+#include <iostream>
 #include <future>
 #include <mutex>
 #include <noise/noiseutils.h>
-
 #include <unordered_set>
-#include <array>
+
+#include "Debug.h"
 
 VoxelManager::VoxelManager(int chunkSize, int chunkRadius, float worldStep) : chunkSize(chunkSize), chunkRadius(chunkRadius), worldStep(worldStep) {}
 

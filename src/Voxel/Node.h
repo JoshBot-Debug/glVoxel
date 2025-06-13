@@ -1,5 +1,5 @@
 #pragma once
-#include "Voxel.h"
+#include "Voxel/Voxel.h"
 #include <glm/glm.hpp>
 
 struct Node

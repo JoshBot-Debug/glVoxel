@@ -9,10 +9,10 @@
 #include <execution>
 
 #include "Engine/Types.h"
-#include "World/Common.h"
+#include "Voxel/Common.h"
 #include "Debug.h"
-#include "Voxel.h"
-#include "Node.h"
+#include "Voxel/Voxel.h"
+#include "Voxel/Node.h"
 
 #include <fstream>
 

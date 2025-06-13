@@ -2,9 +2,9 @@
 
 #include <glm/glm.hpp>
 #include <unordered_map>
-#include "SparseVoxelOctree.h"
-#include "World/HeightMap.h"
-#include "World/Common.h"
+#include "Voxel/SparseVoxelOctree.h"
+#include "Voxel/HeightMap.h"
+#include "Voxel/Common.h"
 
 #include <future>
 

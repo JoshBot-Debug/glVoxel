@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "SparseVoxelOctree.h"
-#include "World/GreedyMesh.h"
+#include "Voxel/GreedyMesh.h"
 
 SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8) {}
 

@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Octree/SparseVoxelOctree.h"
+#include "Voxel/SparseVoxelOctree.h"
 #include "Engine/Types.h"
 #include "Engine/Face.h"
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "World/Octree/SparseVoxelOctree.h"
-#include "World/Octree/VoxelManager.h"
+#include "Voxel/SparseVoxelOctree.h"
+#include "Voxel/VoxelManager.h"
+#include "Voxel/HeightMap.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Texture2D.h"
 #include "Engine/Camera/PerspectiveCamera.h"
-#include "HeightMap.h"
 
 #include <noise/noise.h>
 #include <noise/noiseutils.h>
@@ -23,10 +23,9 @@ private:
   Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
   VertexArray vao;
 
-  VoxelManager voxels{128, 1};
+  VoxelManager voxels{128, 2};
 
   PerspectiveCamera *camera = nullptr;
-
 
 public:
   HeightMap heightMap{128, 128};
