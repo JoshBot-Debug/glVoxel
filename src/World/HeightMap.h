@@ -6,12 +6,12 @@
 struct TerrainProperties
 {
   int seed = 50;
-  int octaveCount = 3.0f;
-  float frequency = 1.0f;
-  float persistence = 0.4f;
+  int octaveCount = 3.0;
+  float frequency = 1.0;
+  float persistence = 0.4;
 
-  float scale = 0.9f;
-  float bias = 0.0f;
+  float scale = 0.6;
+  float bias = -0.4;
 
   float stoneThreshold = 0.20f;
   float dirtThreshold = 0.30f;
