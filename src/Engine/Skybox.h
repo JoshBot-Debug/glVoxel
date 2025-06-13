@@ -16,7 +16,11 @@ private:
   unsigned int texture = 0;
 
 public:
-  // {right, left, top, bottom, front, back}
+  /**
+   * This order here is important
+   *
+   * right, left, top, bottom, front, back
+   */
   Skybox(std::vector<std::string> faces);
   ~Skybox() = default;
 
