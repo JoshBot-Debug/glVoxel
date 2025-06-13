@@ -21,7 +21,7 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
   for (uint8_t a = 0; a < chunkSize; a++)
     for (uint8_t b = 0; b < chunkSize; b++)
     {
-        /**
+      /**
        * Get the bitmask at index a,b
        * The padding mask has an extra bit as the LSB and MSB.
        * The MSB is the LSB of the pervious neighbour chunk
