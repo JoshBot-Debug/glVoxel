@@ -22,11 +22,15 @@ private:
   int size;
   int maxDepth;
   glm::ivec2 chunkCoord{0, 0};
-  Node *root;
+
+  Node *root = new Node(0);
+
   std::vector<Voxel *> uniqueVoxels;
   std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal> neighbours;
 
-  void set(Node *node, int x, int y, int z, Voxel *voxel, int size);
+  void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel, int scale);
+
+  void set(Node *node, int x, int y, int z, Voxel *voxel, int size, int maxSize = 1);
   Node *get(Node *node, int x, int y, int z, int size, int lod = -1, Voxel *filter = nullptr);
   void clear(Node *node);
 
@@ -41,10 +45,31 @@ public:
   const int getMaxDepth() const;
   Node *getRoot();
 
-  void set(glm::vec3 position, Voxel *voxel);
+  /**
+   * Requires you to pass in a mask
+   *
+   * uint64_t mask[size * size * (size / 64)] = {0};
+   *
+   * for (int z = 0; z < size; z++)
+   *   for (int x = 0; x < size; x++)
+   *   {
+   *      float n = map.GetValue(x, z);
+   *      unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
+   *      for (int y = 0; y < height; y++)
+   *      {
+   *          int index = x + size * (z + size * y);
+   *          if(blockIsGrass)
+   *            mask[index / 64] |= 1UL << (index % 64);
+   *      }
+   *   }
+   *
+   */
+  void setBlock(uint64_t (&mask)[], Voxel *voxel);
+
+  void set(glm::vec3 position, Voxel *voxel, int maxSize = 1);
   Node *get(glm::vec3 position, int maxDepth = -1, Voxel *filter = nullptr);
 
-  void set(int x, int y, int z, Voxel *voxel);
+  void set(int x, int y, int z, Voxel *voxel, int maxSize = 1);
   Node *get(int x, int y, int z, int maxDepth = -1, Voxel *filter = nullptr);
 
   void clear();

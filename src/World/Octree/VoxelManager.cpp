@@ -6,6 +6,7 @@
 #include <noise/noiseutils.h>
 
 #include <unordered_set>
+#include <array>
 
 VoxelManager::VoxelManager(int chunkSize, int chunkRadius, float worldStep) : chunkSize(chunkSize), chunkRadius(chunkRadius), worldStep(worldStep) {}
 
@@ -20,6 +21,18 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
   this->heightMap = heightMap;
 
   const std::vector<glm::ivec2> coords = getChunkPositionsInRadius(getChunkPosition(position));
+
+  // for (const auto &coord : coords)
+  //   generateChunk(coord);
+
+  // for (size_t i = 0; i < coords.size(); i++)
+  // {
+  //   SparseVoxelOctree &tree = chunks[coords[i]];
+  //   tree.setNeighbours(coords[i], chunks);
+  // }
+
+  // for (const auto &coord : coords)
+  //   meshChunk(coord);
 
   for (const auto &coord : coords)
     futures.push_back(std::async(std::launch::async, &VoxelManager::generateChunk, this, coord));
@@ -39,7 +52,7 @@ void VoxelManager::initialize(const glm::vec3 &position, HeightMap *heightMap)
 
                 for (const auto &coord : coords)
                   futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord));
-                
+
                 for (auto &f : futures) f.get();
 
                 std::cout << "Chunks: " << coords.size() << std::endl;
@@ -111,6 +124,7 @@ const glm::ivec2 VoxelManager::getChunkPosition(const glm::vec3 &position) const
 
 void VoxelManager::generateChunk(const glm::ivec2 &coord)
 {
+  auto t1 = START_TIMER;
   auto [it, inserted] = chunks.try_emplace(coord, chunkSize);
   SparseVoxelOctree &tree = it->second;
 
@@ -123,26 +137,40 @@ void VoxelManager::generateChunk(const glm::ivec2 &coord)
   int dirtLimit = static_cast<int>(size * heightMap->terrain.dirtThreshold);
   int grassLimit = static_cast<int>(size * heightMap->terrain.grassThreshold);
 
-  for (int z = 0; z < size; ++z)
-    for (int x = 0; x < size; ++x)
-    {
-      float n = map.GetValue(x, z);
-      unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
+  const unsigned int maskSize = size * size * (size / 64);
 
-      for (int y = 0; y < height; ++y)
-        if (y < stoneLimit)
-          tree.set(x, y, z, voxelPalette[VoxelPalette::STONE]);
-        else if (y < dirtLimit)
-          tree.set(x, y, z, voxelPalette[VoxelPalette::DIRT]);
-        else if (y < grassLimit)
-          tree.set(x, y, z, voxelPalette[VoxelPalette::GRASS]);
-        else
-          tree.set(x, y, z, voxelPalette[VoxelPalette::SNOW]);
-    }
+  auto generateBlockChunks = [&](int thresholdFrom, int thresholdTo, Voxel *voxel) mutable
+  {
+    uint64_t mask[size * size * (size / 64)] = {0};
+
+    for (int z = 0; z < size; z++)
+      for (int x = 0; x < size; x++)
+      {
+        float n = map.GetValue(x, z);
+        unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
+        for (int y = 0; y < height; y++)
+        {
+          int index = x + size * (z + size * y);
+          if (y >= thresholdFrom && y < thresholdTo)
+            mask[index / 64] |= 1UL << (index % 64);
+        }
+      }
+
+    tree.setBlock(mask, voxel);
+  };
+
+  generateBlockChunks(0, stoneLimit, voxelPalette[VoxelPalette::STONE]);
+  generateBlockChunks(stoneLimit, dirtLimit, voxelPalette[VoxelPalette::DIRT]);
+  generateBlockChunks(dirtLimit, grassLimit, voxelPalette[VoxelPalette::GRASS]);
+  generateBlockChunks(grassLimit, size, voxelPalette[VoxelPalette::SNOW]);
+
+  END_TIMER(t1, "generateChunk()");
 }
 
 void VoxelManager::meshChunk(const glm::ivec2 &coord)
 {
+  auto t1 = START_TIMER;
+
   SparseVoxelOctree &tree = chunks[coord];
 
   const std::vector<Voxel *> &filters = tree.getUniqueVoxels();
@@ -152,10 +180,9 @@ void VoxelManager::meshChunk(const glm::ivec2 &coord)
 
 #pragma omp parallel for
   for (int i = 0; i < filters.size(); i++)
+  {
     tree.greedyMesh(tVertices[i], filters[i]);
 
-  for (int i = 0; i < filters.size(); i++)
-  {
     Voxel *filter = filters[i];
     std::vector<Vertex> &iv = tVertices[i];
 
@@ -174,4 +201,6 @@ void VoxelManager::meshChunk(const glm::ivec2 &coord)
                       std::make_move_iterator(iv.end()));
     }
   }
+
+  END_TIMER(t1, "meshChunk()");
 }

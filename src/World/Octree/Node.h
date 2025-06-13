@@ -8,6 +8,7 @@ struct Node
   Voxel *voxel = nullptr;
   Node *children[8] = {nullptr};
 
+  Node();
   Node(uint8_t depth);
   ~Node();
 

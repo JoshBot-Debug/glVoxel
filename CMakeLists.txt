@@ -75,6 +75,9 @@ set_target_properties(glVoxel PROPERTIES
   CXX_EXTENSIONS OFF
 )
 
+# Stack trace in debug mode
+# set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address")
+
 # Enable the best optimization settings
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto -funroll-loops -fomit-frame-pointer")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto=auto")

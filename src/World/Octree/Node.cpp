@@ -1,6 +1,8 @@
 #include "Node.h"
 #include <unordered_map>
 
+Node::Node() {}
+
 Node::Node(uint8_t depth) : depth(depth) {}
 
 Node::~Node()
@@ -25,10 +27,7 @@ void Node::clear()
 
   for (int i = 0; i < 8; i++)
     if (children[i])
-    {
-      delete children[i];
       children[i] = nullptr;
-    }
 }
 
 Voxel *Node::getAverageVoxel()

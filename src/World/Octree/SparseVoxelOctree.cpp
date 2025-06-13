@@ -4,10 +4,10 @@
 #include "SparseVoxelOctree.h"
 #include "World/GreedyMesh.h"
 
-SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8), root(new Node(0)) {}
+SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8) {}
 
 SparseVoxelOctree::SparseVoxelOctree(int size)
-    : size(size), maxDepth(std::log2(size)), root(new Node(0)) {}
+    : size(size), maxDepth(std::log2(size)) {}
 
 SparseVoxelOctree::~SparseVoxelOctree()
 {
@@ -29,14 +29,64 @@ Node *SparseVoxelOctree::getRoot()
   return root;
 }
 
-void SparseVoxelOctree::set(glm::vec3 position, Voxel *voxel)
+void SparseVoxelOctree::setBlock(uint64_t (&mask)[], Voxel *voxel)
 {
-  set(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<int>(position.z), voxel);
+  for (int z = 0; z < size; z += 64)
+    for (int x = 0; x < size; x += 64)
+      for (int y = 0; y < size; y += 64)
+        setBlock(mask, x, y, z, voxel, 64);
 }
 
-void SparseVoxelOctree::set(int x, int y, int z, Voxel *voxel)
+void SparseVoxelOctree::setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel, int scale)
 {
-  set(root, x, y, z, voxel, size);
+  bool isFullBlock = true;
+
+  for (int dz = 0; dz < scale && isFullBlock; ++dz)
+    for (int dx = 0; dx < scale && isFullBlock; ++dx)
+      for (int dy = 0; dy < scale && isFullBlock; ++dy)
+      {
+        int ix = x + dx;
+        int iy = y + dy;
+        int iz = z + dz;
+
+        int index = ix + size * (iz + size * iy);
+        if (!(mask[index / 64] & (1UL << (index % 64))))
+        {
+          isFullBlock = false;
+          break;
+        }
+      }
+
+  if (isFullBlock)
+  {
+    set(x, y, z, voxel, scale);
+    return;
+  }
+
+  if (scale == 1)
+  {
+    int index = x + size * (z + size * y);
+    if (mask[index / 64] & (1UL << (index % 64)))
+      set(x, y, z, voxel, 1);
+    return;
+  }
+
+  int half = scale / 2;
+
+  for (int dz = 0; dz < scale; dz += half)
+    for (int dx = 0; dx < scale; dx += half)
+      for (int dy = 0; dy < scale; dy += half)
+        setBlock(mask, x + dx, y + dy, z + dz, voxel, half);
+}
+
+void SparseVoxelOctree::set(glm::vec3 position, Voxel *voxel, int maxSize)
+{
+  set(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<int>(position.z), voxel, maxSize);
+}
+
+void SparseVoxelOctree::set(int x, int y, int z, Voxel *voxel, int maxSize)
+{
+  set(root, x, y, z, voxel, size, maxSize);
 }
 
 Node *SparseVoxelOctree::get(glm::vec3 position, int maxDepth, Voxel *filter)
@@ -49,11 +99,9 @@ Node *SparseVoxelOctree::get(int x, int y, int z, int maxDepth, Voxel *filter)
   return get(root, x, y, z, size, maxDepth, filter);
 }
 
-static inline Node NodeOut{0};
-
-void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int size)
+void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int size, int maxSize)
 {
-  if (size == 1)
+  if (size == maxSize)
   {
     node->voxel = voxel;
 
@@ -72,7 +120,7 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel, int s
   if (!node->children[index])
     node->children[index] = new Node((uint8_t)(maxDepth - std::log2(half)));
 
-  this->set(node->children[index], x % half, y % half, z % half, voxel, half);
+  this->set(node->children[index], x % half, y % half, z % half, voxel, half, maxSize);
 
   if (!node->children[0] || !node->children[0]->voxel)
     return;
