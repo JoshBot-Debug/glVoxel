@@ -1,24 +1,24 @@
 #include "Buffer.h"
 #include "Debug.h"
 
-Buffer::Buffer(BufferTarget target, VertexDraw draw) : target(target), draw(draw) {}
+Buffer::Buffer(BufferTarget target, VertexDraw draw)
+    : target(target), draw(draw) {}
 
-Buffer::Buffer(BufferTarget target, unsigned int resizeFactor, VertexDraw draw) : target(target), draw(draw), resizeFactor(resizeFactor) {};
+Buffer::Buffer(BufferTarget target, unsigned int resizeFactor, VertexDraw draw)
+    : target(target), draw(draw), resizeFactor(resizeFactor){};
 
-Buffer::~Buffer()
-{
+Buffer::~Buffer() {
   if (buffer)
     glDeleteBuffers(1, &buffer);
 }
 
-void Buffer::generate()
-{
+void Buffer::generate() {
   if (!buffer)
     glGenBuffers(1, &buffer);
 }
 
-void Buffer::set(unsigned int chunk, unsigned int count, const void *data, const std::vector<unsigned int> partitions)
-{
+void Buffer::set(unsigned int chunk, unsigned int count, const void *data,
+                 const std::vector<unsigned int> partitions) {
   unsigned int size = count * chunk;
 
   if (partitions.size())
@@ -30,9 +30,11 @@ void Buffer::set(unsigned int chunk, unsigned int count, const void *data, const
   glBufferData((unsigned int)target, size, data, (unsigned int)draw);
 }
 
-void Buffer::update(unsigned int chunk, unsigned int offset, unsigned int size, const void *data, unsigned int partition)
-{
-  glBufferSubData((unsigned int)target, (offset * chunk) + getBufferPartitionOffsetSize(partition), size, data);
+void Buffer::update(unsigned int chunk, unsigned int offset, unsigned int size,
+                    const void *data, unsigned int partition) {
+  glBufferSubData((unsigned int)target,
+                  (offset * chunk) + getBufferPartitionOffsetSize(partition),
+                  size, data);
 }
 
 unsigned int Buffer::get() const { return buffer; }
@@ -41,8 +43,7 @@ void Buffer::bind() const { glBindBuffer((unsigned int)target, buffer); }
 
 void Buffer::unbind() const { glBindBuffer((unsigned int)target, 0); }
 
-int Buffer::getBufferSize() const
-{
+int Buffer::getBufferSize() const {
   glBindBuffer((unsigned int)target, buffer);
 
   int size = 0;
@@ -51,8 +52,8 @@ int Buffer::getBufferSize() const
   return size;
 }
 
-void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offset)
-{
+void Buffer::resize(unsigned int partition, unsigned int size,
+                    unsigned int offset) {
   if (partitions.size() <= partition)
     addPartition(partition);
 
@@ -63,7 +64,8 @@ void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offs
   unsigned int next;
   glGenBuffers(1, &next);
   glBindBuffer((unsigned int)target, next);
-  glBufferData((unsigned int)target, currentSize + size, nullptr, (unsigned int)draw);
+  glBufferData((unsigned int)target, currentSize + size, nullptr,
+               (unsigned int)draw);
 
   glBindBuffer(GL_COPY_WRITE_BUFFER, next);
 
@@ -72,10 +74,13 @@ void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offs
   const size_t remaining = currentSize - (partitionOffset + offset);
 
   if (partitionOffset + offset > 0)
-    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, partitionOffset + offset);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                        partitionOffset + offset);
 
   if (remaining > 0)
-    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, partitionOffset + offset, partitionOffset + offset + size, remaining);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
+                        partitionOffset + offset,
+                        partitionOffset + offset + size, remaining);
 
   glBindBuffer(GL_COPY_READ_BUFFER, 0);
   glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
@@ -86,8 +91,7 @@ void Buffer::resize(unsigned int partition, unsigned int size, unsigned int offs
   partitions[partition] += size;
 }
 
-const unsigned int Buffer::addPartition(unsigned int size)
-{
+const unsigned int Buffer::addPartition(unsigned int size) {
   this->partitions.emplace_back(size);
   const unsigned int id = this->partitions.size() - 1;
 
@@ -97,12 +101,10 @@ const unsigned int Buffer::addPartition(unsigned int size)
   return id;
 }
 
-const bool Buffer::isNextPartition(const unsigned int partition)
-{
+const bool Buffer::isNextPartition(const unsigned int partition) {
   return this->partitions.size() == partition;
 }
 
-const bool Buffer::partitionExists(const unsigned int partition)
-{
+const bool Buffer::partitionExists(const unsigned int partition) {
   return partitions.size() > partition;
 }

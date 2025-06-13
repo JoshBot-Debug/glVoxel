@@ -1,8 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 
-struct Voxel
-{
+struct Voxel {
   uint32_t color = 0;
   uint32_t material = 0;
 

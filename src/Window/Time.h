@@ -1,7 +1,6 @@
 #pragma once
 
-class Time
-{
+class Time {
 private:
   static double time;
   static double deltaTime;

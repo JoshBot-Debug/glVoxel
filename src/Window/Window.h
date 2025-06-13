@@ -1,16 +1,15 @@
 #pragma once
 
-#include <string>
 #include <iostream>
+#include <string>
 
-#include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "Scene.h"
 
-struct WindowOptions
-{
+struct WindowOptions {
   std::string title;
 
   unsigned int width;
@@ -28,8 +27,7 @@ struct WindowOptions
   bool maximized = false;
 };
 
-class Window : Scene
-{
+class Window : Scene {
 private:
   GLFWwindow *window;
 

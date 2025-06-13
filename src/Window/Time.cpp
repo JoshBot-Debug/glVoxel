@@ -10,14 +10,12 @@ int Time::currentFrame = 0;
 int Time::averageFPS[60];
 int Time::fps = 0;
 
-void Time::UpdateDeltaTime()
-{
+void Time::UpdateDeltaTime() {
   double time = glfwGetTime();
   Time::deltaTime = time - Time::time;
   Time::time = time;
 
-  if (Time::deltaTime > 0)
-  {
+  if (Time::deltaTime > 0) {
     int fps = (int)(1.0 / Time::deltaTime);
 
     Time::averageFPS[Time::currentFrame] = fps;
@@ -32,17 +30,8 @@ void Time::UpdateDeltaTime()
   }
 }
 
-const double Time::GetTime()
-{
-  return glfwGetTime();
-}
+const double Time::GetTime() { return glfwGetTime(); }
 
-const double Time::GetDeltaTime()
-{
-  return Time::deltaTime;
-}
+const double Time::GetDeltaTime() { return Time::deltaTime; }
 
-const int Time::GetAverageFPS()
-{
-  return Time::fps;
-}
+const int Time::GetAverageFPS() { return Time::fps; }

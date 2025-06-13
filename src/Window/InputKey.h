@@ -2,14 +2,13 @@
 
 #include <GLFW/glfw3.h>
 
-enum class KeyAction: int {
+enum class KeyAction : int {
   PRESS = GLFW_PRESS,
   REPEAT = GLFW_REPEAT,
   RELEASE = GLFW_RELEASE,
 };
 
-enum class MouseButton: int
-{
+enum class MouseButton : int {
   UNKNOWN = -1,
 
   // Mouse buttons
@@ -25,8 +24,7 @@ enum class MouseButton: int
   BUTTON_8 = GLFW_MOUSE_BUTTON_8,
 };
 
-enum class KeyboardKey: int
-{
+enum class KeyboardKey : int {
   UNKNOWN = -1,
 
   // Alphabetical keys

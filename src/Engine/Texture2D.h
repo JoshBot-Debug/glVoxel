@@ -1,18 +1,16 @@
 #pragma once
 
-#include <string>
 #include <GL/glew.h>
+#include <string>
 
-enum class TextureWrap
-{
+enum class TextureWrap {
   REPEAT = GL_REPEAT,
   MIRRORED_REPEAT = GL_MIRRORED_REPEAT,
   CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE,
   CLAMP_TO_BORDER = GL_CLAMP_TO_BORDER,
 };
 
-enum class TextureFilter
-{
+enum class TextureFilter {
   NEAREST = GL_NEAREST,
   LINEAR = GL_LINEAR,
   NEAREST_MIPMAP_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
@@ -21,8 +19,7 @@ enum class TextureFilter
   LINEAR_MIPMAP_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
 };
 
-class Texture2D
-{
+class Texture2D {
 private:
   unsigned int texture = 0;
   unsigned char *data;
@@ -43,8 +40,11 @@ public:
   void generateMipmap();
   void setWidth(int width);
   void setHeight(int height);
-  void setWrap(TextureWrap s = TextureWrap::REPEAT, TextureWrap t = TextureWrap::REPEAT, TextureWrap r = TextureWrap::REPEAT) const;
-  void setFilter(TextureFilter min = TextureFilter::LINEAR_MIPMAP_LINEAR, TextureFilter mag = TextureFilter::LINEAR) const;
+  void setWrap(TextureWrap s = TextureWrap::REPEAT,
+               TextureWrap t = TextureWrap::REPEAT,
+               TextureWrap r = TextureWrap::REPEAT) const;
+  void setFilter(TextureFilter min = TextureFilter::LINEAR_MIPMAP_LINEAR,
+                 TextureFilter mag = TextureFilter::LINEAR) const;
   void setMipmapLevel(int base, int max) const;
   void setBorderColor(float color[4]) const;
 

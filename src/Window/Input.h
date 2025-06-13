@@ -5,8 +5,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-class Input
-{
+class Input {
 private:
   static GLFWwindow *window;
   static glm::vec2 scroll;
@@ -16,29 +15,22 @@ public:
 
   static const glm::vec2 MousePosition();
 
-  static void ResetScroll()
-  {
+  static void ResetScroll() {
     scroll.x = 0.0f;
     scroll.y = 0.0f;
   }
 
-  static void ScrollCallback(GLFWwindow *window, double x, double y)
-  {
+  static void ScrollCallback(GLFWwindow *window, double x, double y) {
     scroll.x = x;
     scroll.y = y;
   }
 
-  static const glm::vec2 GetScroll()
-  {
-    return scroll;
-  }
+  static const glm::vec2 GetScroll() { return scroll; }
 
   /**
    * @param key Expects a KeyboardKey or MouseButton
    */
-  template <typename T>
-  static const bool KeyPress(const T &key)
-  {
+  template <typename T> static const bool KeyPress(const T &key) {
     if (!window)
       return false;
 
@@ -56,9 +48,7 @@ public:
   /**
    * @param key Expects a KeyboardKey or MouseButton
    */
-  template <typename T>
-  static const bool KeyRelease(const T &key)
-  {
+  template <typename T> static const bool KeyRelease(const T &key) {
     if (!window)
       return false;
 

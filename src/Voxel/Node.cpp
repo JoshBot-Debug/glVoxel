@@ -5,23 +5,16 @@ Node::Node() {}
 
 Node::Node(uint8_t depth) : depth(depth) {}
 
-Node::~Node()
-{
-  clear();
+Node::~Node() { clear(); }
+
+bool Node::operator==(const Node &other) const {
+  return voxel->color == other.voxel->color &&
+         voxel->material == other.voxel->material;
 }
 
-bool Node::operator==(const Node &other) const
-{
-  return voxel->color == other.voxel->color && voxel->material == other.voxel->material;
-}
+bool Node::operator!=(const Node &other) const { return !(*this == other); }
 
-bool Node::operator!=(const Node &other) const
-{
-  return !(*this == other);
-}
-
-void Node::clear()
-{
+void Node::clear() {
   depth = 0;
   voxel = nullptr;
 
@@ -30,15 +23,13 @@ void Node::clear()
       children[i] = nullptr;
 }
 
-Voxel *Node::getAverageVoxel()
-{
+Voxel *Node::getAverageVoxel() {
   Voxel *merged = new Voxel();
 
   std::unordered_map<int, int> color;
   std::unordered_map<int, int> material;
 
-  for (const Node *child : children)
-  {
+  for (const Node *child : children) {
     if (!child || !child->voxel)
       continue;
 
@@ -47,8 +38,7 @@ Voxel *Node::getAverageVoxel()
   }
 
   int colorCount = 0;
-  for (const auto &[color, count] : color)
-  {
+  for (const auto &[color, count] : color) {
     if (count < colorCount)
       continue;
     merged->color = color;
@@ -56,8 +46,7 @@ Voxel *Node::getAverageVoxel()
   }
 
   int materialCount = 0;
-  for (const auto &[material, count] : material)
-  {
+  for (const auto &[material, count] : material) {
     if (count < materialCount)
       continue;
     merged->material = material;

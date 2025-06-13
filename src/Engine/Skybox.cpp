@@ -4,23 +4,30 @@
 
 #include "Debug.h"
 
-const std::vector<float> SkyboxCube = {-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
+const std::vector<float> SkyboxCube = {
+    -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+    -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
+    -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,
+    -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f,
+    -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+    1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,
+    -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f,
+    1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
+    1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
 
-Skybox::Skybox(std::vector<std::string> faces) : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC)
-{
+Skybox::Skybox(std::vector<std::string> faces)
+    : vbo(BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC) {
   glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 
   int width, height, nrChannels;
-  for (unsigned int i = 0; i < faces.size(); i++)
-  {
-    unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-    if (data)
-    {
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                   0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    }
-    else
-    {
+  for (unsigned int i = 0; i < faces.size(); i++) {
+    unsigned char *data =
+        stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height,
+                   0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    } else {
       LOG_BREAK_BEFORE;
       LOG("Skybox: Failed to read skybox face texture");
       LOG_BREAK_AFTER;
@@ -46,8 +53,8 @@ Skybox::Skybox(std::vector<std::string> faces) : vbo(BufferTarget::ARRAY_BUFFER,
   vao.unbind();
 }
 
-void Skybox::draw(const Camera &camera, Shader &shader, const std::string &shaderName) const
-{
+void Skybox::draw(const Camera &camera, Shader &shader,
+                  const std::string &shaderName) const {
   glDepthFunc(GL_LEQUAL);
   shader.bind(shaderName);
 
@@ -62,7 +69,4 @@ void Skybox::draw(const Camera &camera, Shader &shader, const std::string &shade
   glDepthFunc(GL_LESS);
 }
 
-void Skybox::unbind() const
-{
-  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-}
+void Skybox::unbind() const { glBindTexture(GL_TEXTURE_CUBE_MAP, 0); }

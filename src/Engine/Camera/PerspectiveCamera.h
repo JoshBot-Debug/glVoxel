@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string>
 #include <glm/glm.hpp>
+#include <string>
 
 #include "Camera.h"
 
-class PerspectiveCamera : public Camera
-{
+class PerspectiveCamera : public Camera {
 private:
   glm::mat4 view = glm::mat4(1.0f);
   glm::mat4 projection = glm::mat4(0.0f);

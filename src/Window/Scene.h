@@ -2,8 +2,7 @@
 
 #include <SDL3/SDL.h>
 
-class Scene
-{
+class Scene {
 public:
   virtual ~Scene() = default;
 
@@ -15,7 +14,7 @@ public:
    * configuration required before the game starts. It should be called
    * at the beginning of the game loop.
    */
-  virtual void onInitialize() {};
+  virtual void onInitialize(){};
 
   /**
    * @brief Called once after onInput() for each frame.
@@ -24,7 +23,7 @@ public:
    * It should incorporate changes based on user input and other
    * game logic, such as physics, animations, and AI updates.
    */
-  virtual void onUpdate() {};
+  virtual void onUpdate(){};
 
   /**
    * @brief Called once after onUpdate() for each frame.
@@ -34,7 +33,7 @@ public:
    * previous frame and draw all visual elements based on the
    * updated state.
    */
-  virtual void onDraw() {};
+  virtual void onDraw(){};
 
   /**
    * @brief Called to clean up resources before the game or application exits.
@@ -44,5 +43,5 @@ public:
    * and other game data. It should be called before shutting down the
    * application to prevent memory leaks and ensure proper cleanup.
    */
-  virtual void onCleanUp() {};
+  virtual void onCleanUp(){};
 };

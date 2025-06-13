@@ -1,45 +1,33 @@
 #include "Model.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 #include "Debug.h"
 
-Model::Model(unsigned int id, const char *filepath) : id(id)
-{
+Model::Model(unsigned int id, const char *filepath) : id(id) {
   // loadOBJ(filepath, meshes);
 }
 
 Model::~Model() {}
 
-const unsigned int Model::getID() const
-{
-  return id;
-}
+const unsigned int Model::getID() const { return id; }
 
-const unsigned int Model::createInstance()
-{
+const unsigned int Model::createInstance() {
   instances.emplace_back();
   return instances.size() - 1;
 }
 
-Instance &Model::getInstance(unsigned int id)
-{
-  return instances.at(id);
-}
+Instance &Model::getInstance(unsigned int id) { return instances.at(id); }
 
-std::vector<Instance> &Model::getInstances()
-{
-  return instances;
-}
+std::vector<Instance> &Model::getInstances() { return instances; }
 
-const std::vector<Vertex> Model::getVertices() const
-{
+const std::vector<Vertex> Model::getVertices() const {
   std::vector<Vertex> vertices;
 
   size_t count = 0;
@@ -54,8 +42,7 @@ const std::vector<Vertex> Model::getVertices() const
   return vertices;
 }
 
-const std::vector<unsigned int> Model::getIndices() const
-{
+const std::vector<unsigned int> Model::getIndices() const {
   std::vector<unsigned int> indices;
 
   size_t count = 0;

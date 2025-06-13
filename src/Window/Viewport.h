@@ -4,8 +4,7 @@
 
 #include "Scene.h"
 
-class Viewport : public Scene
-{
+class Viewport : public Scene {
 private:
   unsigned int texture = 0;
   unsigned int framebuffer = 0;
@@ -65,7 +64,7 @@ public:
   /**
    * Use this in place of onDraw();
    */
-  virtual void onDrawViewport() {};
+  virtual void onDrawViewport(){};
 
   /**
    * Get the size of the viewport
@@ -80,5 +79,5 @@ public:
   /**
    * Called when the viewport is resized.
    */
-  virtual void onResize(glm::vec2 size) {};
+  virtual void onResize(glm::vec2 size){};
 };

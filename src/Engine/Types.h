@@ -1,21 +1,19 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-enum class VertexDraw
-{
+enum class VertexDraw {
   STATIC = GL_STATIC_DRAW,
   DYNAMIC = GL_DYNAMIC_DRAW,
   STREAM = GL_STREAM_DRAW
 };
 
-enum class VertexType
-{
+enum class VertexType {
   FLOAT = GL_FLOAT,
   INT = GL_INT,
   UNSIGNED_INT = GL_UNSIGNED_INT,
@@ -26,8 +24,7 @@ enum class VertexType
   BOOL = GL_BOOL,
 };
 
-enum class Primitive
-{
+enum class Primitive {
   POINTS = GL_POINTS,
   LINES = GL_LINES,
   LINE_STRIP = GL_LINE_STRIP,
@@ -37,8 +34,7 @@ enum class Primitive
   TRIANGLE_FAN = GL_TRIANGLE_FAN
 };
 
-struct Vertex
-{
+struct Vertex {
   float x;
   float y;
   float z;
@@ -49,25 +45,28 @@ struct Vertex
   int material;
 
   Vertex() = default;
-  Vertex(float x, float y, float z, float nx, float ny, float nz) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
-  Vertex(float x, float y, float z, float nx, float ny, float nz, int color) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color) {}
-  Vertex(float x, float y, float z, float nx, float ny, float nz, int color, int material) : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color), material(material) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz)
+      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz, int color)
+      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color) {}
+  Vertex(float x, float y, float z, float nx, float ny, float nz, int color,
+         int material)
+      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color),
+        material(material) {}
 
-  bool operator==(const Vertex &other) const
-  {
-    return x == other.x && y == other.y && z == other.z && nx == other.nx && ny == other.ny && nz == other.nz;
+  bool operator==(const Vertex &other) const {
+    return x == other.x && y == other.y && z == other.z && nx == other.nx &&
+           ny == other.ny && nz == other.nz;
   }
 };
 
-struct InstanceBuffer
-{
+struct InstanceBuffer {
   glm::mat4 model = glm::mat4(1.0f);
   glm::mat3 normalMatrix = glm::mat3(1.0f);
   glm::vec3 color = glm::vec3(1.0f);
 };
 
-class Instance
-{
+class Instance {
 private:
   InstanceBuffer buffer;
 
@@ -78,13 +77,15 @@ public:
   glm::vec3 scale = glm::vec3(1.0f);
   glm::vec3 color = glm::vec3(1.0f);
 
-  const InstanceBuffer &update()
-  {
+  const InstanceBuffer &update() {
     buffer.model = glm::mat4(1.0f);
     buffer.model = glm::scale(buffer.model, scale);
-    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.x),
+                               glm::vec3(1.0f, 0.0f, 0.0f));
+    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.y),
+                               glm::vec3(0.0f, 1.0f, 0.0f));
+    buffer.model = glm::rotate(buffer.model, glm::radians(rotation.z),
+                               glm::vec3(0.0f, 0.0f, 1.0f));
     buffer.model = glm::translate(buffer.model, translate);
     buffer.color = color;
     buffer.normalMatrix = glm::transpose(glm::inverse(glm::mat3(buffer.model)));
@@ -93,15 +94,13 @@ public:
   }
 };
 
-struct Mesh
-{
+struct Mesh {
   std::string name;
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 };
 
-struct DrawElementsIndirectCommand
-{
+struct DrawElementsIndirectCommand {
   unsigned int count;
   unsigned int primCount;
   unsigned int firstIndex;

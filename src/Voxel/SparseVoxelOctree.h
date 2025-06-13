@@ -1,23 +1,22 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <glm/glm.hpp>
 
 #include <algorithm>
 #include <execution>
 
+#include "Debug.h"
 #include "Engine/Types.h"
 #include "Voxel/Common.h"
-#include "Debug.h"
-#include "Voxel/Voxel.h"
 #include "Voxel/Node.h"
+#include "Voxel/Voxel.h"
 
 #include <fstream>
 
-class SparseVoxelOctree
-{
+class SparseVoxelOctree {
 private:
   int size;
   int maxDepth;
@@ -26,12 +25,16 @@ private:
   Node *root = new Node(0);
 
   std::vector<Voxel *> uniqueVoxels;
-  std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal> neighbours;
+  std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal>
+      neighbours;
 
-  void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel, int scale);
+  void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel,
+                int scale);
 
-  void set(Node *node, int x, int y, int z, Voxel *voxel, int size, int maxSize = 1);
-  Node *get(Node *node, int x, int y, int z, int size, int lod = -1, Voxel *filter = nullptr);
+  void set(Node *node, int x, int y, int z, Voxel *voxel, int size,
+           int maxSize = 1);
+  Node *get(Node *node, int x, int y, int z, int size, int lod = -1,
+            Voxel *filter = nullptr);
   void clear(Node *node);
 
   const size_t getMemoryUsage(Node *node) const;
@@ -54,8 +57,9 @@ public:
    *   for (int x = 0; x < size; x++)
    *   {
    *      float n = map.GetValue(x, z);
-   *      unsigned int height = static_cast<unsigned int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2)));
-   *      for (int y = 0; y < height; y++)
+   *      unsigned int height = static_cast<unsigned
+   * int>(std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (size / 2))); for (int y
+   * = 0; y < height; y++)
    *      {
    *          int index = x + size * (z + size * y);
    *          if(blockIsGrass)
@@ -79,5 +83,7 @@ public:
 
   const std::vector<Voxel *> &getUniqueVoxels() const;
 
-  void setNeighbours(const glm::ivec2 &chunkPosition, std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> &chunks);
+  void setNeighbours(const glm::ivec2 &chunkPosition,
+                     std::unordered_map<glm::ivec2, SparseVoxelOctree,
+                                        IVec2Hash, IVec2Equal> &chunks);
 };

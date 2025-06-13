@@ -6,8 +6,7 @@
 #include "Model.h"
 #include "Shader.h"
 
-class ResourceManager
-{
+class ResourceManager {
 private:
   Shader shader;
   std::vector<Model *> models;
@@ -17,8 +16,7 @@ public:
 
   ResourceManager(const ResourceManager &) = delete;
 
-  ~ResourceManager()
-  {
+  ~ResourceManager() {
     for (const auto &model : models)
       delete model;
   };
@@ -26,8 +24,7 @@ public:
   /**
    * @returns A pointer to a Model
    */
-  Model *loadModel(const char *path)
-  {
+  Model *loadModel(const char *path) {
     unsigned int id = models.size();
 
     Model *model = new Model(id, path);
@@ -40,22 +37,13 @@ public:
    * Get the Model by id
    * @returns The Model
    */
-  Model *getModel(unsigned int id)
-  {
-    return models.at(id);
-  }
+  Model *getModel(unsigned int id) { return models.at(id); }
 
   /**
    * Gets all models
    * @returns A vector of Model pointers
    */
-  const std::vector<Model *> &getModels() const
-  {
-    return models;
-  }
+  const std::vector<Model *> &getModels() const { return models; }
 
-  Shader &getShader()
-  {
-    return shader;
-  };
+  Shader &getShader() { return shader; };
 };

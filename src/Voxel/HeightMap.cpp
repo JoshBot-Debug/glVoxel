@@ -3,8 +3,7 @@
 
 HeightMap::HeightMap(int width, int height) : width(width), height(height) {}
 
-void HeightMap::initialize()
-{
+void HeightMap::initialize() {
   if (terrain.seed == 0)
     perlin.SetSeed(static_cast<int>(std::time(0)));
   else
@@ -18,15 +17,16 @@ void HeightMap::initialize()
   scaleBias.SetBias(terrain.bias);
 }
 
-utils::NoiseMap HeightMap::build(double lowerXBound, double upperXBound, double lowerZBound, double upperZBound)
-{
+utils::NoiseMap HeightMap::build(double lowerXBound, double upperXBound,
+                                 double lowerZBound, double upperZBound) {
   utils::NoiseMap heightMap;
   utils::NoiseMapBuilderPlane heightMapBuilder;
 
   heightMapBuilder.SetSourceModule(scaleBias);
   heightMapBuilder.SetDestNoiseMap(heightMap);
   heightMapBuilder.SetDestSize(width, height);
-  heightMapBuilder.SetBounds(lowerXBound, upperXBound, lowerZBound, upperZBound);
+  heightMapBuilder.SetBounds(lowerXBound, upperXBound, lowerZBound,
+                             upperZBound);
   heightMapBuilder.Build();
 
   return heightMap;

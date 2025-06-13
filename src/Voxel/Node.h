@@ -2,8 +2,7 @@
 #include "Voxel/Voxel.h"
 #include <glm/glm.hpp>
 
-struct Node
-{
+struct Node {
   uint8_t depth = 0;
   Voxel *voxel = nullptr;
   Node *children[8] = {nullptr};

@@ -1,7 +1,3 @@
 #include <App.h>
 
-
-int main()
-{
-  App app;
-}
+int main() { App app; }

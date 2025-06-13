@@ -12,28 +12,28 @@
 
 glm::vec2 Window::dimensions = glm::vec2(0.0f, 0.0f);
 
-void errorCallback(int error, const char *description)
-{
+void errorCallback(int error, const char *description) {
   std::cerr << "GLFW Error " << error << ":" << description << std::endl;
 }
 
-void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
-{
+void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id,
+                              GLenum severity, GLsizei length,
+                              const GLchar *message, const void *userParam) {
   std::cerr << "OpenGL Debug Message (" << id << "): " << message << std::endl;
-  std::cerr << "Source: " << source << ", Type: " << type << ", Severity: " << severity << std::endl;
+  std::cerr << "Source: " << source << ", Type: " << type
+            << ", Severity: " << severity << std::endl;
 }
 
-static void glDebug()
-{
+static void glDebug() {
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
   glDebugMessageCallback(debugCallback, nullptr);
-  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr,
+                        GL_TRUE);
 }
 
-void Window::open()
-{
+void Window::open() {
   this->onInitialize();
 
   glfwShowWindow(window);
@@ -41,10 +41,8 @@ void Window::open()
   if (options.maximized)
     glfwMaximizeWindow(window);
 
-  while (!glfwWindowShouldClose(window))
-  {
-    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0)
-    {
+  while (!glfwWindowShouldClose(window)) {
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
       ImGui_ImplGlfw_Sleep(10);
       continue;
     }
@@ -71,20 +69,15 @@ void Window::open()
   this->onCleanUp();
 }
 
-const glm::vec2 &Window::GetDimensions()
-{
-  return Window::dimensions;
-}
+const glm::vec2 &Window::GetDimensions() { return Window::dimensions; }
 
-void Window::setFrameBufferSize(GLFWwindow *window, int w, int h)
-{
+void Window::setFrameBufferSize(GLFWwindow *window, int w, int h) {
   glViewport(0, 0, w, h);
   dimensions.x = w;
   dimensions.y = h;
 }
 
-Window::Window(const WindowOptions &options) : options(options)
-{
+Window::Window(const WindowOptions &options) : options(options) {
   glfwSetErrorCallback(errorCallback);
 
   if (!glfwInit())
@@ -103,9 +96,9 @@ Window::Window(const WindowOptions &options) : options(options)
   if (options.MSAA)
     glfwWindowHint(GLFW_SAMPLES, options.MSAA);
 
-  window = glfwCreateWindow(options.width, options.height, options.title.c_str(), nullptr, nullptr);
-  if (!window)
-  {
+  window = glfwCreateWindow(options.width, options.height,
+                            options.title.c_str(), nullptr, nullptr);
+  if (!window) {
     glfwTerminate();
     return;
   }
@@ -118,7 +111,8 @@ Window::Window(const WindowOptions &options) : options(options)
   const int init = glewInit();
 
   if (init != GLEW_OK)
-    std::cerr << "GLEW initialization failed! Error code: " << init << std::endl;
+    std::cerr << "GLEW initialization failed! Error code: " << init
+              << std::endl;
 
   std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
@@ -132,7 +126,8 @@ Window::Window(const WindowOptions &options) : options(options)
   const GLFWvidmode *screen = glfwGetVideoMode(glfwGetPrimaryMonitor());
   int windowWidth, windowHeight;
   glfwGetWindowSize(window, &windowWidth, &windowHeight);
-  glfwSetWindowPos(window, (screen->width - windowWidth) / 2, (screen->height - windowHeight) / 2);
+  glfwSetWindowPos(window, (screen->width - windowWidth) / 2,
+                   (screen->height - windowHeight) / 2);
 
   IMGUI_CHECKVERSION();
 
@@ -159,8 +154,7 @@ Window::Window(const WindowOptions &options) : options(options)
   glfwSetScrollCallback(window, Input::ScrollCallback);
 }
 
-Window::~Window()
-{
+Window::~Window() {
   glfwDestroyWindow(window);
   glfwTerminate();
 }

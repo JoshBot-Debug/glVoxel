@@ -2,31 +2,27 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
-enum class ShaderType : unsigned int
-{
+enum class ShaderType : unsigned int {
   VERTEX_SHADER = GL_VERTEX_SHADER,
   FRAGMENT_SHADER = GL_FRAGMENT_SHADER
 };
 
-struct ShaderProgram
-{
+struct ShaderProgram {
   std::string name;
   const char *vertex = nullptr;
   const char *fragment = nullptr;
 };
 
-struct Program
-{
+struct Program {
   unsigned int id;
   ShaderProgram shaderProgram;
 };
 
-class Shader
-{
+class Shader {
 private:
   Program *program = nullptr;
 
@@ -80,7 +76,8 @@ public:
   void setUniform1f(const std::string &name, float value);
 
   /**
-   * Sets a uniform of type `int` (two values) in the currently active shader program.
+   * Sets a uniform of type `int` (two values) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first integer value.
@@ -90,7 +87,8 @@ public:
   void setUniform2i(const std::string &name, glm::ivec2 value);
 
   /**
-   * Sets a uniform of type `float` (two values) in the currently active shader program.
+   * Sets a uniform of type `float` (two values) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first float value.
@@ -100,29 +98,34 @@ public:
   void setUniform2f(const std::string &name, glm::vec2 value);
 
   /**
-   * Sets a uniform of type `int` (three values) in the currently active shader program.
+   * Sets a uniform of type `int` (three values) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first integer value.
    * @param value2 The second integer value.
    * @param value3 The third integer value.
    */
-  void setUniform3i(const std::string &name, int value1, int value2, int value3);
+  void setUniform3i(const std::string &name, int value1, int value2,
+                    int value3);
   void setUniform3i(const std::string &name, glm::ivec3 value);
 
   /**
-   * Sets a uniform of type `float` (three values) in the currently active shader program.
+   * Sets a uniform of type `float` (three values) in the currently active
+   * shader program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first float value.
    * @param value2 The second float value.
    * @param value3 The third float value.
    */
-  void setUniform3f(const std::string &name, float value1, float value2, float value3);
+  void setUniform3f(const std::string &name, float value1, float value2,
+                    float value3);
   void setUniform3f(const std::string &name, glm::vec3 value);
 
   /**
-   * Sets a uniform of type `int` (four values) in the currently active shader program.
+   * Sets a uniform of type `int` (four values) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first integer value.
@@ -130,11 +133,13 @@ public:
    * @param value3 The third integer value.
    * @param value4 The fourth integer value.
    */
-  void setUniform4i(const std::string &name, int value1, int value2, int value3, int value4);
+  void setUniform4i(const std::string &name, int value1, int value2, int value3,
+                    int value4);
   void setUniform4i(const std::string &name, glm::ivec4 value);
 
   /**
-   * Sets a uniform of type `float` (four values) in the currently active shader program.
+   * Sets a uniform of type `float` (four values) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform variable in the shader.
    * @param value1 The first float value.
@@ -142,11 +147,13 @@ public:
    * @param value3 The third float value.
    * @param value4 The fourth float value.
    */
-  void setUniform4f(const std::string &name, float value1, float value2, float value3, float value4);
+  void setUniform4f(const std::string &name, float value1, float value2,
+                    float value3, float value4);
   void setUniform4f(const std::string &name, glm::vec4 value);
 
   /**
-   * Sets a uniform of type `mat4` (4x4 matrix) in the currently active shader program.
+   * Sets a uniform of type `mat4` (4x4 matrix) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform matrix variable in the shader.
    * @param matrix The 4x4 matrix (glm::mat4) to assign to the uniform variable.
@@ -154,7 +161,8 @@ public:
   void setUniformMatrix4fv(const std::string &name, const glm::mat4 &matrix);
 
   /**
-   * Sets a uniform of type `mat3` (3x3 matrix) in the currently active shader program.
+   * Sets a uniform of type `mat3` (3x3 matrix) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform matrix variable in the shader.
    * @param matrix The 3x3 matrix (glm::mat3) to assign to the uniform variable.
@@ -162,7 +170,8 @@ public:
   void setUniformMatrix3fv(const std::string &name, const glm::mat3 &matrix);
 
   /**
-   * Sets a uniform of type `float` (1D vector) in the currently active shader program.
+   * Sets a uniform of type `float` (1D vector) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform vector variable in the shader.
    * @param vector The float to assign to the uniform variable.
@@ -170,7 +179,8 @@ public:
   void setUniform1fv(const std::string &name, float value);
 
   /**
-   * Sets a uniform of type `vec2` (2D vector) in the currently active shader program.
+   * Sets a uniform of type `vec2` (2D vector) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform vector variable in the shader.
    * @param vector The 2D vector (glm::vec2) to assign to the uniform variable.
@@ -178,7 +188,8 @@ public:
   void setUniform2fv(const std::string &name, const glm::vec2 &vector);
 
   /**
-   * Sets a uniform of type `vec3` (3D vector) in the currently active shader program.
+   * Sets a uniform of type `vec3` (3D vector) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform vector variable in the shader.
    * @param vector The 3D vector (glm::vec3) to assign to the uniform variable.
@@ -186,7 +197,8 @@ public:
   void setUniform3fv(const std::string &name, const glm::vec3 &vector);
 
   /**
-   * Sets a uniform of type `vec4` (4D vector) in the currently active shader program.
+   * Sets a uniform of type `vec4` (4D vector) in the currently active shader
+   * program.
    *
    * @param name The name of the uniform vector variable in the shader.
    * @param vector The 4D vector (glm::vec4) to assign to the uniform variable.

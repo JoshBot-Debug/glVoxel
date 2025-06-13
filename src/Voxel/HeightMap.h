@@ -3,8 +3,7 @@
 #include <noise/noise.h>
 #include <noise/noiseutils.h>
 
-struct TerrainProperties
-{
+struct TerrainProperties {
   int seed = 50;
   int octaveCount = 3.0;
   float frequency = 1.0;
@@ -18,8 +17,7 @@ struct TerrainProperties
   float grassThreshold = 0.5f;
 };
 
-class HeightMap
-{
+class HeightMap {
 private:
   int width;
   int height;
@@ -35,5 +33,6 @@ public:
 
   void initialize();
 
-  utils::NoiseMap build(double lowerXBound, double upperXBound, double lowerZBound, double upperZBound);
+  utils::NoiseMap build(double lowerXBound, double upperXBound,
+                        double lowerZBound, double upperZBound);
 };

@@ -1,15 +1,14 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "Engine/Shader.h"
 #include "Engine/Camera/Camera.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
+#include "Engine/Shader.h"
 
-class Skybox
-{
+class Skybox {
 private:
   Buffer vbo;
   VertexArray vao;
@@ -24,6 +23,7 @@ public:
   Skybox(std::vector<std::string> faces);
   ~Skybox() = default;
 
-  void draw(const Camera &camera, Shader &shader, const std::string &shaderName) const;
+  void draw(const Camera &camera, Shader &shader,
+            const std::string &shaderName) const;
   void unbind() const;
 };

@@ -1,28 +1,23 @@
 #include "Viewport.h"
 
-#include <algorithm>
 #include <GL/glew.h>
+#include <algorithm>
 
 #include "imgui.h"
 
 Viewport::~Viewport() {}
 
-void Viewport::setTitle(const char *title)
-{
-  this->title = title;
-}
+void Viewport::setTitle(const char *title) { this->title = title; }
 
-void Viewport::setDimensions(glm::vec2 dimensions)
-{
+void Viewport::setDimensions(glm::vec2 dimensions) {
   this->dimensions = dimensions;
 }
 
-void Viewport::resize(glm::vec2 size)
-{
-  if (this->texture)
-  {
+void Viewport::resize(glm::vec2 size) {
+  if (this->texture) {
     glBindTexture(GL_TEXTURE_2D, this->texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
@@ -30,8 +25,7 @@ void Viewport::resize(glm::vec2 size)
   this->onResize(size);
 }
 
-void Viewport::createFrameBuffer()
-{
+void Viewport::createFrameBuffer() {
   // Create & bind the frame buffer
   glGenFramebuffers(1, &this->framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
@@ -39,21 +33,23 @@ void Viewport::createFrameBuffer()
   // Create a texture to render to & bind it
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->dimensions.x, this->dimensions.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->dimensions.x, this->dimensions.y,
+               0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   // Attach the texture to the framebuffer
-  // The texture will now serve as the output for any rendering done to this framebuffer
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->texture, 0);
+  // The texture will now serve as the output for any rendering done to this
+  // framebuffer
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                         this->texture, 0);
 
   // Unbind texture & framebuffer
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Viewport::onDraw()
-{
+void Viewport::onDraw() {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
   ImGui::Begin(this->title, nullptr, ImGuiWindowFlags_NoCollapse);
 
@@ -75,18 +71,13 @@ void Viewport::onDraw()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  ImGui::Image((ImTextureID)this->texture, ImVec2(this->dimensions.x, this->dimensions.y));
+  ImGui::Image((ImTextureID)this->texture,
+               ImVec2(this->dimensions.x, this->dimensions.y));
 
   ImGui::End();
   ImGui::PopStyleVar();
 }
 
-glm::vec2 *Viewport::getDimensions()
-{
-  return &this->dimensions;
-}
+glm::vec2 *Viewport::getDimensions() { return &this->dimensions; }
 
-glm::vec2 *Viewport::getPosition()
-{
-  return &this->position;
-}
+glm::vec2 *Viewport::getPosition() { return &this->position; }

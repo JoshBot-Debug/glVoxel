@@ -2,21 +2,23 @@
 
 #include <Window/Window.h>
 
-#include "Engine/Skybox.h"
-#include "Engine/ResourceManager.h"
+#include "ECS/Registry.h"
 #include "Engine/Camera/PerspectiveCamera.h"
+#include "Engine/ResourceManager.h"
+#include "Engine/Skybox.h"
 
 #include "EngineControlPanel.h"
 #include "World/World.h"
 
-class App : Window
-{
+class App : Window {
 private:
-  ResourceManager resource;
+  World world;
+  Registry registry;
   PerspectiveCamera camera;
+  ResourceManager resource;
 
   EngineControlPanel controlPanel;
-  World world;
+
   Skybox skybox{{"assets/skybox/plain/left-right-front-back.jpg",
                  "assets/skybox/plain/left-right-front-back.jpg",
                  "assets/skybox/plain/top.jpg",

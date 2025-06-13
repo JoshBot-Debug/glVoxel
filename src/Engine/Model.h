@@ -1,13 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <glm/glm.hpp>
+#include <string>
+#include <vector>
 
 #include "Types.h"
 
-class Model
-{
+class Model {
 private:
   unsigned int id;
 
