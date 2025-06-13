@@ -40,12 +40,12 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[], uint32_t (&wi
       /**
        * The first bit that is on on the left/top/front
        */
-      int msbIndex = (mask == 0) ? 31 : 31 - __builtin_clz(mask);
+      const unsigned int msbIndex = (mask == 0) ? 31 : 31 - __builtin_clz(mask);
 
       /**
        * The first bit that is on on the right/bottom/back
        */
-      int lsbIndex = (mask == 0) ? 0 : __builtin_ctz(mask);
+      const unsigned int lsbIndex = (mask == 0) ? 0 : __builtin_ctz(mask);
 
       /**
        * Remove all the bits other than the start face
@@ -271,6 +271,15 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices, 
     uint64_t &column = columns[i];
     uint64_t &layer = layers[i];
 
+    int rMSB = 63 - __builtin_clzll(row) + 1;
+    int rLSB = __builtin_ctzll(row) - 1;
+
+    int cMSB = 63 - __builtin_clzll(column) + 1;
+    int cLSB = __builtin_ctzll(column) - 1;
+
+    int lMSB = 63 - __builtin_clzll(layer) + 1;
+    int lLSB = __builtin_ctzll(layer) - 1;
+
     row = (row << 1);
     column = (column << 1);
     layer = (layer << 1);
@@ -278,28 +287,22 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices, 
     int fast = i % chunkSize;
     int slow = (i / chunkSize) % chunkSize;
 
-    int rowMSBIndex = ((row == 0) ? -1 : 63 - __builtin_clzll(row) + 1);
-    if (rowMSBIndex > 0 && tree->get(originX + rowMSBIndex, fast + originY, slow + originZ))
+    if (row > 0 && tree->get(originX + rMSB, fast + originY, slow + originZ))
       row |= (1ULL << 63);
 
-    int rowLSBIndex = ((row == 0) ? -2 : __builtin_ctzll(row) - 2);
-    if (tree->get(originX + rowLSBIndex, fast + originY, slow + originZ))
+    if (row > 0 && tree->get(originX + rLSB, fast + originY, slow + originZ))
       row |= (1ULL << 0);
 
-    int columnMSBIndex = ((column == 0) ? -1 : 63 - __builtin_clzll(column) + 1);
-    if (tree->get(fast + originX, originY + columnMSBIndex, slow + originZ))
+    if (column > 0 && tree->get(fast + originX, originY + cMSB, slow + originZ))
       column |= (1ULL << 63);
 
-    int columnLSBIndex = ((column == 0) ? -2 : __builtin_ctzll(column) - 2);
-    if (tree->get(fast + originX, originY + columnLSBIndex, slow + originZ))
+    if (column > 0 && tree->get(fast + originX, originY + cLSB, slow + originZ))
       column |= (1ULL << 0);
 
-    int layerMSBIndex = ((layer == 0) ? -1 : 63 - __builtin_clzll(layer) + 1);
-    if (tree->get(slow + originX, fast + originY, originZ + layerMSBIndex))
+    if (layer > 0 && tree->get(slow + originX, fast + originY, originZ + lMSB))
       layer |= (1ULL << 63);
 
-    int layerLSBIndex = ((layer == 0) ? -2 : __builtin_ctzll(layer) - 2);
-    if (tree->get(slow + originX, fast + originY, originZ + layerLSBIndex))
+    if (layer > 0 && tree->get(slow + originX, fast + originY, originZ + lLSB))
       layer |= (1ULL << 0);
   }
 
