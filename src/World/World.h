@@ -4,12 +4,13 @@
 
 #include "Voxel/HeightMap.h"
 #include "Voxel/SparseVoxelOctree.h"
-#include "Voxel/VoxelManager.h"
 
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/Core/Buffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Texture2D.h"
+
+#include "VoxelManager.h"
 
 #include <future>
 #include <noise/noise.h>

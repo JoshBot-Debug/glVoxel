@@ -2,14 +2,19 @@
 
 #include <future>
 #include <glm/glm.hpp>
+
+#include <tuple>
+#include <functional>
 #include <unordered_map>
 
 #include "Voxel/Common.h"
 #include "Voxel/HeightMap.h"
 #include "Voxel/SparseVoxelOctree.h"
 
-class VoxelManager {
-  enum VoxelPalette {
+class VoxelManager
+{
+  enum VoxelPalette
+  {
     STONE = 0,
     DIRT = 1,
     GRASS = 2,
@@ -17,9 +22,9 @@ class VoxelManager {
   };
 
 private:
-  int chunkSize;
-  int chunkRadius;
-  float worldStep;
+  int CHUNK_SIZE;
+  int CHUNK_RADIUS;
+  float HEIGHT_MAP_STEP;
 
   HeightMap *heightMap;
 
@@ -29,8 +34,7 @@ private:
 
   std::mutex verticesMutex;
   std::vector<std::future<void>> futures;
-  std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal>
-      chunks;
+  std::unordered_map<std::tuple<int, int, int>, SparseVoxelOctree *> chunks;
 
 public:
   std::vector<Vertex> vertices;
@@ -41,21 +45,13 @@ public:
 
   void setHeightMap(HeightMap *heightMap);
 
-  const int getChunkRadius() const;
+  void initialize(const glm::vec3 &position);
 
-  const int getChunkSize() const;
+  void meshChunk(const glm::ivec3 &coord);
 
-  std::unordered_map<glm::ivec2, SparseVoxelOctree, IVec2Hash, IVec2Equal> &
-  getChunks();
+  void generateChunk(const glm::ivec3 &coord);
 
-  SparseVoxelOctree &getChunk(const glm::ivec2 &coord);
+  const std::vector<glm::ivec3> getChunkPositionsInRadius(const glm::ivec3 &center) const;
 
-  void meshChunk(const glm::ivec2 &coord);
-
-  void generateChunk(const glm::ivec2 &coord);
-
-  const std::vector<glm::ivec2>
-  getChunkPositionsInRadius(const glm::ivec2 &center) const;
-
-  const glm::ivec2 getChunkPosition(const glm::vec3 &position) const;
+  const glm::ivec3 getChunkPosition(const glm::vec3 &position) const;
 };

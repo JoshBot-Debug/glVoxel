@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 
+#include <tuple>
+#include <functional>
 #include <algorithm>
 #include <execution>
 
@@ -14,20 +16,33 @@
 #include "Voxel/Node.h"
 #include "Voxel/Voxel.h"
 
-#include <fstream>
+namespace std
+{
+  template <>
+  struct hash<std::tuple<int, int, int>>
+  {
+    std::size_t operator()(const std::tuple<int, int, int> &key) const
+    {
+      auto [x, y, z] = key;
+      std::size_t h1 = std::hash<int>{}(x);
+      std::size_t h2 = std::hash<int>{}(y);
+      std::size_t h3 = std::hash<int>{}(z);
+      return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+  };
+}
 
 class SparseVoxelOctree
 {
 private:
   int size;
   int maxDepth;
-  glm::ivec2 chunkCoord{0, 0};
+  glm::ivec3 treePosition{0, 0, 0};
 
   Node *root = new Node(0);
 
   std::vector<Voxel *> uniqueVoxels;
-  std::unordered_map<glm::ivec2, SparseVoxelOctree *, IVec2Hash, IVec2Equal>
-      neighbours;
+  std::unordered_map<std::tuple<int, int, int>, SparseVoxelOctree *> neighbours;
 
   void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel,
                 int scale);
@@ -80,7 +95,5 @@ public:
 
   const std::vector<Voxel *> &getUniqueVoxels() const;
 
-  void setNeighbours(const glm::ivec2 &chunkPosition,
-                     std::unordered_map<glm::ivec2, SparseVoxelOctree,
-                                        IVec2Hash, IVec2Equal> &chunks);
+  void setNeighbours(const glm::ivec3 &treePosition, const std::unordered_map<std::tuple<int, int, int>, SparseVoxelOctree *> &neighbours);
 };
