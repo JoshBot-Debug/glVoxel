@@ -17,8 +17,7 @@ const int SparseVoxelOctree::getMaxDepth() const { return maxDepth; }
 
 Node *SparseVoxelOctree::getRoot() { return root; }
 
-void SparseVoxelOctree::setBlock(uint64_t (&mask)[], Voxel *voxel)
-{
+void SparseVoxelOctree::setBlock(uint64_t (&mask)[], Voxel *voxel) {
   for (int z = 0; z < size; z += 64)
     for (int x = 0; x < size; x += 64)
       for (int y = 0; y < size; y += 64)
@@ -26,34 +25,29 @@ void SparseVoxelOctree::setBlock(uint64_t (&mask)[], Voxel *voxel)
 }
 
 void SparseVoxelOctree::setBlock(uint64_t (&mask)[], int x, int y, int z,
-                                 Voxel *voxel, int scale)
-{
+                                 Voxel *voxel, int scale) {
   bool isFullBlock = true;
 
   for (int dz = 0; dz < scale && isFullBlock; ++dz)
     for (int dx = 0; dx < scale && isFullBlock; ++dx)
-      for (int dy = 0; dy < scale && isFullBlock; ++dy)
-      {
+      for (int dy = 0; dy < scale && isFullBlock; ++dy) {
         int ix = x + dx;
         int iy = y + dy;
         int iz = z + dz;
 
         int index = ix + size * (iz + size * iy);
-        if (!(mask[index / 64] & (1UL << (index % 64))))
-        {
+        if (!(mask[index / 64] & (1UL << (index % 64)))) {
           isFullBlock = false;
           break;
         }
       }
 
-  if (isFullBlock)
-  {
+  if (isFullBlock) {
     set(x, y, z, voxel, scale);
     return;
   }
 
-  if (scale == 1)
-  {
+  if (scale == 1) {
     int index = x + size * (z + size * y);
     if (mask[index / 64] & (1UL << (index % 64)))
       set(x, y, z, voxel, 1);
@@ -68,33 +62,27 @@ void SparseVoxelOctree::setBlock(uint64_t (&mask)[], int x, int y, int z,
         setBlock(mask, x + dx, y + dy, z + dz, voxel, half);
 }
 
-void SparseVoxelOctree::set(glm::vec3 position, Voxel *voxel, int maxSize)
-{
+void SparseVoxelOctree::set(glm::vec3 position, Voxel *voxel, int maxSize) {
   set(static_cast<int>(position.x), static_cast<int>(position.y),
       static_cast<int>(position.z), voxel, maxSize);
 }
 
-void SparseVoxelOctree::set(int x, int y, int z, Voxel *voxel, int maxSize)
-{
+void SparseVoxelOctree::set(int x, int y, int z, Voxel *voxel, int maxSize) {
   set(root, x, y, z, voxel, size, maxSize);
 }
 
-Node *SparseVoxelOctree::get(glm::vec3 position, int maxDepth, Voxel *filter)
-{
+Node *SparseVoxelOctree::get(glm::vec3 position, int maxDepth, Voxel *filter) {
   return get(static_cast<int>(position.x), static_cast<int>(position.y),
              static_cast<int>(position.z), maxDepth, filter);
 }
 
-Node *SparseVoxelOctree::get(int x, int y, int z, int maxDepth, Voxel *filter)
-{
+Node *SparseVoxelOctree::get(int x, int y, int z, int maxDepth, Voxel *filter) {
   return get(root, x, y, z, size, maxDepth, filter);
 }
 
 void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel,
-                            int size, int maxSize)
-{
-  if (size == maxSize)
-  {
+                            int size, int maxSize) {
+  if (size == maxSize) {
     node->voxel = voxel;
 
     for (const Voxel *v : uniqueVoxels)
@@ -129,8 +117,7 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel,
         node->children[i]->voxel != firstVoxel)
       return;
 
-  for (int i = 0; i < 8; i++)
-  {
+  for (int i = 0; i < 8; i++) {
     delete node->children[i];
     node->children[i] = nullptr;
   }
@@ -138,37 +125,36 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel,
   node->voxel = firstVoxel;
 }
 
-inline int floorDiv(int a, int b)
-{
+inline int floorDiv(int a, int b) {
   return (a >= 0) ? (a / b) : ((a - b + 1) / b);
 }
 
-inline int mod(int a, int b)
-{
+inline int mod(int a, int b) {
   int r = a % b;
   return (r < 0) ? r + b : r;
 }
 
 Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size,
-                             int maxDepth, Voxel *filter)
-{
+                             int maxDepth, Voxel *filter) {
   if (!node)
     return nullptr;
 
-  if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
-  {
-    const glm::ivec3 np = {floorDiv(x, this->size) + treePosition.x, floorDiv(y, this->size) + treePosition.y, floorDiv(z, this->size) + treePosition.z};
+  if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size) {
+    const glm::ivec3 np = {floorDiv(x, this->size) + treePosition.x,
+                           floorDiv(y, this->size) + treePosition.y,
+                           floorDiv(z, this->size) + treePosition.z};
 
     auto it = neighbours.find(np);
 
     if (it == neighbours.end() || it->second == nullptr)
       return nullptr;
 
-    return neighbours[np]->get({mod(x, this->size), mod(y, this->size), mod(z, this->size)}, -1, filter);
+    return neighbours[np]->get(
+        {mod(x, this->size), mod(y, this->size), mod(z, this->size)}, -1,
+        filter);
   }
 
-  if (node->voxel)
-  {
+  if (node->voxel) {
     if (filter && *filter != *node->voxel)
       return nullptr;
     return node;
@@ -182,8 +168,7 @@ Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size,
              maxDepth, filter);
 }
 
-void SparseVoxelOctree::clear(Node *node)
-{
+void SparseVoxelOctree::clear(Node *node) {
   if (!node)
     return;
 
@@ -191,8 +176,7 @@ void SparseVoxelOctree::clear(Node *node)
   node = nullptr;
 }
 
-void SparseVoxelOctree::clear()
-{
+void SparseVoxelOctree::clear() {
   if (!root)
     return;
 
@@ -200,8 +184,7 @@ void SparseVoxelOctree::clear()
 }
 
 void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
-                                   Voxel *filter)
-{
+                                   Voxel *filter) {
   const int chunkSize = 32;
   const int chunksPerAxis = size / chunkSize;
 
@@ -213,8 +196,7 @@ void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
                            filter);
 }
 
-const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const
-{
+const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const {
   if (!node)
     return 0;
 
@@ -229,58 +211,55 @@ const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const
   return size;
 }
 
-const size_t SparseVoxelOctree::getTotalMemoryUsage() const
-{
+const size_t SparseVoxelOctree::getTotalMemoryUsage() const {
   return sizeof(SparseVoxelOctree) + getMemoryUsage(root);
 }
 
-const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const
-{
+const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const {
   return uniqueVoxels;
 }
 
-void SparseVoxelOctree::setNeighbours(const glm::ivec3 &treePosition, const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours)
-{
+void SparseVoxelOctree::setNeighbours(
+    const glm::ivec3 &treePosition,
+    const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours) {
   this->treePosition = treePosition;
 
-  static const std::vector<glm::ivec3> directions = {
-      // Cardinal directions (6)
-      {1, 0, 0},  // +X (East)
-      {-1, 0, 0}, // -X (West)
-      {0, 1, 0},  // +Y (Up)
-      {0, -1, 0}, // -Y (Down)
-      {0, 0, 1},  // +Z (South)
-      {0, 0, -1}, // -Z (North)
+  static const std::vector<glm::ivec3> directions = {// Cardinal directions (6)
+                                                     {1, 0, 0},  // +X (East)
+                                                     {-1, 0, 0}, // -X (West)
+                                                     {0, 1, 0},  // +Y (Up)
+                                                     {0, -1, 0}, // -Y (Down)
+                                                     {0, 0, 1},  // +Z (South)
+                                                     {0, 0, -1}, // -Z (North)
 
-      // Face diagonals (12)
-      {1, 1, 0},
-      {1, -1, 0},
-      {-1, 1, 0},
-      {-1, -1, 0},
-      {1, 0, 1},
-      {1, 0, -1},
-      {-1, 0, 1},
-      {-1, 0, -1},
-      {0, 1, 1},
-      {0, 1, -1},
-      {0, -1, 1},
-      {0, -1, -1},
+                                                     // Face diagonals (12)
+                                                     {1, 1, 0},
+                                                     {1, -1, 0},
+                                                     {-1, 1, 0},
+                                                     {-1, -1, 0},
+                                                     {1, 0, 1},
+                                                     {1, 0, -1},
+                                                     {-1, 0, 1},
+                                                     {-1, 0, -1},
+                                                     {0, 1, 1},
+                                                     {0, 1, -1},
+                                                     {0, -1, 1},
+                                                     {0, -1, -1},
 
-      // Corner diagonals (8)
-      {1, 1, 1},
-      {1, 1, -1},
-      {1, -1, 1},
-      {1, -1, -1},
-      {-1, 1, 1},
-      {-1, 1, -1},
-      {-1, -1, 1},
-      {-1, -1, -1}};
+                                                     // Corner diagonals (8)
+                                                     {1, 1, 1},
+                                                     {1, 1, -1},
+                                                     {1, -1, 1},
+                                                     {1, -1, -1},
+                                                     {-1, 1, 1},
+                                                     {-1, 1, -1},
+                                                     {-1, -1, 1},
+                                                     {-1, -1, -1}};
 
   this->neighbours.clear();
   this->neighbours.reserve(directions.size());
 
-  for (const glm::ivec3 &dir : directions)
-  {
+  for (const glm::ivec3 &dir : directions) {
     glm::ivec3 np = treePosition + dir;
     auto it = neighbours.find(np);
     if (it != neighbours.end())

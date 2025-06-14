@@ -1,6 +1,5 @@
 #pragma once
 
-struct CVoxelBuffer
-{
+struct CVoxelBuffer {
   bool shouldUpdate;
 };

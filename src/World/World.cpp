@@ -3,33 +3,25 @@
 
 #include "Components.h"
 
-World::World()
-{
-  voxels.setHeightMap(&heightMap);
-}
+World::World() { voxels.setHeightMap(&heightMap); }
 
-void World::initialize()
-{
+void World::initialize() {
   vao.generate();
   vbo.generate();
   heightMap.initialize();
   voxels.initialize(camera->position);
 }
 
-void World::draw()
-{
+void World::draw() {
   vao.bind();
   glDrawArrays(static_cast<GLenum>(drawMode), 0, voxels.vertices.size());
 }
 
-void World::update()
-{
+void World::update() {
   voxels.update(camera->position);
 
-  for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
-  {
-    if (voxelBuffer->shouldUpdate)
-    {
+  for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>()) {
+    if (voxelBuffer->shouldUpdate) {
       voxelBuffer->shouldUpdate = false;
 
       vao.bind();
@@ -46,8 +38,7 @@ void World::update()
   }
 }
 
-void World::setRegistry(Registry *registry)
-{
+void World::setRegistry(Registry *registry) {
   this->registry = registry;
   voxels.setRegistry(registry);
 }

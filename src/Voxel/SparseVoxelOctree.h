@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <algorithm>
 #include <execution>
 #include <glm/glm.hpp>
 #include <unordered_map>
+#include <vector>
 
 #include "Debug.h"
 #include "Engine/Types.h"
@@ -12,8 +12,7 @@
 #include "Voxel/Node.h"
 #include "Voxel/Voxel.h"
 
-class SparseVoxelOctree
-{
+class SparseVoxelOctree {
 private:
   int size;
   int maxDepth;
@@ -75,5 +74,7 @@ public:
 
   const std::vector<Voxel *> &getUniqueVoxels() const;
 
-  void setNeighbours(const glm::ivec3 &treePosition, const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours);
+  void setNeighbours(
+      const glm::ivec3 &treePosition,
+      const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours);
 };

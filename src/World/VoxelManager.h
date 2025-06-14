@@ -12,10 +12,8 @@
 
 #include "Components.h"
 
-class VoxelManager
-{
-  enum VoxelPalette
-  {
+class VoxelManager {
+  enum VoxelPalette {
     STONE = 0,
     DIRT = 1,
     GRASS = 2,
@@ -64,7 +62,8 @@ public:
 
   void generateChunk(const glm::ivec3 &coord);
 
-  const std::vector<glm::ivec3> getChunkPositionsInRadius(const glm::ivec3 &center) const;
+  const std::vector<glm::ivec3>
+  getChunkPositionsInRadius(const glm::ivec3 &center) const;
 
   const glm::ivec3 getChunkPosition(const glm::vec3 &position) const;
 };
