@@ -76,5 +76,5 @@ public:
 
   void setNeighbours(
       const glm::ivec3 &treePosition,
-      const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours);
+      std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours);
 };

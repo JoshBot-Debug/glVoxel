@@ -221,7 +221,7 @@ const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const {
 
 void SparseVoxelOctree::setNeighbours(
     const glm::ivec3 &treePosition,
-    const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours) {
+    std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours) {
   this->treePosition = treePosition;
 
   static const std::vector<glm::ivec3> directions = {// Cardinal directions (6)
@@ -261,9 +261,8 @@ void SparseVoxelOctree::setNeighbours(
 
   for (const glm::ivec3 &dir : directions) {
     glm::ivec3 np = treePosition + dir;
-    auto it = neighbours.find(np);
-    if (it != neighbours.end())
-      this->neighbours[np] = it->second;
+    if (neighbours.contains(np))
+      this->neighbours[np] = neighbours[np];
     else
       this->neighbours[np] = nullptr;
   }

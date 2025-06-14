@@ -34,24 +34,33 @@ void VoxelManager::update(const glm::vec3 &position) {
   const std::vector<glm::ivec3> coords =
       getChunkPositionsInRadius(currentCenter);
 
-  for (auto it = chunks.begin(); it != chunks.end();) {
-    if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
-      std::unique_lock lock(mutex.get(it->first));
+  // for (auto it = chunks.begin(); it != chunks.end();) {
+  //   if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
 
-      delete it->second;
-      it->second = nullptr;
-      it = chunks.erase(it);
-    } else
-      ++it;
-  }
+  //     glm::ivec3 coord = it->first;
 
-  std::vector<glm::ivec3> coordsToCreate;
+  //     std::unique_lock lock(mutex.get(coord));
+
+  //     std::cout << "Delete SVO Lock: " << coord.x << " " << coord.y << " "
+  //               << coord.z << std::endl;
+
+  //     delete it->second;
+  //     it->second = nullptr;
+  //     it = chunks.erase(it);
+
+  //     std::cout << "Delete SVO Unlock: " << coord.x << " " << coord.y << " "
+  //               << coord.z << std::endl;
+  //   } else
+  //     ++it;
+  // }
+
+  std::vector<glm::ivec3> create;
 
   for (const auto &coord : coords)
-    if (chunks.find({coord.x, coord.y, coord.z}) == chunks.end())
-      coordsToCreate.push_back(coord);
+    if (!chunks.contains(coord))
+      create.push_back(coord);
 
-  generateTerrain(coordsToCreate);
+  generateTerrain(create);
 }
 
 void VoxelManager::setHeightMap(HeightMap *heightMap) {
@@ -83,21 +92,30 @@ VoxelManager::getChunkPosition(const glm::vec3 &position) const {
 }
 
 void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
-  for (const auto &coord : coords) {
-    std::cout << "Coord: " << coord.x << " " << coord.y << " " << coord.z
-              << std::endl;
-    futures.push_back(std::async(std::launch::async,
-                                 &VoxelManager::generateChunk, this, coord));
-  }
-
   std::thread([this, coords = coords, futures = std::move(futures)]() mutable {
     auto t1 = START_TIMER;
+
+    for (const auto &coord : coords) {
+      std::cout << "Coord: " << coord.x << " " << coord.y << " " << coord.z
+                << std::endl;
+      futures.push_back(std::async(std::launch::async,
+                                   &VoxelManager::generateChunk, this, coord));
+    }
+
     for (auto &f : futures)
       f.get();
 
     for (const glm::ivec3 &coord : coords) {
-      if (chunks.contains({coord.x, coord.y, coord.z}))
-        chunks[{coord.x, coord.y, coord.z}]->setNeighbours(coord, chunks);
+      std::unique_lock lock(mutex.get(coord));
+      std::cout << "SN Write SVO Lock: " << coord.x << " " << coord.y << " "
+                << coord.z << std::endl;
+      if (chunks.contains(coord)) {
+        std::cout << "Set neighbours: " << coord.x << " " << coord.y << " "
+                  << coord.z << std::endl;
+        chunks[coord]->setNeighbours(coord, chunks);
+      }
+      std::cout << "SN Write SVO Unlock: " << coord.x << " " << coord.y << " "
+                << coord.z << std::endl;
     }
 
     futures.clear();
@@ -114,13 +132,14 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
     std::cout << "Chunks: " << coords.size() << std::endl;
     std::cout << "Size: " << CHUNK_SIZE << std::endl;
     END_TIMER(t1, "Chunks");
-  })
-
-      .detach();
+  }).detach();
 }
 
 void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   std::unique_lock lock(mutex.get(coord));
+
+  std::cout << "GC Write SVO Lock: " << coord.x << " " << coord.y << " "
+            << coord.z << std::endl;
 
   auto t1 = START_TIMER;
 
@@ -131,8 +150,11 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
 
   tree->clear();
 
-  if (coord.y != 0)
+  if (coord.y != 0) {
+    std::cout << "GC Write SVO Unlock: " << coord.x << " " << coord.y << " "
+              << coord.z << std::endl;
     return;
+  }
 
   utils::NoiseMap map =
       heightMap->build(coord.x + 1.0f, coord.x + HEIGHT_MAP_STEP + 1.0f,
@@ -172,15 +194,24 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   generateBlockChunks(grassLimit, CHUNK_SIZE, voxelPalette[VoxelPalette::SNOW]);
 
   END_TIMER(t1, "generateChunk()");
+
+  std::cout << "GC Write SVO Unlock: " << coord.x << " " << coord.y << " "
+            << coord.z << std::endl;
 }
 
 void VoxelManager::meshChunk(const glm::ivec3 &coord) {
-  std::shared_lock lock(mutex.get(coord));
+  std::unique_lock lock(mutex.get(coord));
+
+  std::cout << "MC Read SVO Lock: " << coord.x << " " << coord.y << " "
+            << coord.z << std::endl;
 
   auto t1 = START_TIMER;
 
-  if (!chunks.contains({coord.x, coord.y, coord.z}))
+  if (!chunks.contains({coord.x, coord.y, coord.z})) {
+    std::cout << "MC Read SVO Unlock: " << coord.x << " " << coord.y << " "
+              << coord.z << std::endl;
     return;
+  }
 
   SparseVoxelOctree *tree = chunks[{coord.x, coord.y, coord.z}];
 
@@ -212,4 +243,7 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   }
 
   END_TIMER(t1, "meshChunk()");
+
+  std::cout << "MC Read SVO Unlock: " << coord.x << " " << coord.y << " "
+            << coord.z << std::endl;
 }

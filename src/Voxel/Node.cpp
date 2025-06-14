@@ -19,8 +19,10 @@ void Node::clear() {
   voxel = nullptr;
 
   for (int i = 0; i < 8; i++)
-    if (children[i])
+    if (children[i]) {
+      delete children[i];
       children[i] = nullptr;
+    }
 }
 
 Voxel *Node::getAverageVoxel() {
