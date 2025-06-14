@@ -157,7 +157,7 @@ Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size,
 
   if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
   {
-    const std::tuple<int, int, int> np = {floorDiv(x, this->size) + treePosition.x, floorDiv(y, this->size) + treePosition.y, floorDiv(z, this->size) + treePosition.z};
+    const glm::ivec3 np = {floorDiv(x, this->size) + treePosition.x, floorDiv(y, this->size) + treePosition.y, floorDiv(z, this->size) + treePosition.z};
 
     auto it = neighbours.find(np);
 
@@ -239,7 +239,7 @@ const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const
   return uniqueVoxels;
 }
 
-void SparseVoxelOctree::setNeighbours(const glm::ivec3 &treePosition, const std::unordered_map<std::tuple<int, int, int>, SparseVoxelOctree *> &neighbours)
+void SparseVoxelOctree::setNeighbours(const glm::ivec3 &treePosition, const std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours)
 {
   this->treePosition = treePosition;
 
@@ -281,8 +281,7 @@ void SparseVoxelOctree::setNeighbours(const glm::ivec3 &treePosition, const std:
 
   for (const glm::ivec3 &dir : directions)
   {
-    glm::ivec3 p = treePosition + dir;
-    std::tuple<int, int, int> np = {p.x, p.y, p.z};
+    glm::ivec3 np = treePosition + dir;
     auto it = neighbours.find(np);
     if (it != neighbours.end())
       this->neighbours[np] = it->second;

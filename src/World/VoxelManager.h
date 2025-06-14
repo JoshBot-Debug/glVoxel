@@ -2,9 +2,6 @@
 
 #include <future>
 #include <glm/glm.hpp>
-
-#include <tuple>
-#include <functional>
 #include <unordered_map>
 
 #include "ECS/Entity.h"
@@ -44,7 +41,7 @@ private:
 
   std::mutex verticesMutex;
   std::vector<std::future<void>> futures;
-  std::unordered_map<std::tuple<int, int, int>, SparseVoxelOctree *> chunks;
+  std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
 
 public:
   std::vector<Vertex> vertices;

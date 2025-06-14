@@ -39,11 +39,7 @@ void VoxelManager::update(const glm::vec3 &position)
 
   for (auto it = chunks.begin(); it != chunks.end();)
   {
-    const std::tuple<int, int, int> &t = it->first;
-    const glm::ivec3 chunkPosition = {std::get<0>(t), std::get<1>(t),
-                                      std::get<2>(t)};
-
-    if (std::find(coords.begin(), coords.end(), chunkPosition) ==
+    if (std::find(coords.begin(), coords.end(), it->first) ==
         coords.end())
     {
       delete it->second;
