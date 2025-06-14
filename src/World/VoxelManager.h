@@ -11,6 +11,7 @@
 #include "Voxel/SparseVoxelOctree.h"
 
 #include "Components.h"
+#include "IVecMutex.h"
 
 class VoxelManager {
   enum VoxelPalette {
@@ -37,6 +38,7 @@ private:
       new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
       new Voxel(34, 139, 34, 255), new Voxel(255, 255, 255, 255)};
 
+  IVecMutex mutex;
   std::mutex verticesMutex;
   std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;

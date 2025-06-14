@@ -36,6 +36,8 @@ void VoxelManager::update(const glm::vec3 &position) {
 
   for (auto it = chunks.begin(); it != chunks.end();) {
     if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
+      std::unique_lock lock(mutex.get(it->first));
+
       delete it->second;
       it->second = nullptr;
       it = chunks.erase(it);
@@ -93,8 +95,10 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
     for (auto &f : futures)
       f.get();
 
-    for (const glm::ivec3 &coord : coords)
-      chunks[{coord.x, coord.y, coord.z}]->setNeighbours(coord, chunks);
+    for (const glm::ivec3 &coord : coords) {
+      if (chunks.contains({coord.x, coord.y, coord.z}))
+        chunks[{coord.x, coord.y, coord.z}]->setNeighbours(coord, chunks);
+    }
 
     futures.clear();
 
@@ -116,6 +120,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
 }
 
 void VoxelManager::generateChunk(const glm::ivec3 &coord) {
+  std::unique_lock lock(mutex.get(coord));
+
   auto t1 = START_TIMER;
 
   auto [it, _] = chunks.try_emplace({coord.x, coord.y, coord.z},
@@ -169,7 +175,12 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
 }
 
 void VoxelManager::meshChunk(const glm::ivec3 &coord) {
+  std::shared_lock lock(mutex.get(coord));
+
   auto t1 = START_TIMER;
+
+  if (!chunks.contains({coord.x, coord.y, coord.z}))
+    return;
 
   SparseVoxelOctree *tree = chunks[{coord.x, coord.y, coord.z}];
 
