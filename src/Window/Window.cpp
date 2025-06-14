@@ -12,19 +12,22 @@
 
 glm::vec2 Window::dimensions = glm::vec2(0.0f, 0.0f);
 
-void errorCallback(int error, const char *description) {
+void errorCallback(int error, const char *description)
+{
   std::cerr << "GLFW Error " << error << ":" << description << std::endl;
 }
 
 void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id,
                               GLenum severity, GLsizei length,
-                              const GLchar *message, const void *userParam) {
+                              const GLchar *message, const void *userParam)
+{
   std::cerr << "OpenGL Debug Message (" << id << "): " << message << std::endl;
   std::cerr << "Source: " << source << ", Type: " << type
             << ", Severity: " << severity << std::endl;
 }
 
-static void glDebug() {
+static void glDebug()
+{
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
@@ -33,7 +36,8 @@ static void glDebug() {
                         GL_TRUE);
 }
 
-void Window::open() {
+void Window::open()
+{
   this->onInitialize();
 
   glfwShowWindow(window);
@@ -41,8 +45,10 @@ void Window::open() {
   if (options.maximized)
     glfwMaximizeWindow(window);
 
-  while (!glfwWindowShouldClose(window)) {
-    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+  while (!glfwWindowShouldClose(window))
+  {
+    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0)
+    {
       ImGui_ImplGlfw_Sleep(10);
       continue;
     }
@@ -71,13 +77,15 @@ void Window::open() {
 
 const glm::vec2 &Window::GetDimensions() { return Window::dimensions; }
 
-void Window::setFrameBufferSize(GLFWwindow *window, int w, int h) {
+void Window::setFrameBufferSize(GLFWwindow *window, int w, int h)
+{
   glViewport(0, 0, w, h);
   dimensions.x = w;
   dimensions.y = h;
 }
 
-Window::Window(const WindowOptions &options) : options(options) {
+Window::Window(const WindowOptions &options) : options(options)
+{
   glfwSetErrorCallback(errorCallback);
 
   if (!glfwInit())
@@ -98,7 +106,8 @@ Window::Window(const WindowOptions &options) : options(options) {
 
   window = glfwCreateWindow(options.width, options.height,
                             options.title.c_str(), nullptr, nullptr);
-  if (!window) {
+  if (!window)
+  {
     glfwTerminate();
     return;
   }
@@ -154,7 +163,8 @@ Window::Window(const WindowOptions &options) : options(options) {
   glfwSetScrollCallback(window, Input::ScrollCallback);
 }
 
-Window::~Window() {
+Window::~Window()
+{
   glfwDestroyWindow(window);
   glfwTerminate();
 }

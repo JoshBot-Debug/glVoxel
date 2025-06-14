@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ECS/Registry.h"
+#include "ECS/Entity.h"
 
 #include "Voxel/HeightMap.h"
 #include "Voxel/SparseVoxelOctree.h"
@@ -12,7 +12,7 @@
 
 #include "VoxelManager.h"
 
-#include <future>
+#include <mutex>
 #include <noise/noise.h>
 #include <noise/noiseutils.h>
 
@@ -28,14 +28,12 @@ private:
   Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
   VertexArray vao;
 
-  VoxelManager voxels{128, 2};
+  VoxelManager voxels{256, 3};
 
   PerspectiveCamera *camera = nullptr;
 
-  std::vector<std::future<void>> futures;
-
 public:
-  HeightMap heightMap{128, 128};
+  HeightMap heightMap{256, 256};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
@@ -46,9 +44,6 @@ public:
   void draw();
 
   void update();
-
-  // Private in the future
-  void setBuffer();
 
   void setRegistry(Registry *registry);
 

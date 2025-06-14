@@ -89,19 +89,6 @@ public:
 
     ImGui::Spacing();
 
-    // if (ImGui::Button("Generate chunk"))
-    // {
-    //   for (int x = -0; x < 1; x++)
-    //     for (int z = -0; z < 1; z++)
-    //       world->generateChunk(x, z);
-    // }
-    ImGui::Spacing();
-
-    if (ImGui::Button("Set Buffer"))
-      world->setBuffer();
-
-    ImGui::Spacing();
-
     ImGui::DragInt("Seed", &world->heightMap.terrain.seed);
     ImGui::DragFloat("Scale", &world->heightMap.terrain.scale, 0.01f);
     ImGui::DragFloat("Bias", &world->heightMap.terrain.bias, 0.01f);

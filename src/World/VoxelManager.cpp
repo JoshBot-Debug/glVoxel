@@ -5,10 +5,13 @@
 #include <noise/noiseutils.h>
 #include <unordered_set>
 
+#include "Components.h"
 #include "Debug.h"
 
-VoxelManager::VoxelManager(int CHUNK_SIZE, int CHUNK_RADIUS, float HEIGHT_MAP_STEP)
-    : CHUNK_SIZE(CHUNK_SIZE), CHUNK_RADIUS(CHUNK_RADIUS), HEIGHT_MAP_STEP(HEIGHT_MAP_STEP) {}
+VoxelManager::VoxelManager(int CHUNK_SIZE, int CHUNK_RADIUS,
+                           float HEIGHT_MAP_STEP)
+    : CHUNK_SIZE(CHUNK_SIZE), CHUNK_RADIUS(CHUNK_RADIUS),
+      HEIGHT_MAP_STEP(HEIGHT_MAP_STEP) {}
 
 VoxelManager::~VoxelManager()
 {
@@ -18,42 +21,60 @@ VoxelManager::~VoxelManager()
 
 void VoxelManager::initialize(const glm::vec3 &position)
 {
-  const std::vector<glm::ivec3> coords = getChunkPositionsInRadius(getChunkPosition(position));
+  playerPosition = position;
+  generateTerrain(getChunkPositionsInRadius(getChunkPosition(position)));
+}
 
-  for (const auto &coord : coords)
+void VoxelManager::update(const glm::vec3 &position)
+{
+  const glm::ivec3 currentCenter = getChunkPosition(position);
+
+  if (playerPosition == currentCenter)
+    return;
+
+  playerPosition = currentCenter;
+
+  const std::vector<glm::ivec3> coords =
+      getChunkPositionsInRadius(currentCenter);
+
+  for (auto it = chunks.begin(); it != chunks.end();)
   {
-    std::cout << "Coord: " << coord.x << " " << coord.y << " " << coord.z << std::endl;
-    futures.push_back(std::async(std::launch::async, &VoxelManager::generateChunk, this, coord));
+    const std::tuple<int, int, int> &t = it->first;
+    const glm::ivec3 chunkPosition = {std::get<0>(t), std::get<1>(t),
+                                      std::get<2>(t)};
+
+    if (std::find(coords.begin(), coords.end(), chunkPosition) ==
+        coords.end())
+    {
+      delete it->second;
+      it = chunks.erase(it);
+    }
+    else
+      ++it;
   }
 
-  std::thread([this, coords = coords, futures = std::move(futures)]() mutable
-              {
-                auto t1 = START_TIMER;
-                for (auto &f : futures) f.get();
+  std::vector<glm::ivec3> coordsToCreate;
 
-                for (const glm::ivec3 &coord : coords)
-                  chunks[{coord.x,coord.y,coord.z}]->setNeighbours(coord, chunks);
+  for (const auto &coord : coords)
+    if (chunks.find({coord.x, coord.y, coord.z}) == chunks.end())
+      coordsToCreate.push_back(coord);
 
-                futures.clear();
-
-                for (const auto &coord : coords)
-                  futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk, this, coord));
-
-                for (auto &f : futures) f.get();
-
-                std::cout << "Chunks: " << coords.size() << std::endl;
-                std::cout << "Size: " << CHUNK_SIZE << std::endl;
-                END_TIMER(t1, "Chunks"); })
-
-      .detach();
+  generateTerrain(coordsToCreate);
 }
 
 void VoxelManager::setHeightMap(HeightMap *heightMap)
 {
   this->heightMap = heightMap;
 }
+void VoxelManager::setRegistry(Registry *registry)
+{
+  this->registry = registry;
+  Entity *entity = registry->createEntity("VoxelBuffer");
+  this->voxelBuffer = entity->add<CVoxelBuffer>(false);
+}
 
-const std::vector<glm::ivec3> VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const
+const std::vector<glm::ivec3>
+VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const
 {
   std::vector<glm::ivec3> result;
 
@@ -65,30 +86,75 @@ const std::vector<glm::ivec3> VoxelManager::getChunkPositionsInRadius(const glm:
   return result;
 }
 
-const glm::ivec3 VoxelManager::getChunkPosition(const glm::vec3 &position) const
+const glm::ivec3
+VoxelManager::getChunkPosition(const glm::vec3 &position) const
 {
   return {static_cast<int>(std::floor(position.x / CHUNK_SIZE)),
           static_cast<int>(std::floor(position.y / CHUNK_SIZE)),
           static_cast<int>(std::floor(position.z / CHUNK_SIZE))};
 }
 
+void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords)
+{
+  for (const auto &coord : coords)
+  {
+    std::cout << "Coord: " << coord.x << " " << coord.y << " " << coord.z
+              << std::endl;
+    futures.push_back(std::async(std::launch::async,
+                                 &VoxelManager::generateChunk, this, coord));
+  }
+
+  std::thread([this, coords = coords, futures = std::move(futures)]() mutable
+              {
+    auto t1 = START_TIMER;
+    for (auto &f : futures)
+      f.get();
+
+    for (const glm::ivec3 &coord : coords)
+      chunks[{coord.x, coord.y, coord.z}]->setNeighbours(coord, chunks);
+    
+    futures.clear();
+
+    for (const auto &coord : coords)
+      futures.push_back(std::async(std::launch::async, &VoxelManager::meshChunk,
+                                   this, coord));
+
+    for (auto &f : futures)
+      f.get();
+
+    voxelBuffer->shouldUpdate = true;
+
+    std::cout << "Chunks: " << coords.size() << std::endl;
+    std::cout << "Size: " << CHUNK_SIZE << std::endl;
+    END_TIMER(t1, "Chunks"); })
+
+      .detach();
+}
+
 void VoxelManager::generateChunk(const glm::ivec3 &coord)
 {
   auto t1 = START_TIMER;
 
-  auto [it, _] = chunks.try_emplace({coord.x, coord.y, coord.z}, new SparseVoxelOctree(CHUNK_SIZE));
+  auto [it, _] = chunks.try_emplace({coord.x, coord.y, coord.z},
+                                    new SparseVoxelOctree(CHUNK_SIZE));
 
   SparseVoxelOctree *tree = it->second;
 
   tree->clear();
 
+  if (coord.y != 0)
+    return;
+
   utils::NoiseMap map =
       heightMap->build(coord.x + 1.0f, coord.x + HEIGHT_MAP_STEP + 1.0f,
                        coord.z + 1.0f, coord.z + HEIGHT_MAP_STEP + 1.0f);
 
-  int stoneLimit = static_cast<int>(CHUNK_SIZE * heightMap->terrain.stoneThreshold);
-  int dirtLimit = static_cast<int>(CHUNK_SIZE * heightMap->terrain.dirtThreshold);
-  int grassLimit = static_cast<int>(CHUNK_SIZE * heightMap->terrain.grassThreshold);
+  int stoneLimit =
+      static_cast<int>(CHUNK_SIZE * heightMap->terrain.stoneThreshold);
+  int dirtLimit =
+      static_cast<int>(CHUNK_SIZE * heightMap->terrain.dirtThreshold);
+  int grassLimit =
+      static_cast<int>(CHUNK_SIZE * heightMap->terrain.grassThreshold);
 
   const unsigned int maskSize = CHUNK_SIZE * CHUNK_SIZE * (CHUNK_SIZE / 64);
 

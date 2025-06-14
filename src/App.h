@@ -2,7 +2,8 @@
 
 #include <Window/Window.h>
 
-#include "ECS/Registry.h"
+#include "ECS/Entity.h"
+
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/ResourceManager.h"
 #include "Engine/Skybox.h"
