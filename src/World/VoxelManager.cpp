@@ -43,6 +43,7 @@ void VoxelManager::update(const glm::vec3 &position)
         coords.end())
     {
       delete it->second;
+      it->second = nullptr;
       it = chunks.erase(it);
     }
     else
