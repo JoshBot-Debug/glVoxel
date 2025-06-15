@@ -25,8 +25,8 @@ class World {
 private:
   Registry *registry{nullptr};
 
-  Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
   VertexArray vao;
+  Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
 
   VoxelManager voxels{128, {0, 0, 0}};
 

@@ -15,7 +15,7 @@ App::App()
               .width = 800,
               .height = 600,
               .enableDepth = true,
-              .enableVSync = false,
+              .enableVSync = true,
               .MSAA = 16,
               .imguiEnableDocking = true,
               .maximized = true}) {
@@ -33,16 +33,17 @@ App::App()
   controlPanel.light.position = {0, 512, -128};
 
   Shader &shader = resource.getShader();
+
   shader.create({
       .name = "voxel",
-      .vertex = "src/Shaders/voxel.vs",
-      .fragment = "src/Shaders/voxel.fs",
+      .vertex = (EXE_DIRECTORY + "/../src/Shaders/voxel.vs").c_str(),
+      .fragment = (EXE_DIRECTORY + "/../src/Shaders/voxel.fs").c_str(),
   });
 
   shader.create({
       .name = "skybox",
-      .vertex = "src/Shaders/skybox.vs",
-      .fragment = "src/Shaders/skybox.fs",
+      .vertex = (EXE_DIRECTORY + "/../src/Shaders/skybox.vs").c_str(),
+      .fragment = (EXE_DIRECTORY + "/../src/Shaders/skybox.fs").c_str(),
   });
 
   open();

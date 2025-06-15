@@ -11,6 +11,10 @@
 #include "EngineControlPanel.h"
 #include "World/World.h"
 
+#include "Utility.h"
+
+const std::string EXE_DIRECTORY = getExecutableDir();
+
 class App : Window {
 private:
   World world;
@@ -20,12 +24,13 @@ private:
 
   EngineControlPanel controlPanel;
 
-  Skybox skybox{{"assets/skybox/plain/left-right-front-back.jpg",
-                 "assets/skybox/plain/left-right-front-back.jpg",
-                 "assets/skybox/plain/top.jpg",
-                 "assets/skybox/plain/bottom.jpg",
-                 "assets/skybox/plain/left-right-front-back.jpg",
-                 "assets/skybox/plain/left-right-front-back.jpg"}};
+  Skybox skybox{
+      {EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",
+       EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",
+       EXE_DIRECTORY + "/../assets/skybox/plain/top.jpg",
+       EXE_DIRECTORY + "/../assets/skybox/plain/bottom.jpg",
+       EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",
+       EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg"}};
 
 public:
   App();

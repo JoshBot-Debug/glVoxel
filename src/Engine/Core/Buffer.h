@@ -126,8 +126,7 @@ public:
    * @param chunk The size of one chunk in bytes.
    * @param count The number of chunks you are inserting
    * @param data A pointer to the raw data to be uploaded to the buffer.
-   * @param draw Specifies how the buffer will be used (static, dynamic, etc.).
-   * Default is STATIC.
+   * @param partitions A vector of buffer sizes
    */
   void set(unsigned int chunk, unsigned int count, const void *data,
            const std::vector<unsigned int> partitions = {});
@@ -143,7 +142,7 @@ public:
    * @tparam T The type of the elements in the vector (e.g., float, glm::vec3).
    */
   template <typename T>
-  void update(unsigned int offset, const std::vector<T> &data,
+  void update(const std::vector<T> &data, unsigned int offset = 0,
               unsigned int partition = 0) {
     glBufferSubData((unsigned int)target,
                     offset * sizeof(T) +
@@ -155,27 +154,28 @@ public:
    * Updates part of the buffer using raw data.
    *
    * @param chunk The size of one chunk in bytes.
-   * @param offset The offset of chunks in the buffer.
    * @param size The size of the data to update in bytes.
+   * @param offset The offset of chunks in the buffer.
    * @param data A pointer to the raw data to upload to the buffer.
+   * @param partition The partition you want to update the data into.
    */
-  void update(unsigned int chunk, unsigned int offset, unsigned int size,
-              const void *data, unsigned int partition = 0);
+  void update(unsigned int chunk, unsigned int size, const void *data,
+              unsigned int offset = 0, unsigned int partition = 0);
 
   /**
    * Insert or updates part of the buffer with a vector of generic data type.
    * If there is not enough place in the partition, the buffer will resize.
    *
-   * @param offset The offset in the buffer to start updating (in terms of
-   * number of elements).
    * @param data The new data to upload to the buffer. This is a vector of any
    * type T.
+   * @param offset The offset in the buffer to start updating (in terms of
+   * number of elements).
    * @param partition The partition you want to upsert the data into.
    *
    * @tparam T The type of the elements in the vector (e.g., float, glm::vec3).
    */
   template <typename T>
-  void upsert(unsigned int offset, const std::vector<T> &data,
+  void upsert(const std::vector<T> &data, unsigned int offset = 0,
               unsigned int partition = 0) {
     // Did you forget to call .addPartition(0) before trying to upsert to a
     // partition that does not exist? You need to add a partition first. And if
@@ -199,6 +199,8 @@ public:
    * Insert or updates part of the buffer with a vector of generic data type.
    * If there is not enough place in the partition, the buffer will resize.
    *
+   * @param chunk The size of one chunk in bytes.
+   * @param size The size of the data to update in bytes.
    * @param offset The offset in the buffer to start updating (in terms of
    * number of elements).
    * @param data The new data to upload to the buffer. This is a vector of any
@@ -207,8 +209,8 @@ public:
    *
    * @tparam T The type of the elements in the vector (e.g., float, glm::vec3).
    */
-  void upsert(unsigned int chunk, unsigned int offset, unsigned int size,
-              const void *data, unsigned int partition = 0) {
+  void upsert(unsigned int chunk, unsigned int size, const void *data,
+              unsigned int offset = 0, unsigned int partition = 0) {
     // Did you forget to call .addPartition(0) before trying to upsert to a
     // partition that does not exist? You need to add a partition first. And if
     // only partition 0 exists, you cannot try upserting to partition[2,3,4,...]

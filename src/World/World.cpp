@@ -28,8 +28,12 @@ void World::update() {
 
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>()) {
     if (voxelBuffer->isDirty()) {
+      const std::vector<Vertex> verticies = voxelBuffer->getVertices();
+      std::cout << "verticies: " << sizeof(Vertex) * verticies.size() << std::endl;
+      std::cout << "verticies: " << verticies.size() << std::endl;
       vao.bind();
-      vbo.set(voxelBuffer->getVertices());
+      vbo.set(sizeof(Vertex), verticies.size(), nullptr); // orphan
+      vbo.update(verticies);
       vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex),
               (void *)(offsetof(Vertex, x)));
       vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex),
