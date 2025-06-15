@@ -12,7 +12,6 @@
 
 #include "Components.h"
 #include "IVecMutex.h"
-#include <chrono>
 
 class VoxelManager {
   enum VoxelPalette {
@@ -41,9 +40,6 @@ private:
 
   IVecMutex mutex;
   bool isUpdating = false;
-  std::chrono::milliseconds debounceUpdate = std::chrono::milliseconds(2000);
-  std::chrono::high_resolution_clock::time_point lastUpdated =
-      std::chrono::high_resolution_clock::now();
   std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
 
