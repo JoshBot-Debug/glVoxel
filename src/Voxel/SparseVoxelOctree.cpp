@@ -9,7 +9,11 @@ SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8) {}
 SparseVoxelOctree::SparseVoxelOctree(int size)
     : size(size), maxDepth(std::log2(size)) {}
 
-SparseVoxelOctree::~SparseVoxelOctree() { clear(); }
+SparseVoxelOctree::~SparseVoxelOctree() {
+  clear();
+  delete root;
+  root = nullptr;
+}
 
 const int SparseVoxelOctree::getSize() const { return size; }
 
@@ -262,7 +266,7 @@ void SparseVoxelOctree::setNeighbours(
   for (const glm::ivec3 &dir : directions) {
     glm::ivec3 np = treePosition + dir;
     if (neighbours.contains(np))
-      this->neighbours[np] = neighbours[np];
+      this->neighbours[np] = neighbours.at(np);
     else
       this->neighbours[np] = nullptr;
   }
