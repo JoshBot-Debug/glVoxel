@@ -26,9 +26,10 @@ void VoxelManager::initialize(const glm::vec3 &position) {
 void VoxelManager::update(const glm::vec3 &position) {
   const glm::ivec3 currentCenter = getChunkPosition(position);
 
-  if (playerPosition == currentCenter || isUpdating.exchange(true))
+  if (playerPosition == currentCenter || isUpdating)
     return;
 
+  isUpdating = true;
   playerPosition = currentCenter;
 
   std::thread([this, currentCenter]() {
@@ -52,7 +53,7 @@ void VoxelManager::update(const glm::vec3 &position) {
 
     generateTerrain(create);
 
-    isUpdating.store(false);
+    isUpdating = false;
   }).detach();
 }
 

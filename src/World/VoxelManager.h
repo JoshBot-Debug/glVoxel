@@ -39,7 +39,7 @@ private:
       new Voxel(34, 139, 34, 255), new Voxel(255, 255, 255, 255)};
 
   IVecMutex mutex;
-  std::atomic<bool> isUpdating;
+  bool isUpdating;
   std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
 
