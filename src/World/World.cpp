@@ -14,6 +14,11 @@ void World::initialize() {
 
 void World::draw() {
   vao.bind();
+
+  /**
+   * TODO: Eventually we will get a segment fault here because the vertex buffer
+   * has a size limit. The solution is to batch vertices and draw them.
+   */
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
     glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
 }
