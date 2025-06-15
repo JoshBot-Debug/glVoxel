@@ -19,37 +19,43 @@ VoxelManager::~VoxelManager() {
 }
 
 void VoxelManager::initialize(const glm::vec3 &position) {
-  playerPosition = position;
+  playerChunkPosition = getChunkPosition(position);
   generateTerrain(getChunkPositionsInRadius(getChunkPosition(position)));
 }
 
 void VoxelManager::update(const glm::vec3 &position) {
-  const glm::ivec3 currentCenter = getChunkPosition(position);
+  const glm::ivec3 currentChunkPosition = getChunkPosition(position);
 
-  if (playerPosition == currentCenter || isUpdating)
+  if (playerChunkPosition == currentChunkPosition || isUpdating)
     return;
 
   isUpdating = true;
-  playerPosition = currentCenter;
+  playerChunkPosition = currentChunkPosition;
 
-  std::thread([this, currentCenter]() {
-    const std::vector<glm::ivec3> coords =
-        getChunkPositionsInRadius(currentCenter);
+  std::thread([this, currentChunkPosition]() {
+    std::vector<glm::ivec3> create =
+        getChunkPositionsInRadius(currentChunkPosition);
+    std::vector<glm::ivec3> remove;
 
     for (auto it = chunks.begin(); it != chunks.end();) {
-      if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
+      if (std::find(create.begin(), create.end(), it->first) == create.end()) {
         std::unique_lock lock(mutex.get(it->first));
+        remove.push_back(it->first);
         delete it->second;
         it = chunks.erase(it);
       } else
         ++it;
     }
 
-    std::vector<glm::ivec3> create;
+    for (const auto &coord : remove) {
+      auto cit = std::find(create.begin(), create.end(), coord);
+      if (cit != create.end())
+        create.erase(cit);
+    }
 
-    for (const auto &coord : getChunkPositionsInRadius(currentCenter))
-      if (!chunks.contains(coord))
-        create.push_back(coord);
+    for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+      for (const auto &coord : remove)
+        voxelBuffer->clearVertices(coord);
 
     generateTerrain(create);
 
@@ -70,14 +76,13 @@ const std::vector<glm::ivec3>
 VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const {
   std::vector<glm::ivec3> result;
 
-  for (int dz = -ChunkRadius.z; dz < ChunkRadius.z; ++dz)
-    for (int dx = -ChunkRadius.x; dx < ChunkRadius.x; ++dx) {
-      if (center.y == 0)
-        result.emplace_back(center.x + dx, 0, center.z + dz);
-      else
-        for (int dy = -ChunkRadius.y; dy < ChunkRadius.y; ++dy)
-          result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
-    }
+  for (int dz = -ChunkRadius.z; dz <= ChunkRadius.z; ++dz)
+    for (int dx = -ChunkRadius.x; dx <= ChunkRadius.x; ++dx)
+      for (int dy = -ChunkRadius.y; dy <= ChunkRadius.y; ++dy)
+        result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
+
+  for (auto coord : result)
+    LOG_IVEC3("Coord", coord);
 
   return result;
 }
@@ -112,9 +117,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
     for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
       voxelBuffer->flush();
 
-    std::cout << "Chunks: " << coords.size() << std::endl;
-    std::cout << "Size: " << ChunkSize << std::endl;
-    END_TIMER(t1, "Chunks");
+    LOG("Chunks", coords.size());
+    END_TIMER(t1);
   }).detach();
 }
 
@@ -172,7 +176,7 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   generateBlockChunks(dirtLimit, grassLimit, voxelPalette[VoxelPalette::GRASS]);
   generateBlockChunks(grassLimit, ChunkSize, voxelPalette[VoxelPalette::SNOW]);
 
-  END_TIMER(t1, "generateChunk()");
+  END_TIMER(t1);
 }
 
 void VoxelManager::meshChunk(const glm::ivec3 &coord) {
@@ -189,15 +193,12 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   const std::vector<Voxel *> &filters = it->second->getUniqueVoxels();
 
-  std::vector<std::vector<Vertex>> tVertices;
-  tVertices.resize(filters.size());
-
 #pragma omp parallel for
   for (int i = 0; i < filters.size(); i++) {
-    it->second->greedyMesh(tVertices[i], filters[i]);
+    std::vector<Vertex> vertices;
+    it->second->greedyMesh(vertices, filters[i]);
 
     Voxel *filter = filters[i];
-    std::vector<Vertex> &vertices = tVertices[i];
 
     for (int j = 0; j < vertices.size(); j++) {
       vertices[j].x += static_cast<float>(coord.x * ChunkSize);
@@ -208,8 +209,8 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
     }
 
     for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
-      voxelBuffer->setVertices(vertices);
+      voxelBuffer->setVertices(coord, vertices);
   }
 
-  END_TIMER(t1, "meshChunk()");
+  END_TIMER(t1);
 }

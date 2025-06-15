@@ -4,24 +4,10 @@
 
 #include <chrono>
 #include <functional>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <string>
 #include <thread>
-
-#define LOG(...) Log(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define BENCHMARK(...) Benchmark(__VA_ARGS__)
-#define LOG_BREAK_BEFORE                                                       \
-  std::cout << std::endl                                                       \
-            << "-------------------------------------------------------------" \
-               "---------------------------"                                   \
-            << std::endl
-#define LOG_BREAK_AFTER                                                        \
-  std::cout << "-------------------------------------------------------------" \
-               "---------------------------"                                   \
-            << std::endl
-
-#define START_TIMER std::chrono::high_resolution_clock::now()
-#define END_TIMER(...) EndTimer(__VA_ARGS__)
 
 template <typename... Args>
 inline void Log(const char *file, int line, const char *functionName,
@@ -29,6 +15,13 @@ inline void Log(const char *file, int line, const char *functionName,
   std::cout << "LOG " << file << ":" << line << " (" << functionName << "):";
   ((std::cout << " " << args), ...);
   std::cout << std::endl;
+}
+
+inline void LogIVec3(const char *file, int line, const char *functionName,
+                     const std::string &name, const glm::ivec3 &position) {
+
+  Log(file, line, functionName, name, "(", position.x, ",", position.y, ",",
+      position.z, ")");
 }
 
 inline void Benchmark(const std::string &functionName,
@@ -45,12 +38,27 @@ inline void Benchmark(const std::string &functionName,
             << " ms (average) over " << iterations << " iterations.\n";
 }
 
-inline void EndTimer(std::chrono::_V2::system_clock::time_point startTime,
-                     const std::string &name) {
+inline void EndTimer(const char *file, int line, const char *functionName,
+                     std::chrono::_V2::system_clock::time_point startTime) {
   auto end = std::chrono::high_resolution_clock::now(); // End timing
   std::chrono::duration<double, std::milli> duration = end - startTime;
-  std::cout << name << ": " << duration.count() << " ms\n";
+  Log(file, line, functionName, duration.count(), "ms");
 }
+
+#define LOG(...) Log(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define BENCHMARK(...) Benchmark(__VA_ARGS__)
+#define LOG_BREAK_BEFORE                                                       \
+  std::cout << std::endl                                                       \
+            << "-------------------------------------------------------------" \
+               "---------------------------"                                   \
+            << std::endl
+#define LOG_BREAK_AFTER                                                        \
+  std::cout << "-------------------------------------------------------------" \
+               "---------------------------"                                   \
+            << std::endl
+#define START_TIMER std::chrono::high_resolution_clock::now()
+#define END_TIMER(...) EndTimer(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_IVEC3(...) LogIVec3(__FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #else
 #define LOG(...)
@@ -59,4 +67,5 @@ inline void EndTimer(std::chrono::_V2::system_clock::time_point startTime,
 #define LOG_BREAK_AFTER
 #define START_TIMER 0
 #define END_TIMER(...)
+#define LOG_IVEC3(...)
 #endif

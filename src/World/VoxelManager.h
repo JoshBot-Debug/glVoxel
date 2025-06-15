@@ -12,6 +12,7 @@
 
 #include "Components.h"
 #include "IVecMutex.h"
+#include <chrono>
 
 class VoxelManager {
   enum VoxelPalette {
@@ -22,9 +23,9 @@ class VoxelManager {
   };
 
 private:
-  int ChunkSize;
-  glm::ivec3 ChunkRadius;
-  float HeightMapStep;
+  int ChunkSize = 128;
+  glm::ivec3 ChunkRadius = {0, 0, 0};
+  float HeightMapStep = 0.0f;
 
   Registry *registry{nullptr};
 
@@ -32,14 +33,17 @@ private:
 
   CVoxelBuffer *voxelBuffer{nullptr};
 
-  glm::ivec3 playerPosition{0, 0, 0};
+  glm::ivec3 playerChunkPosition{0, 0, 0};
 
   std::vector<Voxel *> voxelPalette = {
       new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
       new Voxel(34, 139, 34, 255), new Voxel(255, 255, 255, 255)};
 
   IVecMutex mutex;
-  bool isUpdating;
+  bool isUpdating = false;
+  std::chrono::milliseconds debounceUpdate = std::chrono::milliseconds(2000);
+  std::chrono::high_resolution_clock::time_point lastUpdated =
+      std::chrono::high_resolution_clock::now();
   std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
 
