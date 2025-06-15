@@ -26,14 +26,8 @@ void VoxelManager::initialize(const glm::vec3 &position) {
 void VoxelManager::update(const glm::vec3 &position) {
   const glm::ivec3 currentCenter = getChunkPosition(position);
 
-  if (playerPosition == currentCenter)
+  if (playerPosition == currentCenter || isUpdating.exchange(true))
     return;
-
-  if (isUpdating.exchange(true)) {
-    // Another update is still running
-    // std::cout << "Update skipped (already in progress)\n";
-    return;
-  }
 
   playerPosition = currentCenter;
 
@@ -44,7 +38,6 @@ void VoxelManager::update(const glm::vec3 &position) {
     for (auto it = chunks.begin(); it != chunks.end();) {
       if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
         std::unique_lock lock(mutex.get(it->first));
-        std::cout << "Deleting SVO: " << it->first.x << " " << it->first.y << " " << it->first.z << " " << std::endl;
         delete it->second;
         it = chunks.erase(it);
       } else
