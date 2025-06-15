@@ -4,6 +4,39 @@
 #include "SparseVoxelOctree.h"
 #include "Voxel/GreedyMesh.h"
 
+static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =
+    {               // Cardinal directions (6)
+        {1, 0, 0},  // +X (East)
+        {-1, 0, 0}, // -X (West)
+        {0, 1, 0},  // +Y (Up)
+        {0, -1, 0}, // -Y (Down)
+        {0, 0, 1},  // +Z (South)
+        {0, 0, -1}, // -Z (North)
+
+        // Face diagonals (12)
+        {1, 1, 0},
+        {1, -1, 0},
+        {-1, 1, 0},
+        {-1, -1, 0},
+        {1, 0, 1},
+        {1, 0, -1},
+        {-1, 0, 1},
+        {-1, 0, -1},
+        {0, 1, 1},
+        {0, 1, -1},
+        {0, -1, 1},
+        {0, -1, -1},
+
+        // Corner diagonals (8)
+        {1, 1, 1},
+        {1, 1, -1},
+        {1, -1, 1},
+        {1, -1, -1},
+        {-1, 1, 1},
+        {-1, 1, -1},
+        {-1, -1, 1},
+        {-1, -1, -1}};
+
 SparseVoxelOctree::SparseVoxelOctree() : size(256), maxDepth(8) {}
 
 SparseVoxelOctree::SparseVoxelOctree(int size)
@@ -153,7 +186,7 @@ Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size,
     if (it == neighbours.end() || it->second == nullptr)
       return nullptr;
 
-    return neighbours[np]->get(
+    return it->second->get(
         {mod(x, this->size), mod(y, this->size), mod(z, this->size)}, -1,
         filter);
   }
@@ -225,48 +258,16 @@ const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const {
 
 void SparseVoxelOctree::setNeighbours(
     const glm::ivec3 &treePosition,
-    std::unordered_map<glm::ivec3, SparseVoxelOctree *> &neighbours) {
+    std::unordered_map<glm::ivec3, SparseVoxelOctree *> &chunks) {
   this->treePosition = treePosition;
 
-  static const std::vector<glm::ivec3> directions = {// Cardinal directions (6)
-                                                     {1, 0, 0},  // +X (East)
-                                                     {-1, 0, 0}, // -X (West)
-                                                     {0, 1, 0},  // +Y (Up)
-                                                     {0, -1, 0}, // -Y (Down)
-                                                     {0, 0, 1},  // +Z (South)
-                                                     {0, 0, -1}, // -Z (North)
-
-                                                     // Face diagonals (12)
-                                                     {1, 1, 0},
-                                                     {1, -1, 0},
-                                                     {-1, 1, 0},
-                                                     {-1, -1, 0},
-                                                     {1, 0, 1},
-                                                     {1, 0, -1},
-                                                     {-1, 0, 1},
-                                                     {-1, 0, -1},
-                                                     {0, 1, 1},
-                                                     {0, 1, -1},
-                                                     {0, -1, 1},
-                                                     {0, -1, -1},
-
-                                                     // Corner diagonals (8)
-                                                     {1, 1, 1},
-                                                     {1, 1, -1},
-                                                     {1, -1, 1},
-                                                     {1, -1, -1},
-                                                     {-1, 1, 1},
-                                                     {-1, 1, -1},
-                                                     {-1, -1, 1},
-                                                     {-1, -1, -1}};
-
   this->neighbours.clear();
-  this->neighbours.reserve(directions.size());
+  this->neighbours.reserve(NEIGHBOUR_DIRECTIONS.size());
 
-  for (const glm::ivec3 &dir : directions) {
+  for (const glm::ivec3 &dir : NEIGHBOUR_DIRECTIONS) {
     glm::ivec3 np = treePosition + dir;
-    if (neighbours.contains(np))
-      this->neighbours[np] = neighbours.at(np);
+    if (chunks.contains(np))
+      this->neighbours[np] = chunks.at(np);
     else
       this->neighbours[np] = nullptr;
   }

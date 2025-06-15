@@ -31,7 +31,7 @@ void VoxelManager::update(const glm::vec3 &position) {
 
   if (isUpdating.exchange(true)) {
     // Another update is still running
-    std::cout << "Update skipped (already in progress)\n";
+    // std::cout << "Update skipped (already in progress)\n";
     return;
   }
 
@@ -43,21 +43,12 @@ void VoxelManager::update(const glm::vec3 &position) {
 
     for (auto it = chunks.begin(); it != chunks.end();) {
       if (std::find(coords.begin(), coords.end(), it->first) == coords.end()) {
-        glm::ivec3 coord = it->first;
-        std::unique_lock lock(mutex.get(coord));
-
-        std::cout << "Delete SVO Lock: " << coord.x << " " << coord.y << " "
-                  << coord.z << std::endl;
-
+        std::unique_lock lock(mutex.get(it->first));
+        std::cout << "Deleting SVO: " << it->first.x << " " << it->first.y << " " << it->first.z << " " << std::endl;
         delete it->second;
-        it->second = nullptr;
         it = chunks.erase(it);
-
-        std::cout << "Delete SVO Unlock: " << coord.x << " " << coord.y << " "
-                  << coord.z << std::endl;
-      } else {
+      } else
         ++it;
-      }
     }
 
     std::vector<glm::ivec3> create;
@@ -78,7 +69,7 @@ void VoxelManager::setHeightMap(HeightMap *heightMap) {
 void VoxelManager::setRegistry(Registry *registry) {
   this->registry = registry;
   Entity *entity = registry->createEntity("VoxelBuffer");
-  this->voxelBuffer = entity->add<CVoxelBuffer>(false);
+  this->voxelBuffer = entity->add<CVoxelBuffer>();
 }
 
 const std::vector<glm::ivec3>
@@ -86,9 +77,13 @@ VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const {
   std::vector<glm::ivec3> result;
 
   for (int dz = -ChunkRadius.z; dz < ChunkRadius.z; ++dz)
-    for (int dx = -ChunkRadius.x; dx < ChunkRadius.x; ++dx)
-      for (int dy = -ChunkRadius.y; dy < ChunkRadius.y; ++dy)
-        result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
+    for (int dx = -ChunkRadius.x; dx < ChunkRadius.x; ++dx) {
+      if (center.y == 0)
+        result.emplace_back(center.x + dx, 0, center.z + dz);
+      else
+        for (int dy = -ChunkRadius.y; dy < ChunkRadius.y; ++dy)
+          result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
+    }
 
   return result;
 }
@@ -104,12 +99,9 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
   std::thread([this, coords = coords, futures = std::move(futures)]() mutable {
     auto t1 = START_TIMER;
 
-    for (const auto &coord : coords) {
-      std::cout << "Coord: " << coord.x << " " << coord.y << " " << coord.z
-                << std::endl;
+    for (const auto &coord : coords)
       futures.push_back(std::async(std::launch::async,
                                    &VoxelManager::generateChunk, this, coord));
-    }
 
     for (auto &f : futures)
       f.get();
@@ -123,7 +115,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
     for (auto &f : futures)
       f.get();
 
-    voxelBuffer->shouldUpdate = true;
+    for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+      voxelBuffer->flush();
 
     std::cout << "Chunks: " << coords.size() << std::endl;
     std::cout << "Size: " << ChunkSize << std::endl;
@@ -137,14 +130,16 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
 
   std::unique_lock lock(mutex.get(coord));
 
-  std::cout << "GC Write SVO Lock: " << coord.x << " " << coord.y << " "
-            << coord.z << std::endl;
-
   auto t1 = START_TIMER;
 
-  auto [it, _] = chunks.try_emplace(coord, new SparseVoxelOctree(ChunkSize));
+  auto it = chunks.find(coord);
 
-  it->second->clear();
+  if (it == chunks.end() || it->second == nullptr)
+    chunks[coord] = new SparseVoxelOctree(ChunkSize);
+
+  SparseVoxelOctree *tree = chunks.at(coord);
+
+  tree->clear();
 
   utils::NoiseMap map =
       heightMap->build(coord.x + 1.0f, coord.x + HeightMapStep + 1.0f,
@@ -175,7 +170,7 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
         }
       }
 
-    it->second->setBlock(mask, voxel);
+    tree->setBlock(mask, voxel);
   };
 
   generateBlockChunks(0, stoneLimit, voxelPalette[VoxelPalette::STONE]);
@@ -184,55 +179,43 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   generateBlockChunks(grassLimit, ChunkSize, voxelPalette[VoxelPalette::SNOW]);
 
   END_TIMER(t1, "generateChunk()");
-
-  std::cout << "GC Write SVO Unlock: " << coord.x << " " << coord.y << " "
-            << coord.z << std::endl;
 }
 
 void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   std::shared_lock lock(mutex.get(coord));
 
-  if (!chunks.contains(coord))
-    return;
+  auto it = chunks.find(coord);
 
-  std::cout << "MC Read SVO Lock: " << coord.x << " " << coord.y << " "
-            << coord.z << std::endl;
+  if (it == chunks.end() || it->second == nullptr)
+    return;
 
   auto t1 = START_TIMER;
 
-  SparseVoxelOctree *tree = chunks.at(coord);
+  it->second->setNeighbours(coord, chunks);
 
-  tree->setNeighbours(coord, chunks);
-
-  const std::vector<Voxel *> &filters = tree->getUniqueVoxels();
+  const std::vector<Voxel *> &filters = it->second->getUniqueVoxels();
 
   std::vector<std::vector<Vertex>> tVertices;
   tVertices.resize(filters.size());
 
 #pragma omp parallel for
   for (int i = 0; i < filters.size(); i++) {
-    tree->greedyMesh(tVertices[i], filters[i]);
+    it->second->greedyMesh(tVertices[i], filters[i]);
 
     Voxel *filter = filters[i];
-    std::vector<Vertex> &iv = tVertices[i];
+    std::vector<Vertex> &vertices = tVertices[i];
 
-    for (int j = 0; j < iv.size(); j++) {
-      iv[j].x += static_cast<float>(coord.x * ChunkSize);
-      iv[j].y += static_cast<float>(coord.y * ChunkSize);
-      iv[j].z += static_cast<float>(coord.z * ChunkSize);
-      iv[j].color = filter->color;
-      iv[j].material = filter->material;
+    for (int j = 0; j < vertices.size(); j++) {
+      vertices[j].x += static_cast<float>(coord.x * ChunkSize);
+      vertices[j].y += static_cast<float>(coord.y * ChunkSize);
+      vertices[j].z += static_cast<float>(coord.z * ChunkSize);
+      vertices[j].color = filter->color;
+      vertices[j].material = filter->material;
     }
 
-    {
-      std::lock_guard<std::mutex> lock(verticesMutex);
-      vertices.insert(vertices.end(), std::make_move_iterator(iv.begin()),
-                      std::make_move_iterator(iv.end()));
-    }
+    for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+      voxelBuffer->setVertices(vertices);
   }
 
   END_TIMER(t1, "meshChunk()");
-
-  std::cout << "MC Read SVO Unlock: " << coord.x << " " << coord.y << " "
-            << coord.z << std::endl;
 }

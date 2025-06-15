@@ -40,12 +40,8 @@ private:
 
   IVecMutex mutex;
   std::atomic<bool> isUpdating;
-  std::mutex verticesMutex;
   std::vector<std::future<void>> futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
-
-public:
-  std::vector<Vertex> vertices;
 
 public:
   VoxelManager(int chunkSize, glm::ivec3 chunkRadius, float worldStep = 1.0f);

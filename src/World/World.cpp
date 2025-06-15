@@ -14,18 +14,17 @@ void World::initialize() {
 
 void World::draw() {
   vao.bind();
-  glDrawArrays(static_cast<GLenum>(drawMode), 0, voxels.vertices.size());
+  for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+    glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
 }
 
 void World::update() {
   voxels.update(camera->position);
 
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>()) {
-    if (voxelBuffer->shouldUpdate) {
-      voxelBuffer->shouldUpdate = false;
-
+    if (voxelBuffer->isDirty()) {
       vao.bind();
-      vbo.set(voxels.vertices);
+      vbo.set(voxelBuffer->getVertices());
       vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex),
               (void *)(offsetof(Vertex, x)));
       vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex),
@@ -34,6 +33,8 @@ void World::update() {
               (void *)(offsetof(Vertex, color)));
       vao.set(3, 1, VertexType::INT, false, sizeof(Vertex),
               (void *)(offsetof(Vertex, material)));
+
+      voxelBuffer->clean();
     }
   }
 }
