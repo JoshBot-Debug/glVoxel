@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Types.h"
+#include <array>
 #include <glm/glm.hpp>
 #include <mutex>
 #include <vector>
@@ -10,6 +11,11 @@ private:
   bool _dirty = false;
   std::shared_mutex mutex;
   std::vector<Vertex> vertices;
+
+  static constexpr uint8_t next[2] = {1, 0};
+
+  uint8_t current;
+  std::array<std::vector<Vertex>, 2> buffer;
   std::unordered_map<glm::ivec3, std::vector<Vertex>> chunkVertices;
 
 public:
@@ -24,10 +30,10 @@ public:
 
   const std::vector<Vertex> &getVertices() {
     std::shared_lock lock(mutex);
-    return vertices;
+    return buffer[current];
   }
 
-  const size_t getSize() { return vertices.size(); }
+  const size_t getSize() { return buffer[current].size(); }
 
   void erase(const glm::ivec3 &coord) {
     std::unique_lock lock(mutex);
@@ -45,10 +51,15 @@ public:
     std::unique_lock lock(mutex);
     _dirty = true;
 
-    vertices.clear();
+    buffer[next[current]].clear();
 
     for (auto &[k, v] : chunkVertices)
-      vertices.insert(vertices.end(), v.begin(), v.end());
+      buffer[next[current]].insert(buffer[next[current]].end(), v.begin(),
+                                   v.end());
+
+    current = next[current];
+
+    buffer[next[current]].clear();
   }
 
   const bool isDirty() const { return _dirty; }
