@@ -6,14 +6,14 @@
 World::World() { voxels.setHeightMap(&heightMap); }
 
 void World::initialize() {
-  vao.generate();
-  vbo.generate();
+  buffer.generate();
+
   heightMap.initialize();
   voxels.initialize(camera->position);
 }
 
 void World::draw() {
-  vao.bind();
+  buffer.bind();
 
   /**
    * TODO: Eventually we will get a segment fault here because the vertex buffer
@@ -21,27 +21,28 @@ void World::draw() {
    */
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
     glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
+
+  buffer.sync();
 }
 
 void World::update() {
   voxels.update(camera->position);
 
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>()) {
-    if (voxelBuffer->isDirty()) {
+    if (voxelBuffer->isDirty() || buffer.isDirty()) {
       const std::vector<Vertex> verticies = voxelBuffer->getVertices();
-      std::cout << "verticies: " << sizeof(Vertex) * verticies.size() << std::endl;
-      std::cout << "verticies: " << verticies.size() << std::endl;
-      vao.bind();
-      vbo.set(sizeof(Vertex), verticies.size(), nullptr); // orphan
-      vbo.update(verticies);
-      vao.set(0, 3, VertexType::FLOAT, false, sizeof(Vertex),
-              (void *)(offsetof(Vertex, x)));
-      vao.set(1, 3, VertexType::FLOAT, false, sizeof(Vertex),
-              (void *)(offsetof(Vertex, nx)));
-      vao.set(2, 1, VertexType::INT, false, sizeof(Vertex),
-              (void *)(offsetof(Vertex, color)));
-      vao.set(3, 1, VertexType::INT, false, sizeof(Vertex),
-              (void *)(offsetof(Vertex, material)));
+      auto [vao, vbo] = buffer.get();
+
+      vao->bind();
+      vbo->set(verticies);
+      vao->set(0, 3, VertexType::FLOAT, false, sizeof(Vertex),
+               (void *)(offsetof(Vertex, x)));
+      vao->set(1, 3, VertexType::FLOAT, false, sizeof(Vertex),
+               (void *)(offsetof(Vertex, nx)));
+      vao->set(2, 1, VertexType::INT, false, sizeof(Vertex),
+               (void *)(offsetof(Vertex, color)));
+      vao->set(3, 1, VertexType::INT, false, sizeof(Vertex),
+               (void *)(offsetof(Vertex, material)));
 
       voxelBuffer->clean();
     }

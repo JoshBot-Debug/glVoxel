@@ -38,25 +38,23 @@ void VoxelManager::update(const glm::vec3 &position) {
     std::vector<glm::ivec3> remove;
 
     for (auto it = chunks.begin(); it != chunks.end();) {
-      if (std::find(create.begin(), create.end(), it->first) == create.end()) {
+      auto vit = std::find(create.begin(), create.end(), it->first);
+      if (vit == create.end()) {
         std::unique_lock lock(mutex.get(it->first));
         remove.push_back(it->first);
         delete it->second;
         it = chunks.erase(it);
-      } else
+      } else {
+        vit = create.erase(vit);
         ++it;
-    }
-
-    for (const auto &coord : remove) {
-      auto cit = std::find(create.begin(), create.end(), coord);
-      if (cit != create.end())
-        create.erase(cit);
+      }
     }
 
     for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
       for (const auto &coord : remove)
-        voxelBuffer->clearVertices(coord);
+        voxelBuffer->erase(coord);
 
+    std::cout << create.size() << std::endl;
     generateTerrain(create);
 
     isUpdating = false;
@@ -75,15 +73,10 @@ void VoxelManager::setRegistry(Registry *registry) {
 const std::vector<glm::ivec3>
 VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const {
   std::vector<glm::ivec3> result;
-
-  for (int dz = -ChunkRadius.z; dz <= ChunkRadius.z; ++dz)
-    for (int dx = -ChunkRadius.x; dx <= ChunkRadius.x; ++dx)
-      for (int dy = -ChunkRadius.y; dy <= ChunkRadius.y; ++dy)
+  for (int dz = -ChunkRadius.z; dz <= ChunkRadius.z; dz++)
+    for (int dx = -ChunkRadius.x; dx <= ChunkRadius.x; dx++)
+      for (int dy = -ChunkRadius.y; dy <= ChunkRadius.y; dy++)
         result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
-
-  for (auto coord : result)
-    LOG_IVEC3("Coord", coord);
-
   return result;
 }
 

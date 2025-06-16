@@ -7,6 +7,7 @@
 
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/Core/Buffer.h"
+#include "Engine/Core/TripleBuffer.h"
 #include "Engine/Core/VertexArray.h"
 #include "Engine/Texture2D.h"
 
@@ -25,10 +26,9 @@ class World {
 private:
   Registry *registry{nullptr};
 
-  VertexArray vao;
-  Buffer vbo{BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC};
+  TripleBuffer<BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC> buffer;
 
-  VoxelManager voxels{128, {0, 0, 0}};
+  VoxelManager voxels{128, glm::ivec3{3, 0, 3}};
 
   PerspectiveCamera *camera = nullptr;
 
