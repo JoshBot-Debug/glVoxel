@@ -20,10 +20,7 @@ void World::draw() {
    * has a size limit. The solution is to batch vertices and draw them.
    */
   for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
-  {
-    LOG("voxelBuffer->getSize()", voxelBuffer->getSize());
     glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
-  }
 
   buffer.sync();
 }
