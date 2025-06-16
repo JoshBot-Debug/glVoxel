@@ -28,7 +28,7 @@ private:
 
   TripleBuffer<BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC> buffer;
 
-  VoxelManager voxels{128, glm::ivec3{3, 0, 3}};
+  VoxelManager voxels{128, glm::ivec3{0, 0, 0}};
 
   PerspectiveCamera *camera = nullptr;
 

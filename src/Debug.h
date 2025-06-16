@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <fstream>
 
 template <typename... Args>
 inline void Log(const char *file, int line, const char *functionName,
@@ -24,7 +25,19 @@ inline void LogIVec3(const char *file, int line, const char *functionName,
       position.z, ")");
 }
 
-inline void Benchmark(const std::string &functionName,
+template <typename... Args>
+inline void LogToFile(const char *file, int line, const char *functionName,
+                      const std::string &outputFile, const Args &...args) {
+  std::ofstream ofs(outputFile, std::ios::app); // append mode
+  if (!ofs.is_open())
+    return;
+
+  ofs << "LOG " << file << ":" << line << " (" << functionName << "):";
+  ((ofs << " " << args), ...);
+  ofs << std::endl;
+}
+
+inline void Benchmark(const char *file, int line, const char *functionName,
                       const std::function<void()> &func, int iterations) {
   auto start = std::chrono::high_resolution_clock::now();
 
@@ -34,8 +47,8 @@ inline void Benchmark(const std::string &functionName,
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> elapsed = end - start;
 
-  std::cout << functionName << " took " << elapsed.count() / iterations
-            << " ms (average) over " << iterations << " iterations.\n";
+  Log(file, line, functionName, "Took:", elapsed.count() / iterations,
+      "ms (average) over", iterations, "iterations");
 }
 
 inline void EndTimer(const char *file, int line, const char *functionName,
@@ -46,26 +59,17 @@ inline void EndTimer(const char *file, int line, const char *functionName,
 }
 
 #define LOG(...) Log(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define BENCHMARK(...) Benchmark(__VA_ARGS__)
-#define LOG_BREAK_BEFORE                                                       \
-  std::cout << std::endl                                                       \
-            << "-------------------------------------------------------------" \
-               "---------------------------"                                   \
-            << std::endl
-#define LOG_BREAK_AFTER                                                        \
-  std::cout << "-------------------------------------------------------------" \
-               "---------------------------"                                   \
-            << std::endl
+#define BENCHMARK(...) Benchmark(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define START_TIMER std::chrono::high_resolution_clock::now()
 #define END_TIMER(...) EndTimer(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_IVEC3(...) LogIVec3(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_TO_FILE(outputFile, ...) LogToFile(__FILE__, __LINE__, __func__, outputFile, __VA_ARGS__)
 
 #else
 #define LOG(...)
 #define BENCHMARK(...)
-#define LOG_BREAK_BEFORE
-#define LOG_BREAK_AFTER
 #define START_TIMER 0
 #define END_TIMER(...)
 #define LOG_IVEC3(...)
+#define LOG_TO_FILE(...)
 #endif

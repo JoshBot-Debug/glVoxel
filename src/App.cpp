@@ -10,6 +10,8 @@
 #include "Debug.h"
 #include "Engine/Types.h"
 
+#include <bitset>
+
 App::App()
     : Window({.title = "glVoxel",
               .width = 800,
@@ -47,6 +49,10 @@ App::App()
   });
 
   open();
+
+  // uint64_t mask = 0b0000000000000000000000000000000000000000000000000000000000000000;
+
+  // std::cout << std::bitset<64>((mask & ~((1ULL << 63) - 1))) << std::endl;
 }
 
 void App::onInitialize() {

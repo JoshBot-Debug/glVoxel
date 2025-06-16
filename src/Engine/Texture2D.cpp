@@ -19,9 +19,7 @@ void Texture2D::loadFile(const char *filepath) {
     else if (nrChannels == 4)
       format = GL_RGBA;
   } else {
-    LOG_BREAK_BEFORE;
     LOG("Texture: Failed to read texture", filepath);
-    LOG_BREAK_AFTER;
   }
 }
 

@@ -13,9 +13,7 @@ inline const char *readFile(const std::string &filepath) {
   std::ifstream stream(filepath);
 
   if (!stream.is_open()) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to open file:", filepath);
-    LOG_BREAK_AFTER;
     return nullptr;
   }
 
@@ -54,10 +52,8 @@ inline unsigned int compileShader(const char *filepath,
     char *log = new char[length];
     glGetShaderInfoLog(shader, length, &length, log);
 
-    LOG_BREAK_BEFORE;
     LOG("Compilation failed", filepath);
     LOG("ERROR:", log);
-    LOG_BREAK_AFTER;
 
     delete[] log;
     glDeleteShader(shader);
@@ -85,10 +81,8 @@ inline unsigned int createShaderProgram(const std::vector<unsigned int> &link) {
     std::vector<char> log(length);
     glGetProgramInfoLog(id, length, &length, log.data());
 
-    LOG_BREAK_BEFORE;
     LOG("Program linking failed");
     LOG("ERROR:", log.data());
-    LOG_BREAK_AFTER;
 
     glDeleteProgram(id);
     return 0;
@@ -155,10 +149,8 @@ void Shader::unbind() {
 void Shader::setUniform1i(const std::string &name, int location) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -167,20 +159,16 @@ void Shader::setUniform1i(const std::string &name, int location) {
 
     glUniform1i(uniforms[name], location);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform1f(const std::string &name, float value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -189,20 +177,16 @@ void Shader::setUniform1f(const std::string &name, float value) {
 
     glUniform1f(uniforms[name], value);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform2i(const std::string &name, int value1, int value2) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -211,20 +195,16 @@ void Shader::setUniform2i(const std::string &name, int value1, int value2) {
 
     glUniform2i(uniforms[name], value1, value2);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform2i(const std::string &name, glm::ivec2 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -233,20 +213,16 @@ void Shader::setUniform2i(const std::string &name, glm::ivec2 value) {
 
     glUniform2i(uniforms[name], value.x, value.y);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform2f(const std::string &name, float value1, float value2) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -255,20 +231,16 @@ void Shader::setUniform2f(const std::string &name, float value1, float value2) {
 
     glUniform2f(uniforms[name], value1, value2);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform2f(const std::string &name, glm::vec2 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -277,10 +249,8 @@ void Shader::setUniform2f(const std::string &name, glm::vec2 value) {
 
     glUniform2f(uniforms[name], value.x, value.y);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -288,10 +258,8 @@ void Shader::setUniform3i(const std::string &name, int value1, int value2,
                           int value3) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -300,20 +268,16 @@ void Shader::setUniform3i(const std::string &name, int value1, int value2,
 
     glUniform3i(uniforms[name], value1, value2, value3);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform3i(const std::string &name, glm::ivec3 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -322,10 +286,8 @@ void Shader::setUniform3i(const std::string &name, glm::ivec3 value) {
 
     glUniform3i(uniforms[name], value.x, value.y, value.z);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -333,10 +295,8 @@ void Shader::setUniform3f(const std::string &name, float value1, float value2,
                           float value3) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -345,20 +305,16 @@ void Shader::setUniform3f(const std::string &name, float value1, float value2,
 
     glUniform3f(uniforms[name], value1, value2, value3);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform3f(const std::string &name, glm::vec3 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -367,10 +323,8 @@ void Shader::setUniform3f(const std::string &name, glm::vec3 value) {
 
     glUniform3f(uniforms[name], value.x, value.y, value.z);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -378,10 +332,8 @@ void Shader::setUniform4i(const std::string &name, int value1, int value2,
                           int value3, int value4) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -390,20 +342,16 @@ void Shader::setUniform4i(const std::string &name, int value1, int value2,
 
     glUniform4i(uniforms[name], value1, value2, value3, value4);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform4i(const std::string &name, glm::ivec4 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -412,10 +360,8 @@ void Shader::setUniform4i(const std::string &name, glm::ivec4 value) {
 
     glUniform4i(uniforms[name], value.x, value.y, value.z, value.w);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -423,10 +369,8 @@ void Shader::setUniform4f(const std::string &name, float value1, float value2,
                           float value3, float value4) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -435,20 +379,16 @@ void Shader::setUniform4f(const std::string &name, float value1, float value2,
 
     glUniform4f(uniforms[name], value1, value2, value3, value4);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform4f(const std::string &name, glm::vec4 value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -457,10 +397,8 @@ void Shader::setUniform4f(const std::string &name, glm::vec4 value) {
 
     glUniform4f(uniforms[name], value.x, value.y, value.z, value.w);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -468,10 +406,8 @@ void Shader::setUniformMatrix4fv(const std::string &name,
                                  const glm::mat4 &matrix) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -480,10 +416,8 @@ void Shader::setUniformMatrix4fv(const std::string &name,
 
     glUniformMatrix4fv(uniforms[name], 1, GL_FALSE, glm::value_ptr(matrix));
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
@@ -491,10 +425,8 @@ void Shader::setUniformMatrix3fv(const std::string &name,
                                  const glm::mat3 &matrix) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -503,20 +435,16 @@ void Shader::setUniformMatrix3fv(const std::string &name,
 
     glUniformMatrix3fv(uniforms[name], 1, GL_FALSE, glm::value_ptr(matrix));
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform1fv(const std::string &name, float value) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -525,20 +453,16 @@ void Shader::setUniform1fv(const std::string &name, float value) {
 
     glUniform1fv(uniforms[name], 1, &value);
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform2fv(const std::string &name, const glm::vec2 &vector) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -547,20 +471,16 @@ void Shader::setUniform2fv(const std::string &name, const glm::vec2 &vector) {
 
     glUniform2fv(uniforms[name], 1, glm::value_ptr(vector));
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform3fv(const std::string &name, const glm::vec3 &vector) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -569,20 +489,16 @@ void Shader::setUniform3fv(const std::string &name, const glm::vec3 &vector) {
 
     glUniform3fv(uniforms[name], 1, glm::value_ptr(vector));
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }
 
 void Shader::setUniform4fv(const std::string &name, const glm::vec4 &vector) {
   try {
     if (!program) {
-      LOG_BREAK_BEFORE;
       LOG("Error! No shader program bound");
       LOG("Cannot set uniform", name);
-      LOG_BREAK_AFTER;
       return;
     }
 
@@ -591,9 +507,7 @@ void Shader::setUniform4fv(const std::string &name, const glm::vec4 &vector) {
 
     glUniform4fv(uniforms[name], 1, glm::value_ptr(vector));
   } catch (const std::exception &e) {
-    LOG_BREAK_BEFORE;
     LOG("Failed to set uniform:", name);
     LOG("Bound program:", program);
-    LOG_BREAK_AFTER;
   }
 }

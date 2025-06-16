@@ -25,3 +25,13 @@ build/glVoxel
 ```
 
 To play around go to World/World.h. Check line 35, and play around!
+
+## Benchmarks
+
+32bit Greedy meshing for 128x128x128
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 47.5163 ms (average) over 100 iterations
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 45.4442 ms (average) over 100 iterations
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 42.3203 ms (average) over 100 iterations
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 47.2106 ms (average) over 100 iterations
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 45.2261 ms (average) over 100 iterations
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 41.912 ms (average) over 100 iterations

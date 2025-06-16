@@ -73,8 +73,8 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[],
        * if ((paddingMask >> 0) & 1)
        *   startMask &= ~(1ULL << 0);
        */
-      if ((paddingMask >> 0) & 1)
-        startMask &= ~(1ULL << lsbIndex);
+      // if ((paddingMask >> 0) & 1)
+      //   startMask &= ~(1ULL << lsbIndex);
 
       /**
        * Check the padding mask, if the bit at 63 index is on
@@ -88,8 +88,8 @@ void GreedyMesh::PrepareWidthHeightMasks(const uint64_t (&bits)[],
        * if ((paddingMask >> 63) & 1)
        *   endMask &= ~(1ULL << 31);
        */
-      if ((paddingMask >> 63) & 1)
-        endMask &= ~(1ULL << msbIndex);
+      // if ((paddingMask >> 63) & 1)
+      //   endMask &= ~(1ULL << msbIndex);
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart, chunkSize);
       SetWidthHeight(a, b, endMask, widthEnd, heightEnd, chunkSize);
@@ -106,9 +106,13 @@ void GreedyMesh::GreedyMeshFace(const glm::ivec3 &offsetPosition, uint8_t a,
     const unsigned int w = __builtin_ffs(bits) - 1;
     bits &= ~((1ULL << w + 1) - 1);
 
+    LOG_TO_FILE("32.txt", (int)a, (int)b, std::bitset<64>(widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize]));
+
     const uint32_t &width =
         widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize] &=
         ~((1ULL << b) - 1);
+
+    LOG_TO_FILE("32-width.txt", (int)a, (int)b, std::bitset<64>(width));
 
     if (!width)
       continue;
@@ -190,6 +194,7 @@ void GreedyMesh::GreedyMeshAxis(
       const uint32_t mask =
           (bits[(chunkSize * (b + (chunkSize * a))) / chunkSize] >> 1) &
           0xFFFFFFFF;
+
       GreedyMeshFace(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                      heightStart, vertices, startType, chunkSize);
       GreedyMeshFace(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
@@ -376,10 +381,6 @@ void GreedyMesh::Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices,
    */
   PrepareWidthHeightMasks(columns, widthStart, heightStart, widthEnd, heightEnd,
                           chunkSize);
-
-  /**
-   * Greedy mesh the given axis
-   */
   GreedyMeshAxis(coord, columns, widthStart, heightStart, widthEnd, heightEnd,
                  vertices, FaceType::BOTTOM, FaceType::TOP, chunkSize);
 
