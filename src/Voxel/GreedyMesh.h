@@ -14,6 +14,12 @@
 
 class GreedyMesh {
 private:
+  static constexpr uint8_t CHUNK_SIZE = 32;
+
+  static uint64_t ClearLowestBits(uint64_t bits, int n) {
+    return (n >= CHUNK_SIZE) ? 0 : (bits & ~((1ULL << n) - 1));
+  }
+
   static void SetWidthHeight(unsigned int a, unsigned int b, uint32_t bits,
                              uint32_t (&widthMasks)[],
                              uint32_t (&heightMasks)[], unsigned int chunkSize);

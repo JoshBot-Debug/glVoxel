@@ -13,7 +13,8 @@ void GreedyMesh::SetWidthHeight(unsigned int a, unsigned int b, uint32_t bits,
     const unsigned int hi = b + (chunkSize * (w + (chunkSize * a)));
     heightMasks[hi / chunkSize] |= (1ULL << (hi % chunkSize));
 
-    bits &= ~((1ULL << w + 1) - 1);
+    // bits &= ~((1ULL << w + 1) - 1);
+    bits = ClearLowestBits(bits, w + 1);
   }
 }
 
@@ -104,15 +105,19 @@ void GreedyMesh::GreedyMeshFace(const glm::ivec3 &offsetPosition, uint8_t a,
                                 unsigned int chunkSize) {
   while (bits) {
     const unsigned int w = __builtin_ffs(bits) - 1;
-    bits &= ~((1ULL << w + 1) - 1);
+    // bits &= ~((1ULL << w + 1) - 1);
+    bits = ClearLowestBits(bits, w + 1);
 
-    LOG_TO_FILE("32.txt", (int)a, (int)b, std::bitset<64>(widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize]));
+    LOG_TO_FILE(
+        "GreedyMeshAxis-widthMasks.txt", (int)a, (int)b,
+        std::bitset<64>(
+            widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize]));
 
     const uint32_t &width =
-        widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize] &=
+        widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize] &
         ~((1ULL << b) - 1);
 
-    LOG_TO_FILE("32-width.txt", (int)a, (int)b, std::bitset<64>(width));
+    LOG_TO_FILE("GreedyMeshAxis-width.txt", (int)a, (int)b, std::bitset<64>(width));
 
     if (!width)
       continue;
@@ -122,7 +127,7 @@ void GreedyMesh::GreedyMeshFace(const glm::ivec3 &offsetPosition, uint8_t a,
 
     const uint32_t &height =
         heightMasks[(chunkSize * (w + (chunkSize * (int)(widthOffset)))) /
-                    chunkSize] &= ~((1ULL << a) - 1);
+                    chunkSize] & ~((1ULL << a) - 1);
 
     const unsigned int heightOffset = __builtin_ffs(height) - 1;
     unsigned int heightSize = __builtin_ctz(~(height >> heightOffset));
@@ -194,6 +199,11 @@ void GreedyMesh::GreedyMeshAxis(
       const uint32_t mask =
           (bits[(chunkSize * (b + (chunkSize * a))) / chunkSize] >> 1) &
           0xFFFFFFFF;
+
+      LOG_TO_FILE(
+          "GreedyMeshAxis-widthStart.txt", chunkSize, (int)a, (int)b,
+          std::bitset<32>(
+              widthStart[(chunkSize * (b + (chunkSize * a))) / chunkSize]));
 
       GreedyMeshFace(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                      heightStart, vertices, startType, chunkSize);

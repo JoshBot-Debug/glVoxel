@@ -49,7 +49,7 @@ void GreedyMesh64::PrepareWidthHeightMasks(
        * The first bit that is on on the left/top/front
        */
       const unsigned int msbIndex =
-          (mask == 0) ? 63 : 63 - __builtin_clzll(mask);
+          (mask == 0) ? (CHUNK_SIZE - 1) : (CHUNK_SIZE - 1) - __builtin_clzll(mask);
 
       /**
        * The first bit that is on on the right/bottom/back
@@ -110,15 +110,16 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
     bits = ClearLowestBits(bits, w + 1);
 
     LOG_TO_FILE(
-        "64.txt",
-        (int)a, (int)b, std::bitset<64>(
+        "GreedyMesh64Face-widthMasks.txt", chunkSize, w, (int)a, (int)b,
+        std::bitset<64>(
             widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize]));
 
     const uint64_t &width =
         widthMasks[(chunkSize * (w + (chunkSize * a))) / chunkSize] &=
         ~((1ULL << b) - 1);
 
-    LOG_TO_FILE("64-width.txt", (int)a, (int)b, std::bitset<64>(width));
+    LOG_TO_FILE("GreedyMesh64Face-width.txt", (int)a, (int)b,
+                std::bitset<64>(width));
 
     if (!width)
       continue;
@@ -203,10 +204,15 @@ void GreedyMesh64::GreedyMesh64Axis(
           bits[(chunkSize * (b + (chunkSize * a))) / chunkSize] &
           0xFFFFFFFFFFFFFFFF;
 
+      LOG_TO_FILE(
+          "GreedyMesh64Axis-widthStart.txt", chunkSize, (int)a, (int)b,
+          std::bitset<64>(
+              widthStart[(chunkSize * (b + (chunkSize * a))) / chunkSize]));
+
       GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                        heightStart, vertices, startType, chunkSize);
-      GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
-                       heightEnd, vertices, endType, chunkSize);
+      // GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
+      //                  heightEnd, vertices, endType, chunkSize);
     }
 }
 
