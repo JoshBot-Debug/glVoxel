@@ -74,6 +74,8 @@ LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): To
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 42.8006 ms (average) over 200 iterations
 
 [HOME] 64bit Greedy meshing for 128x128x128 Terrain \w parallelization
+# Pratically this is not realistic because we will be building more than 8 chunks at a time so we
+# cannot parallelize this. In fact performance degrades if we try to because more than 8 threads will be used.
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:171 (generateChunk): 88.5121 ms
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 14.0636 ms (average) over 200 iterations
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 15.9212 ms (average) over 200 iterations
