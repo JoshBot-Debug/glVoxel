@@ -15,24 +15,27 @@
 class SparseVoxelOctree {
 private:
   int size;
-  int maxDepth;
-  glm::ivec3 treePosition{0, 0, 0};
-
-  Node *root = new Node(0);
+  uint8_t depth;
+  Node *root = nullptr;
+  glm::ivec3 globalPosition{0, 0, 0};
 
   std::vector<Voxel *> uniqueVoxels;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> neighbours;
 
   void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel,
-                int scale);
+                int size);
 
   void set(Node *node, int x, int y, int z, Voxel *voxel, int size,
            int maxSize = 1);
-  Node *get(Node *node, int x, int y, int z, int size, int lod = -1,
+  Node *get(Node *node, int x, int y, int z, int size, uint8_t maxDepth = 0,
             Voxel *filter = nullptr);
   void clear(Node *node);
 
   const size_t getMemoryUsage(Node *node) const;
+
+  int floorDiv(int a, int b);
+
+  int mod(int a, int b);
 
 public:
   SparseVoxelOctree();
@@ -40,7 +43,7 @@ public:
   ~SparseVoxelOctree();
 
   const int getSize() const;
-  const int getMaxDepth() const;
+  const int getDepth() const;
   Node *getRoot();
 
   /**
@@ -62,10 +65,10 @@ public:
   void setBlock(uint64_t (&mask)[], Voxel *voxel);
 
   void set(glm::vec3 position, Voxel *voxel, int maxSize = 1);
-  Node *get(glm::vec3 position, int maxDepth = -1, Voxel *filter = nullptr);
+  Node *get(glm::vec3 position, uint8_t maxDepth = 0, Voxel *filter = nullptr);
 
   void set(int x, int y, int z, Voxel *voxel, int maxSize = 1);
-  Node *get(int x, int y, int z, int maxDepth = -1, Voxel *filter = nullptr);
+  Node *get(int x, int y, int z, uint8_t maxDepth = 0, Voxel *filter = nullptr);
 
   void clear();
   void greedyMesh(std::vector<Vertex> &vertices, Voxel *filter = nullptr);

@@ -50,9 +50,9 @@ void VoxelManager::update(const glm::vec3 &position) {
       }
     }
 
-    // for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
-    //   for (const auto &coord : remove)
-    //     voxelBuffer->erase(coord);
+    for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+      for (const auto &coord : remove)
+        voxelBuffer->erase(coord);
 
     generateTerrain(create);
 
@@ -148,21 +148,17 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
                                  Voxel *voxel) mutable {
     uint64_t mask[ChunkSize * ChunkSize * (ChunkSize / 64)] = {0};
 
-    for (size_t i = 0; i < (ChunkSize * ChunkSize * (ChunkSize / 64)); i++) {
-      mask[i] = 0xFFFFFFFFFFFFFFFFULL;
-    }
-
-    // for (int z = 0; z < ChunkSize; z++)
-    //   for (int x = 0; x < ChunkSize; x++) {
-    //     float n = map.GetValue(x, z);
-    //     unsigned int height = static_cast<unsigned int>(
-    //         std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (ChunkSize / 2)));
-    //     for (int y = 0; y < height; y++) {
-    //       int index = x + ChunkSize * (z + ChunkSize * y);
-    //       if (y >= thresholdFrom && y < thresholdTo)
-    //         mask[index / 64] |= 1UL << (index % 64);
-    //     }
-    //   }
+    for (int z = 0; z < ChunkSize; z++)
+      for (int x = 0; x < ChunkSize; x++) {
+        float n = map.GetValue(x, z);
+        unsigned int height = static_cast<unsigned int>(
+            std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (ChunkSize / 2)));
+        for (int y = 0; y < height; y++) {
+          int index = x + ChunkSize * (z + ChunkSize * y);
+          if (y >= thresholdFrom && y < thresholdTo)
+            mask[index / 64] |= 1UL << (index % 64);
+        }
+      }
 
     tree->setBlock(mask, voxel);
   };
@@ -192,13 +188,6 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   for (int i = 0; i < filters.size(); i++) {
     std::vector<Vertex> vertices;
     it->second->greedyMesh(vertices, filters[i]);
-
-    // BENCHMARK(
-    //     [&it, &filters, &i]() {
-    //       std::vector<Vertex> vertices;
-    //       it->second->greedyMesh(vertices, filters[i]);
-    //     },
-    //     100);
 
     Voxel *filter = filters[i];
 

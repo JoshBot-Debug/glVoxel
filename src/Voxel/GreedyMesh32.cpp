@@ -1,25 +1,25 @@
-#include "GreedyMesh64.h"
+#include "GreedyMesh32.h"
 
-void GreedyMesh64::SetWidthHeight(uint8_t a, uint8_t b, uint64_t bits,
-                                  uint64_t (&widthMasks)[],
-                                  uint64_t (&heightMasks)[]) {
+void GreedyMesh32::SetWidthHeight(uint8_t a, uint8_t b, uint32_t bits,
+                                  uint32_t (&widthMasks)[],
+                                  uint32_t (&heightMasks)[]) {
   while (bits) {
-    const uint8_t w = __builtin_ffsll(bits) - 1;
+    const uint8_t w = __builtin_ffs(bits) - 1;
 
     const unsigned int wi = a + (CHUNK_SIZE * (w + (CHUNK_SIZE * b)));
-    widthMasks[wi / CHUNK_SIZE] |= (1ULL << (wi % CHUNK_SIZE));
+    widthMasks[wi / CHUNK_SIZE] |= (1U << (wi % CHUNK_SIZE));
 
     const unsigned int hi = b + (CHUNK_SIZE * (w + (CHUNK_SIZE * a)));
-    heightMasks[hi / CHUNK_SIZE] |= (1ULL << (hi % CHUNK_SIZE));
+    heightMasks[hi / CHUNK_SIZE] |= (1U << (hi % CHUNK_SIZE));
 
     bits = ClearLowestBits(bits, w + 1);
   }
 }
 
-void GreedyMesh64::PrepareWidthHeightMasks(
-    const uint64_t (&bits)[], uint8_t paddingIndex, uint8_t (&padding)[],
-    uint64_t (&widthStart)[], uint64_t (&heightStart)[], uint64_t (&widthEnd)[],
-    uint64_t (&heightEnd)[]) {
+void GreedyMesh32::PrepareWidthHeightMasks(
+    const uint32_t (&bits)[], uint8_t paddingIndex, uint8_t (&padding)[],
+    uint32_t (&widthStart)[], uint32_t (&heightStart)[], uint32_t (&widthEnd)[],
+    uint32_t (&heightEnd)[]) {
   for (uint8_t a = 0; a < CHUNK_SIZE; a++)
     for (uint8_t b = 0; b < CHUNK_SIZE; b++) {
 
@@ -40,31 +40,31 @@ void GreedyMesh64::PrepareWidthHeightMasks(
        * 32bits into a new mask This is the actual mask we will use for the
        * height and width
        */
-      const uint64_t mask = bits[i];
+      const uint32_t mask = bits[i];
 
       /**
        * The first bit that is on on the left/top/front
        */
       const unsigned int msbIndex =
           (mask == 0) ? (CHUNK_SIZE - 1)
-                      : (CHUNK_SIZE - 1) - __builtin_clzll(mask);
+                      : (CHUNK_SIZE - 1) - __builtin_clz(mask);
 
       /**
        * The first bit that is on on the right/bottom/back
        */
-      const unsigned int lsbIndex = (mask == 0) ? 0 : __builtin_ctzll(mask);
+      const unsigned int lsbIndex = (mask == 0) ? 0 : __builtin_ctz(mask);
 
       /**
        * Remove all the bits other than the start face
        * 11100111100011 => 00100000100001
        */
-      uint64_t startMask = mask & ~(mask << 1);
+      uint32_t startMask = mask & ~(mask << 1);
 
       /**
        * Likewise remove all the bits other than the end face
        * 11100111100011 => 10000100000010
        */
-      uint64_t endMask = mask & ~(mask >> 1);
+      uint32_t endMask = mask & ~(mask >> 1);
 
       /**
        * Check the padding mask, if the bit at 0 index is on
@@ -72,10 +72,10 @@ void GreedyMesh64::PrepareWidthHeightMasks(
        *
        * If bit 0 of paddingMask is set, then clear bit 0 of startMask.
        * if ((paddingMask >> 0) & 1)
-       *   startMask &= ~(1ULL << 0);
+       *   startMask &= ~(1U << 0);
        */
       if ((paddingMask >> paddingIndex) & 1)
-        startMask &= ~(1ULL << lsbIndex);
+        startMask &= ~(1U << lsbIndex);
 
       /**
        * Check the padding mask, if the bit at 63 index is on
@@ -87,60 +87,59 @@ void GreedyMesh64::PrepareWidthHeightMasks(
        *
        * If bit 63 of paddingMask is set, then clear bit 31 of endMask.
        * if ((paddingMask >> 63) & 1)
-       *   endMask &= ~(1ULL << 31);
+       *   endMask &= ~(1U << 31);
        */
       if ((paddingMask >> (paddingIndex + 1)) & 1)
-        endMask &= ~(1ULL << msbIndex);
+        endMask &= ~(1U << msbIndex);
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart);
       SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
     }
 }
 
-void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
-                                    uint8_t b, uint64_t bits,
-                                    uint64_t (&widthMasks)[],
-                                    uint64_t (&heightMasks)[],
+void GreedyMesh32::GreedyMesh32Face(const glm::ivec3 &offsetPosition, uint8_t a,
+                                    uint8_t b, uint32_t bits,
+                                    uint32_t (&widthMasks)[],
+                                    uint32_t (&heightMasks)[],
                                     std::vector<Vertex> &vertices,
                                     FaceType type) {
   while (bits) {
-    const uint8_t w = __builtin_ffsll(bits) - 1;
+    const uint8_t w = __builtin_ffs(bits) - 1;
     bits = ClearLowestBits(bits, w + 1);
 
-    const uint64_t &width =
+    const uint32_t &width =
         widthMasks[(CHUNK_SIZE * (w + (CHUNK_SIZE * a))) / CHUNK_SIZE] &
-        ~((1ULL << b) - 1);
+        ~((1U << b) - 1);
 
     if (!width)
       continue;
 
-    const uint8_t widthOffset = __builtin_ffsll(width) - 1;
-    const uint8_t widthSize = __builtin_ctzll(~(width >> widthOffset));
+    const uint8_t widthOffset = __builtin_ffs(width) - 1;
+    const uint8_t widthSize = __builtin_ctz(~(width >> widthOffset));
 
-    const uint64_t &height =
+    const uint32_t &height =
         heightMasks[(CHUNK_SIZE * (w + (CHUNK_SIZE * (int)(widthOffset)))) /
                     CHUNK_SIZE] &
-        ~((1ULL << a) - 1);
+        ~((1U << a) - 1);
 
-    const uint8_t heightOffset = __builtin_ffsll(height) - 1;
-    uint8_t heightSize = __builtin_ctzll(~(height >> heightOffset));
+    const uint8_t heightOffset = __builtin_ffs(height) - 1;
+    uint8_t heightSize = __builtin_ctz(~(height >> heightOffset));
 
     for (uint8_t i = heightOffset; i < heightOffset + heightSize; i++) {
       const unsigned int index =
           (CHUNK_SIZE * (w + (CHUNK_SIZE * i))) / CHUNK_SIZE;
-      const uint64_t SIZE =
+      const uint32_t SIZE =
           widthMasks[index] &
-          (((widthSize >= CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+          (((widthSize >= CHUNK_SIZE ? 0U : (1U << widthSize)) - 1)
            << widthOffset);
 
-      if (__builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
-          widthSize) {
+      if (__builtin_ctz(~(SIZE >> (__builtin_ffs(SIZE) - 1))) != widthSize) {
         heightSize = i - heightOffset;
         break;
       }
 
       widthMasks[index] &=
-          ~(((widthSize >= CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+          ~(((widthSize >= CHUNK_SIZE ? 0U : (1U << widthSize)) - 1)
             << widthOffset);
     }
 
@@ -187,43 +186,41 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
   }
 }
 
-void GreedyMesh64::GreedyMesh64Axis(
-    const glm::ivec3 &offsetPosition, const uint64_t (&bits)[],
-    uint64_t (&widthStart)[], uint64_t (&heightStart)[], uint64_t (&widthEnd)[],
-    uint64_t (&heightEnd)[], std::vector<Vertex> &vertices, FaceType startType,
+void GreedyMesh32::GreedyMesh32Axis(
+    const glm::ivec3 &offsetPosition, const uint32_t (&bits)[],
+    uint32_t (&widthStart)[], uint32_t (&heightStart)[], uint32_t (&widthEnd)[],
+    uint32_t (&heightEnd)[], std::vector<Vertex> &vertices, FaceType startType,
     FaceType endType) {
-
   for (uint8_t a = 0; a < CHUNK_SIZE; a++)
     for (uint8_t b = 0; b < CHUNK_SIZE; b++) {
-      const uint64_t mask =
-          bits[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE] &
-          0xFFFFFFFFFFFFFFFFULL;
+      const uint32_t mask =
+          bits[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE] & 0xFFFFFFFF;
 
-      GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
+      GreedyMesh32Face(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                        heightStart, vertices, startType);
-      GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
+      GreedyMesh32Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
                        heightEnd, vertices, endType);
     }
 }
 
-void GreedyMesh64::CullMesh(const glm::ivec3 &offsetPosition,
+void GreedyMesh32::CullMesh(const glm::ivec3 &offsetPosition,
                             std::vector<Vertex> &vertices,
-                            uint64_t (&columns)[], uint64_t (&rows)[],
-                            uint64_t (&layers)[]) {
+                            uint32_t (&columns)[], uint32_t (&rows)[],
+                            uint32_t (&layers)[]) {
   for (uint8_t a = 0; a < CHUNK_SIZE; a++) {
     for (uint8_t b = 0; b < CHUNK_SIZE; b++) {
-      uint64_t &column =
+      uint32_t &column =
           columns[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE];
-      uint64_t &row = rows[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE];
-      uint64_t &depth =
+      uint32_t &row = rows[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE];
+      uint32_t &depth =
           layers[(CHUNK_SIZE * (b + (CHUNK_SIZE * a))) / CHUNK_SIZE];
 
       while (column) {
-        const unsigned int offset = __builtin_ffsll(column) - 1;
+        const unsigned int offset = __builtin_ffs(column) - 1;
         unsigned int size =
-            __builtin_ctzll(~(column >> (__builtin_ffsll(column) - 1)));
+            __builtin_ctz(~(column >> (__builtin_ffs(column) - 1)));
 
-        column &= ~((1ULL << (size + offset)) - 1);
+        column &= ~((1U << (size + offset)) - 1);
 
         Face::Top(vertices, (offsetPosition.x * CHUNK_SIZE) + b,
                   (offsetPosition.y * CHUNK_SIZE) + offset,
@@ -234,11 +231,10 @@ void GreedyMesh64::CullMesh(const glm::ivec3 &offsetPosition,
       }
 
       while (row) {
-        const unsigned int offset = __builtin_ffsll(row) - 1;
-        unsigned int size =
-            __builtin_ctzll(~(row >> (__builtin_ffsll(row) - 1)));
+        const unsigned int offset = __builtin_ffs(row) - 1;
+        unsigned int size = __builtin_ctz(~(row >> (__builtin_ffs(row) - 1)));
 
-        row &= ~((1ULL << (size + offset)) - 1);
+        row &= ~((1U << (size + offset)) - 1);
 
         Face::Left(vertices, (offsetPosition.x * CHUNK_SIZE) + offset,
                    (offsetPosition.y * CHUNK_SIZE) + b,
@@ -249,11 +245,11 @@ void GreedyMesh64::CullMesh(const glm::ivec3 &offsetPosition,
       }
 
       while (depth) {
-        const unsigned int offset = __builtin_ffsll(depth) - 1;
+        const unsigned int offset = __builtin_ffs(depth) - 1;
         unsigned int size =
-            __builtin_ctzll(~(depth >> (__builtin_ffsll(depth) - 1)));
+            __builtin_ctz(~(depth >> (__builtin_ffs(depth) - 1)));
 
-        depth &= ~((1ULL << (size + offset)) - 1);
+        depth &= ~((1U << (size + offset)) - 1);
 
         Face::Front(vertices, (offsetPosition.x * CHUNK_SIZE) + a,
                     (offsetPosition.y * CHUNK_SIZE) + b,
@@ -266,7 +262,7 @@ void GreedyMesh64::CullMesh(const glm::ivec3 &offsetPosition,
   }
 }
 
-void GreedyMesh64::Octree(SparseVoxelOctree *tree,
+void GreedyMesh32::Octree(SparseVoxelOctree *tree,
                           std::vector<Vertex> &vertices, int originX,
                           int originY, int originZ, int depth,
                           Voxel *filter) {
@@ -286,9 +282,9 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
    * 0  0 z0 x3 0  0  0  0 z1 x0 0  0  0  0 z1 x1 0  0  0  0 z1 x2 0  0  0  0 z1
    * x3 0  0  0  0
    */
-  uint64_t rows[MaskLength] = {};
-  uint64_t columns[MaskLength] = {};
-  uint64_t layers[MaskLength] = {};
+  uint32_t rows[MaskLength] = {};
+  uint32_t columns[MaskLength] = {};
+  uint32_t layers[MaskLength] = {};
   uint8_t padding[MaskLength] = {};
 
   bool hasVoxels = false;
@@ -307,11 +303,10 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
           const unsigned int layerIndex =
               z + (CHUNK_SIZE * (y + (CHUNK_SIZE * x)));
 
-          rows[rowIndex / CHUNK_SIZE] |= (1ULL << (rowIndex % CHUNK_SIZE));
+          rows[rowIndex / CHUNK_SIZE] |= (1U << (rowIndex % CHUNK_SIZE));
           columns[columnIndex / CHUNK_SIZE] |=
-              (1ULL << (columnIndex % CHUNK_SIZE));
-          layers[layerIndex / CHUNK_SIZE] |=
-              (1ULL << (layerIndex % CHUNK_SIZE));
+              (1U << (columnIndex % CHUNK_SIZE));
+          layers[layerIndex / CHUNK_SIZE] |= (1U << (layerIndex % CHUNK_SIZE));
         }
 
   if (!hasVoxels)
@@ -331,52 +326,52 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
    * faces on that end.
    */
   for (int i = 0; i < MaskLength; i++) {
-    uint64_t &row = rows[i];
-    uint64_t &column = columns[i];
-    uint64_t &layer = layers[i];
+    uint32_t &row = rows[i];
+    uint32_t &column = columns[i];
+    uint32_t &layer = layers[i];
 
-    int rMSB = (CHUNK_SIZE - 1) - __builtin_clzll(row) + 1;
-    int rLSB = __builtin_ctzll(row) - 1;
+    int rMSB = (CHUNK_SIZE - 1) - __builtin_clz(row) + 1;
+    int rLSB = __builtin_ctz(row) - 1;
 
-    int cMSB = (CHUNK_SIZE - 1) - __builtin_clzll(column) + 1;
-    int cLSB = __builtin_ctzll(column) - 1;
+    int cMSB = (CHUNK_SIZE - 1) - __builtin_clz(column) + 1;
+    int cLSB = __builtin_ctz(column) - 1;
 
-    int lMSB = (CHUNK_SIZE - 1) - __builtin_clzll(layer) + 1;
-    int lLSB = __builtin_ctzll(layer) - 1;
+    int lMSB = (CHUNK_SIZE - 1) - __builtin_clz(layer) + 1;
+    int lLSB = __builtin_ctz(layer) - 1;
 
     int fast = i % CHUNK_SIZE;
     int slow = (i / CHUNK_SIZE) % CHUNK_SIZE;
 
     if (row > 0 &&
         tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
-      padding[i] |= (1ULL << 1);
+      padding[i] |= (1U << 1);
 
     if (row > 0 &&
         tree->get(originX + rLSB, fast + originY, slow + originZ, depth))
-      padding[i] |= (1ULL << 0);
+      padding[i] |= (1U << 0);
 
     if (column > 0 &&
         tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
-      padding[i] |= (1ULL << 3);
+      padding[i] |= (1U << 3);
 
     if (column > 0 &&
         tree->get(fast + originX, originY + cLSB, slow + originZ, depth))
-      padding[i] |= (1ULL << 2);
+      padding[i] |= (1U << 2);
 
     if (layer > 0 &&
         tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
-      padding[i] |= (1ULL << 5);
+      padding[i] |= (1U << 5);
 
     if (layer > 0 &&
         tree->get(slow + originX, fast + originY, originZ + lLSB, depth))
-      padding[i] |= (1ULL << 4);
+      padding[i] |= (1U << 4);
   }
 
-  uint64_t widthStart[MaskLength] = {};
-  uint64_t heightStart[MaskLength] = {};
+  uint32_t widthStart[MaskLength] = {};
+  uint32_t heightStart[MaskLength] = {};
 
-  uint64_t widthEnd[MaskLength] = {};
-  uint64_t heightEnd[MaskLength] = {};
+  uint32_t widthEnd[MaskLength] = {};
+  uint32_t heightEnd[MaskLength] = {};
 
   /**
    * Culls the column/row/layer
@@ -396,7 +391,7 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(rows, 0, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
-  GreedyMesh64Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
+  GreedyMesh32Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::LEFT, FaceType::RIGHT);
 
   std::memset(widthStart, 0, sizeof(widthStart));
@@ -406,8 +401,7 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
                           widthEnd, heightEnd);
-
-  GreedyMesh64Axis(coord, columns, widthStart, heightStart, widthEnd, heightEnd,
+  GreedyMesh32Axis(coord, columns, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::BOTTOM, FaceType::TOP);
 
   std::memset(widthStart, 0, sizeof(widthStart));
@@ -417,6 +411,6 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
-  GreedyMesh64Axis(coord, layers, widthStart, heightStart, widthEnd, heightEnd,
+  GreedyMesh32Axis(coord, layers, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::FRONT, FaceType::BACK);
 }
