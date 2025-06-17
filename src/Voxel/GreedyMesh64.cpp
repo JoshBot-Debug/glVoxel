@@ -115,7 +115,8 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
       continue;
 
     const uint8_t widthOffset = __builtin_ffsll(width) - 1;
-    const uint8_t widthSize = __builtin_ctzll(~(width >> widthOffset));
+    uint8_t widthSize =
+        ~width == 0 ? CHUNK_SIZE : __builtin_ctzll(~(width >> widthOffset));
 
     const uint64_t &height =
         heightMasks[(CHUNK_SIZE * (w + (CHUNK_SIZE * (int)(widthOffset)))) /
@@ -123,18 +124,24 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
         ~((1ULL << a) - 1);
 
     const uint8_t heightOffset = __builtin_ffsll(height) - 1;
-    uint8_t heightSize = __builtin_ctzll(~(height >> heightOffset));
+
+    uint8_t heightSize =
+        ~height == 0 ? CHUNK_SIZE : __builtin_ctzll(~(height >> heightOffset));
 
     for (uint8_t i = heightOffset; i < heightOffset + heightSize; i++) {
       const unsigned int index =
           (CHUNK_SIZE * (w + (CHUNK_SIZE * i))) / CHUNK_SIZE;
+
       const uint64_t SIZE =
           widthMasks[index] &
           (((widthSize >= CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
            << widthOffset);
 
-      if (__builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
-          widthSize) {
+      if (SIZE == 0 ||
+          (~SIZE == 0
+               ? CHUNK_SIZE
+               : __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
+                     widthSize)) {
         heightSize = i - heightOffset;
         break;
       }
@@ -268,8 +275,7 @@ void GreedyMesh64::CullMesh(const glm::ivec3 &offsetPosition,
 
 void GreedyMesh64::Octree(SparseVoxelOctree *tree,
                           std::vector<Vertex> &vertices, int originX,
-                          int originY, int originZ, int depth,
-                          Voxel *filter) {
+                          int originY, int originZ, int depth, Voxel *filter) {
   glm::vec3 coord = {originX / CHUNK_SIZE, originY / CHUNK_SIZE,
                      originZ / CHUNK_SIZE};
 
@@ -294,8 +300,7 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
   for (int x = 0; x < CHUNK_SIZE; x++)
     for (int y = 0; y < CHUNK_SIZE; y++)
       for (int z = 0; z < CHUNK_SIZE; z++)
-        if (tree->get(x + originX, y + originY, z + originZ, depth,
-                      filter)) {
+        if (tree->get(x + originX, y + originY, z + originZ, depth, filter)) {
           hasVoxels = true;
 
           const unsigned int rowIndex =
@@ -333,41 +338,41 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
     uint64_t &column = columns[i];
     uint64_t &layer = layers[i];
 
-    int rMSB = (CHUNK_SIZE - 1) - __builtin_clzll(row) + 1;
-    int rLSB = __builtin_ctzll(row) - 1;
-
-    int cMSB = (CHUNK_SIZE - 1) - __builtin_clzll(column) + 1;
-    int cLSB = __builtin_ctzll(column) - 1;
-
-    int lMSB = (CHUNK_SIZE - 1) - __builtin_clzll(layer) + 1;
-    int lLSB = __builtin_ctzll(layer) - 1;
-
     int fast = i % CHUNK_SIZE;
     int slow = (i / CHUNK_SIZE) % CHUNK_SIZE;
 
-    if (row > 0 &&
-        tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
-      padding[i] |= (1ULL << 1);
+    if (row > 0) {
+      int rMSB = (CHUNK_SIZE - 1) - __builtin_clzll(row) + 1;
+      int rLSB = __builtin_ctzll(row) - 1;
 
-    if (row > 0 &&
-        tree->get(originX + rLSB, fast + originY, slow + originZ, depth))
-      padding[i] |= (1ULL << 0);
+      if (tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
+        padding[i] |= (1ULL << 1);
 
-    if (column > 0 &&
-        tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
-      padding[i] |= (1ULL << 3);
+      if (tree->get(originX + rLSB, fast + originY, slow + originZ, depth))
+        padding[i] |= (1ULL << 0);
+    }
 
-    if (column > 0 &&
-        tree->get(fast + originX, originY + cLSB, slow + originZ, depth))
-      padding[i] |= (1ULL << 2);
+    if (column > 0) {
+      int cMSB = (CHUNK_SIZE - 1) - __builtin_clzll(column) + 1;
+      int cLSB = __builtin_ctzll(column) - 1;
 
-    if (layer > 0 &&
-        tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
-      padding[i] |= (1ULL << 5);
+      if (tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
+        padding[i] |= (1ULL << 3);
 
-    if (layer > 0 &&
-        tree->get(slow + originX, fast + originY, originZ + lLSB, depth))
-      padding[i] |= (1ULL << 4);
+      if (tree->get(fast + originX, originY + cLSB, slow + originZ, depth))
+        padding[i] |= (1ULL << 2);
+    }
+
+    if (layer > 0) {
+      int lMSB = (CHUNK_SIZE - 1) - __builtin_clzll(layer) + 1;
+      int lLSB = __builtin_ctzll(layer) - 1;
+
+      if (tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
+        padding[i] |= (1ULL << 5);
+
+      if (tree->get(slow + originX, fast + originY, originZ + lLSB, depth))
+        padding[i] |= (1ULL << 4);
+    }
   }
 
   uint64_t widthStart[MASK_LENGTH] = {};

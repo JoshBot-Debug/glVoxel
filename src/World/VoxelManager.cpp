@@ -26,13 +26,15 @@ void VoxelManager::initialize(const glm::vec3 &position) {
 void VoxelManager::update(const glm::vec3 &position) {
   const glm::ivec3 currentChunkPosition = getChunkPosition(position);
 
-  if (playerChunkPosition == currentChunkPosition || isUpdating)
+  if (playerChunkPosition == currentChunkPosition)
     return;
 
-  isUpdating = true;
-  playerChunkPosition = currentChunkPosition;
-
   std::thread([this, currentChunkPosition]() {
+    if (!updateMutex.try_lock())
+      return;
+
+    playerChunkPosition = currentChunkPosition;
+
     std::vector<glm::ivec3> create =
         getChunkPositionsInRadius(currentChunkPosition);
     std::vector<glm::ivec3> remove;
@@ -41,11 +43,12 @@ void VoxelManager::update(const glm::vec3 &position) {
       auto vit = std::find(create.begin(), create.end(), it->first);
       if (vit == create.end()) {
         std::unique_lock lock(mutex.get(it->first));
+        LOG_IVEC3("deleted", it->first);
         remove.push_back(it->first);
         delete it->second;
         it = chunks.erase(it);
       } else {
-        vit = create.erase(vit);
+        create.erase(vit);
         ++it;
       }
     }
@@ -54,9 +57,9 @@ void VoxelManager::update(const glm::vec3 &position) {
       for (const auto &coord : remove)
         voxelBuffer->erase(coord);
 
-    generateTerrain(create);
+    updateMutex.unlock();
 
-    isUpdating = false;
+    generateTerrain(create);
   }).detach();
 }
 
@@ -88,6 +91,9 @@ VoxelManager::getChunkPosition(const glm::vec3 &position) const {
 
 void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
   std::thread([this, coords = coords, futures = std::move(futures)]() mutable {
+    if (!updateMutex.try_lock())
+      return;
+
     auto t1 = START_TIMER;
 
     for (const auto &coord : coords)
@@ -111,6 +117,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
 
     LOG("Chunks", coords.size());
     END_TIMER(t1);
+
+    updateMutex.unlock();
   }).detach();
 }
 
