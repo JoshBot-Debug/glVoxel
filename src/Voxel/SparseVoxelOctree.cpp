@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "SparseVoxelOctree.h"
-#include "Voxel/GreedyMesh32.h"
 #include "Voxel/GreedyMesh64.h"
 
 static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =
@@ -230,11 +229,21 @@ void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
   const int chunkSize = GreedyMesh64::CHUNK_SIZE;
   const int chunksPerAxis = size / chunkSize;
 
+  std::vector<std::vector<Vertex>> buffer;
+  buffer.resize(chunksPerAxis * chunksPerAxis * chunksPerAxis);
+
+#pragma omp parallel for collapse(3)
   for (int cz = 0; cz < chunksPerAxis; cz++)
     for (int cy = 0; cy < chunksPerAxis; cy++)
-      for (int cx = 0; cx < chunksPerAxis; cx++)
-        GreedyMesh64::Octree(this, vertices, cx * chunkSize, cy * chunkSize,
+      for (int cx = 0; cx < chunksPerAxis; cx++) {
+        unsigned int i = cx + chunksPerAxis * (cy + chunksPerAxis * cz);
+        GreedyMesh64::Octree(this, buffer[i], cx * chunkSize, cy * chunkSize,
                              cz * chunkSize, 0, filter);
+      }
+
+  for (auto &v : buffer)
+    vertices.insert(vertices.end(), std::make_move_iterator(v.begin()),
+                    std::make_move_iterator(v.end()));
 }
 
 const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const {

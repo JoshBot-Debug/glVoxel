@@ -189,6 +189,13 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
     std::vector<Vertex> vertices;
     it->second->greedyMesh(vertices, filters[i]);
 
+    BENCHMARK(
+        [&]() {
+          std::vector<Vertex> vertices;
+          it->second->greedyMesh(vertices, filters[i]);
+        },
+        200);
+
     Voxel *filter = filters[i];
 
     for (int j = 0; j < vertices.size(); j++) {
