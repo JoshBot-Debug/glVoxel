@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "SparseVoxelOctree.h"
+#include "Voxel/GreedyMesh32.h"
 #include "Voxel/GreedyMesh64.h"
 
 static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =

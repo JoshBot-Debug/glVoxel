@@ -273,8 +273,6 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
   glm::vec3 coord = {originX / CHUNK_SIZE, originY / CHUNK_SIZE,
                      originZ / CHUNK_SIZE};
 
-  const uint32_t MaskLength = CHUNK_SIZE * CHUNK_SIZE;
-
   /**
    * Generate the bit mask for rows, columns and layers.
    *
@@ -286,10 +284,10 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
    * 0  0 z0 x3 0  0  0  0 z1 x0 0  0  0  0 z1 x1 0  0  0  0 z1 x2 0  0  0  0 z1
    * x3 0  0  0  0
    */
-  uint64_t rows[MaskLength] = {};
-  uint64_t columns[MaskLength] = {};
-  uint64_t layers[MaskLength] = {};
-  uint8_t padding[MaskLength] = {};
+  uint64_t rows[MASK_LENGTH] = {};
+  uint64_t columns[MASK_LENGTH] = {};
+  uint64_t layers[MASK_LENGTH] = {};
+  uint8_t padding[MASK_LENGTH] = {};
 
   bool hasVoxels = false;
 
@@ -330,7 +328,7 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
    * if the bits at the 0 & 31st index are on. If so, we need to skip making
    * faces on that end.
    */
-  for (int i = 0; i < MaskLength; i++) {
+  for (int i = 0; i < MASK_LENGTH; i++) {
     uint64_t &row = rows[i];
     uint64_t &column = columns[i];
     uint64_t &layer = layers[i];
@@ -372,11 +370,11 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
       padding[i] |= (1ULL << 4);
   }
 
-  uint64_t widthStart[MaskLength] = {};
-  uint64_t heightStart[MaskLength] = {};
+  uint64_t widthStart[MASK_LENGTH] = {};
+  uint64_t heightStart[MASK_LENGTH] = {};
 
-  uint64_t widthEnd[MaskLength] = {};
-  uint64_t heightEnd[MaskLength] = {};
+  uint64_t widthEnd[MASK_LENGTH] = {};
+  uint64_t heightEnd[MASK_LENGTH] = {};
 
   /**
    * Culls the column/row/layer

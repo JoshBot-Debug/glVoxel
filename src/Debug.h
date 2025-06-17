@@ -3,12 +3,12 @@
 #ifdef DEBUG
 
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
 #include <thread>
-#include <fstream>
 
 template <typename... Args>
 inline void Log(const char *file, int line, const char *functionName,
@@ -39,6 +39,10 @@ inline void LogToFile(const char *file, int line, const char *functionName,
 
 inline void Benchmark(const char *file, int line, const char *functionName,
                       const std::function<void()> &func, int iterations) {
+
+  for (int i = 0; i < 50; ++i)
+    func();
+
   auto start = std::chrono::high_resolution_clock::now();
 
   for (int i = 0; i < iterations; ++i)
@@ -63,7 +67,8 @@ inline void EndTimer(const char *file, int line, const char *functionName,
 #define START_TIMER std::chrono::high_resolution_clock::now()
 #define END_TIMER(...) EndTimer(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_IVEC3(...) LogIVec3(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_TO_FILE(outputFile, ...) LogToFile(__FILE__, __LINE__, __func__, outputFile, __VA_ARGS__)
+#define LOG_TO_FILE(outputFile, ...)                                           \
+  LogToFile(__FILE__, __LINE__, __func__, outputFile, __VA_ARGS__)
 
 #else
 #define LOG(...)

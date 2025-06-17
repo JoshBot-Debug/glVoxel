@@ -15,6 +15,7 @@
 class GreedyMesh64 {
 public:
   static constexpr uint8_t CHUNK_SIZE = 64;
+  static constexpr unsigned int MASK_LENGTH = CHUNK_SIZE * CHUNK_SIZE;
 
 private:
   static uint64_t ClearLowestBits(uint64_t bits, int n) {

@@ -15,6 +15,7 @@
 class GreedyMesh32 {
 public:
   static constexpr uint8_t CHUNK_SIZE = 32;
+  static constexpr unsigned int MASK_LENGTH = CHUNK_SIZE * CHUNK_SIZE;
 
 private:
   static uint32_t ClearLowestBits(uint32_t bits, int n) {
