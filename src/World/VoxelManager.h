@@ -22,7 +22,7 @@ class VoxelManager {
   };
 
 private:
-  static constexpr int s_ChunkSize = 128;
+  static constexpr int s_ChunkSize = 256;
   static constexpr double s_HeightMapStep = 1.0f;
   static constexpr glm::ivec3 s_ChunkRadius = glm::ivec3{0, 0, 0};
 

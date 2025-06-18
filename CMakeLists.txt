@@ -4,6 +4,7 @@ project(glVoxel)
 # === Options ===
 option(ENABLE_AVX256 "Enable AVX-256 instructions" ON)
 option(ENABLE_MULTI_THREADING "Enable multithreaded voxel processing with OpenMP" ON)
+option(ENABLE_STL_DEBUG "Enable STL debug mode and DEBUG macro." OFF)
 option(ENABLE_THREAD_SANITIZER "Enable ThreadSanitizer (disables AddressSanitizer)" OFF)
 
 # === Compiler Flags ===
@@ -14,9 +15,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # === Optional AVX ===
 if(ENABLE_AVX256)
   add_compile_options(-mavx2)
-  message(STATUS "AVX-256 instructions enabled.")
+  message(STATUS "AVX-256 instructions ENABLED.")
 else()
-  message(WARNING "AVX-256 is not enabled. Falling back to default instructions.")
+  message(STATUS "AVX-256 is DISABLED.")
 endif()
 
 # === Source Files ===
@@ -51,7 +52,7 @@ if(ENABLE_MULTI_THREADING)
     message(WARNING "OpenMP requested but not found.")
   endif()
 else()
-  message(STATUS "Multithreading is DISABLED.")
+  message(STATUS "OpenMP is DISABLED.")
 endif()
 
 # === Libraries ===
@@ -86,37 +87,42 @@ find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
-  message(STATUS "ccache is enabled")
+  message(STATUS "ccache is ENABLED.")
 endif()
 
 # === Debug Configuration ===
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(-DDEBUG -D_GLIBCXX_DEBUG)
-  message(STATUS "Debug build: STL debug mode and DEBUG macro enabled.")
 
-  target_compile_options(glVoxel PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wshadow
-    -Wconversion
-    -Wsign-conversion
-    -Wnull-dereference
-    -Wdouble-promotion
-    -Wformat=2
-    -Wunused
-  )
+  if(ENABLE_STL_DEBUG)
+    target_compile_options(glVoxel PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+      -Wshadow
+      -Wconversion
+      -Wsign-conversion
+      -Wnull-dereference
+      -Wdouble-promotion
+      -Wformat=2
+      -Wunused
+    )
 
-  if(ENABLE_THREAD_SANITIZER)
-    set(SANITIZE_FLAGS "-fsanitize=thread")
-    message(STATUS "Using ThreadSanitizer (no ASan/UBSan).")
+    message(STATUS "STL debug mode and DEBUG macro is ENABLED.")
+
+    if(ENABLE_THREAD_SANITIZER)
+      set(SANITIZE_FLAGS "-fsanitize=thread")
+      message(STATUS "Using ThreadSanitizer (no ASan/UBSan).")
+    else()
+      set(SANITIZE_FLAGS "-fsanitize=undefined,address -fno-omit-frame-pointer")
+      message(STATUS "Using AddressSanitizer + UndefinedBehaviorSanitizer.")
+    endif()
+
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${SANITIZE_FLAGS}")
+    set(CMAKE_LINKER_FLAGS_DEBUG "${SANITIZE_FLAGS}")
   else()
-    set(SANITIZE_FLAGS "-fsanitize=undefined,address -fno-omit-frame-pointer")
-    message(STATUS "Using AddressSanitizer + UndefinedBehaviorSanitizer.")
+    message(STATUS "STL debug mode and DEBUG macro is DISABLED.")
   endif()
-
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${SANITIZE_FLAGS}")
-  set(CMAKE_LINKER_FLAGS_DEBUG "${SANITIZE_FLAGS}")
 endif()
 
 # === Release Configuration ===

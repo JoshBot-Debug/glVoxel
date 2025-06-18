@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug",
+      "name": "Debug GDB",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/glVoxel",
@@ -18,6 +18,6 @@
           "ignoreFailures": true
         }
       ]
-    },
+    }
   ]
 }
