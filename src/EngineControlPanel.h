@@ -29,12 +29,12 @@ struct Light {
 
 class EngineControlPanel {
 private:
-  std::vector<Model *> models;
-  PerspectiveCamera *camera;
-  ResourceManager *resource;
-  World *world;
+  std::vector<Model *> m_Models;
+  PerspectiveCamera *m_Camera;
+  ResourceManager *m_Resource;
+  World *m_World;
 
-  glm::vec2 mouse;
+  glm::vec2 m_Mouse;
 
 public:
   Light light;
@@ -42,14 +42,14 @@ public:
 
   std::vector<unsigned int> indices;
 
-  void addModel(Model *model) { models.push_back(model); }
+  void addModel(Model *model) { m_Models.push_back(model); }
 
-  void setCamera(PerspectiveCamera *camera) { this->camera = camera; }
+  void setCamera(PerspectiveCamera *camera) { m_Camera = camera; }
 
-  void setWorld(World *world) { this->world = world; }
+  void setWorld(World *world) { m_World = world; }
 
   void setResourceManager(ResourceManager *resource) {
-    this->resource = resource;
+    this->m_Resource = resource;
   }
 
   void generalMenu() {
@@ -58,17 +58,17 @@ public:
     ImGui::SeparatorText("Shaders");
 
     if (ImGui::Button("Recompile shaders"))
-      resource->getShader().recompile();
+      m_Resource->getShader().recompile();
 
     ImGui::SeparatorText("Terrain");
 
     if (ImGui::TreeNode("Draw mode")) {
       if (ImGui::Selectable("Draw Traingles",
-                            world->drawMode == DrawMode::TRIANGLES))
-        world->drawMode = DrawMode::TRIANGLES;
+                            m_World->drawMode == DrawMode::TRIANGLES))
+        m_World->drawMode = DrawMode::TRIANGLES;
 
-      if (ImGui::Selectable("Draw Lines", world->drawMode == DrawMode::LINES))
-        world->drawMode = DrawMode::LINES;
+      if (ImGui::Selectable("Draw Lines", m_World->drawMode == DrawMode::LINES))
+        m_World->drawMode = DrawMode::LINES;
       ImGui::TreePop();
     }
 
@@ -77,36 +77,27 @@ public:
     ImGui::SeparatorText("Primitives");
 
     // if (ImGui::Button("Generate sphere"))
-    //   world->fillSphere();
+    //   m_World->fillSphere();
 
     // if (ImGui::Button("Generate cube"))
-    //   world->fill();
+    //   m_World->fill();
 
     ImGui::SeparatorText("Terrain");
 
     if (ImGui::Button("Initialize Height Map"))
-      world->heightMap.initialize();
+      m_World->heightMap.initialize();
 
     ImGui::Spacing();
 
-    ImGui::DragInt("Seed", &world->heightMap.terrain.seed);
-    ImGui::DragFloat("Scale", &world->heightMap.terrain.scale, 0.01f);
-    ImGui::DragFloat("Bias", &world->heightMap.terrain.bias, 0.01f);
+    ImGui::DragInt("Seed", &m_World->heightMap.terrain.seed);
+    ImGui::DragFloat("Scale", &m_World->heightMap.terrain.scale, 0.01f);
+    ImGui::DragFloat("Bias", &m_World->heightMap.terrain.bias, 0.01f);
 
-    ImGui::DragFloat("Frequency", &world->heightMap.terrain.frequency, 0.01f);
-    ImGui::DragFloat("Persistence", &world->heightMap.terrain.persistence,
+    ImGui::DragFloat("Frequency", &m_World->heightMap.terrain.frequency, 0.01f);
+    ImGui::DragFloat("Persistence", &m_World->heightMap.terrain.persistence,
                      0.01f);
-    ImGui::DragInt("Octave Count", &world->heightMap.terrain.octaveCount, 1.0f,
-                   1, noise::module::PERLIN_MAX_OCTAVE);
-
-    ImGui::DragFloat("Stone Threshold",
-                     &world->heightMap.terrain.stoneThreshold, 0.01f, 0.01f,
-                     1.0f);
-    ImGui::DragFloat("Dirt Threshold", &world->heightMap.terrain.dirtThreshold,
-                     0.01f, 0.01f, 1.0f);
-    ImGui::DragFloat("Grass Threshold",
-                     &world->heightMap.terrain.grassThreshold, 0.01f, 0.01f,
-                     1.0f);
+    ImGui::DragInt("Octave Count", &m_World->heightMap.terrain.octaveCount,
+                   1.0f, 1, noise::module::PERLIN_MAX_OCTAVE);
 
     ImGui::SeparatorText("Material");
 
@@ -144,7 +135,7 @@ public:
   void instanceMenu() {
     ImGui::ShowDemoWindow();
 
-    for (const auto &model : resource->getModels()) {
+    for (const auto &model : m_Resource->getModels()) {
       std::vector<Instance> &instances = model->getInstances();
 
       for (size_t i = 0; i < instances.size(); i++) {
@@ -188,21 +179,21 @@ public:
 
     ImGui::SeparatorText("Position");
 
-    ImGui::DragFloat("Position X", &camera->position.x, 0.1f);
-    ImGui::DragFloat("Position Y", &camera->position.y, 0.1f);
-    ImGui::DragFloat("Position Z", &camera->position.z, 0.1f);
+    ImGui::DragFloat("Position X", &m_Camera->position.x, 0.1f);
+    ImGui::DragFloat("Position Y", &m_Camera->position.y, 0.1f);
+    ImGui::DragFloat("Position Z", &m_Camera->position.z, 0.1f);
 
     ImGui::SeparatorText("Rotation");
 
-    ImGui::DragFloat("Rotation X", &camera->rotation.x, 0.1f);
-    ImGui::DragFloat("Rotation Y", &camera->rotation.y, 0.1f);
-    ImGui::DragFloat("Rotation Z", &camera->rotation.z, 0.1f);
+    ImGui::DragFloat("Rotation X", &m_Camera->rotation.x, 0.1f);
+    ImGui::DragFloat("Rotation Y", &m_Camera->rotation.y, 0.1f);
+    ImGui::DragFloat("Rotation Z", &m_Camera->rotation.z, 0.1f);
 
     ImGui::SeparatorText("Perspective");
 
-    ImGui::DragFloat("FOV", &camera->fov, 0.1f);
-    ImGui::DragFloat("Near", &camera->nearPlane, 0.1f);
-    ImGui::DragFloat("Far", &camera->farPlane, 0.1f);
+    ImGui::DragFloat("FOV", &m_Camera->fov, 0.1f);
+    ImGui::DragFloat("Near", &m_Camera->nearPlane, 0.1f);
+    ImGui::DragFloat("Far", &m_Camera->farPlane, 0.1f);
 
     ImGui::End();
   }
@@ -214,7 +205,7 @@ public:
       return;
 
     float speed = 30.0f;
-    double delta = Time::GetDeltaTime();
+    float delta = static_cast<float>(Time::GetDeltaTime());
 
     glm::vec3 translate(0.0f);
 
@@ -254,13 +245,13 @@ public:
 
     if (Input::KeyPress(MouseButton::LEFT)) {
       glm::vec2 dm =
-          glm::mix(glm::vec2(0.0f), Input::MousePosition() - mouse, 0.1f);
-      camera->rotate(-dm.y, dm.x, 0.0f);
+          glm::mix(glm::vec2(0.0f), Input::MousePosition() - m_Mouse, 0.1f);
+      m_Camera->rotate(-dm.y, dm.x, 0.0f);
     }
 
-    camera->translate(translate.x, translate.y, translate.z);
+    m_Camera->translate(translate.x, translate.y, translate.z);
 
-    mouse = Input::MousePosition();
+    m_Mouse = Input::MousePosition();
   }
 
   void stats() {
@@ -280,13 +271,13 @@ public:
     ImGui::End();
   }
 
-  void modelsMenu() {
-    if (models.size() == 0)
+  void m_ModelsMenu() {
+    if (m_Models.size() == 0)
       return;
 
-    ImGui::Begin("Models");
+    ImGui::Begin("m_Models");
 
-    for (Model *model : models) {
+    for (Model *model : m_Models) {
       ImGui::SeparatorText("ID " + model->getID());
 
       if (ImGui::Button("Add instance"))
@@ -308,7 +299,7 @@ public:
 
     this->bufferMenu();
 
-    this->modelsMenu();
+    this->m_ModelsMenu();
 
     ImGui::End();
   }

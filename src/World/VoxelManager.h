@@ -22,29 +22,30 @@ class VoxelManager {
   };
 
 private:
-  int ChunkSize = 128;
-  glm::ivec3 ChunkRadius = {0, 0, 0};
-  float HeightMapStep = 0.0f;
+  static constexpr int s_ChunkSize = 128;
+  static constexpr double s_HeightMapStep = 1.0f;
+  static constexpr glm::ivec3 s_ChunkRadius = glm::ivec3{0, 0, 0};
 
-  Registry *registry{nullptr};
+private:
+  Registry *m_Registry{nullptr};
 
-  HeightMap *heightMap{nullptr};
+  HeightMap *m_HeightMap{nullptr};
 
-  CVoxelBuffer *voxelBuffer{nullptr};
+  CVoxelBuffer *m_VoxelBuffer{nullptr};
 
-  glm::ivec3 playerChunkPosition{0, 0, 0};
+  glm::ivec3 m_PlayerChunkPosition{0, 0, 0};
 
-  std::vector<Voxel *> voxelPalette = {
+  std::vector<Voxel *> m_VoxelPalette = {
       new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
       new Voxel(34, 139, 34, 255), new Voxel(255, 255, 255, 255)};
 
-  IVecMutex mutex;
-  std::mutex updateMutex;
-  std::vector<std::future<void>> futures;
-  std::unordered_map<glm::ivec3, SparseVoxelOctree *> chunks;
+  IVecMutex m_Mutex;
+  std::mutex m_UpdateMutex;
+  std::vector<std::future<void>> m_Futures;
+  std::unordered_map<glm::ivec3, SparseVoxelOctree *> m_Chunks;
 
 public:
-  VoxelManager(int chunkSize, glm::ivec3 chunkRadius, float worldStep = 1.0f);
+  VoxelManager() = default;
   ~VoxelManager();
 
   void setHeightMap(HeightMap *heightMap);

@@ -12,11 +12,12 @@
 struct WindowOptions {
   std::string title;
 
-  unsigned int width;
-  unsigned int height;
+  int width;
+  int height;
 
   bool enableDepth = false;
   bool enableVSync = false;
+
   int MSAA = 0;
 
   bool imguiEnableKeyboard = false;
@@ -29,11 +30,11 @@ struct WindowOptions {
 
 class Window : Scene {
 private:
-  GLFWwindow *window;
+  GLFWwindow *m_Window;
 
-  WindowOptions options;
+  WindowOptions m_Options;
 
-  static glm::vec2 dimensions;
+  static glm::ivec2 s_Dimensions;
 
   static void setFrameBufferSize(GLFWwindow *window, int w, int h);
 
@@ -43,5 +44,5 @@ public:
 
   void open();
 
-  static const glm::vec2 &GetDimensions();
+  static const glm::ivec2 &GetDimensions();
 };

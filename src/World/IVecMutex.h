@@ -10,8 +10,8 @@
 
 class IVecMutex {
 private:
-  std::unordered_map<glm::ivec3, std::shared_ptr<std::shared_mutex>> pool;
-  std::shared_mutex mutex;
+  std::unordered_map<glm::ivec3, std::shared_ptr<std::shared_mutex>> m_Pool;
+  std::shared_mutex m_Mutex;
 
 public:
   std::shared_mutex &get(const glm::ivec3 &key);

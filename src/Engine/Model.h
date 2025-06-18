@@ -8,11 +8,11 @@
 
 class Model {
 private:
-  unsigned int id;
+  unsigned int m_Id;
 
-  std::vector<Mesh> meshes;
+  std::vector<Mesh> m_Meshes;
 
-  std::vector<Instance> instances;
+  std::vector<Instance> m_Instances;
 
 public:
   Model(unsigned int id, const char *filepath);
@@ -33,9 +33,9 @@ public:
    */
   Model(Model &&) = default;
 
-  const unsigned int getID() const;
+  unsigned int getID();
 
-  const unsigned int createInstance();
+  unsigned int createInstance();
   Instance &getInstance(unsigned int id);
   std::vector<Instance> &getInstances();
 

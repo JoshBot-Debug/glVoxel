@@ -41,18 +41,21 @@ struct Vertex {
   float nx;
   float ny;
   float nz;
-  int color;
-  int material;
+  unsigned int color;
+  unsigned int material;
 
   Vertex() = default;
-  Vertex(float x, float y, float z, float nx, float ny, float nz)
-      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz) {}
-  Vertex(float x, float y, float z, float nx, float ny, float nz, int color)
-      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color) {}
-  Vertex(float x, float y, float z, float nx, float ny, float nz, int color,
-         int material)
-      : x(x), y(y), z(z), nx(nx), ny(ny), nz(nz), color(color),
-        material(material) {}
+  Vertex(float a_X, float a_Y, float a_Z, float a_NX, float a_NY, float a_NZ)
+      : x(a_X), y(a_Y), z(a_Z), nx(a_NX), ny(a_NY), nz(a_NZ) {}
+
+  Vertex(float a_X, float a_Y, float a_Z, float a_NX, float a_NY, float a_NZ,
+         unsigned int a_Color)
+      : x(a_X), y(a_Y), z(a_Z), nx(a_NX), ny(a_NY), nz(a_NZ), color(a_Color) {}
+
+  Vertex(float a_X, float a_Y, float a_Z, float a_NX, float a_NY, float a_NZ,
+         unsigned int a_Color, unsigned int a_Material)
+      : x(a_X), y(a_Y), z(a_Z), nx(a_NX), ny(a_NY), nz(a_NZ), color(a_Color),
+        material(a_Material) {}
 
   bool operator==(const Vertex &other) const {
     return x == other.x && y == other.y && z == other.z && nx == other.nx &&

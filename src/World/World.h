@@ -24,13 +24,13 @@ enum class DrawMode : GLenum {
 
 class World {
 private:
-  Registry *registry{nullptr};
+  Registry *m_Registry{nullptr};
 
-  TripleBuffer<BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC> buffer;
+  TripleBuffer<BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC> m_Buffer;
 
-  VoxelManager voxels{128, glm::ivec3{1, 0, 1}};
+  VoxelManager m_Voxels;
 
-  PerspectiveCamera *camera = nullptr;
+  PerspectiveCamera *m_Camera = nullptr;
 
 public:
   HeightMap heightMap{128, 128};

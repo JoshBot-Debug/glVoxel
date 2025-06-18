@@ -6,23 +6,23 @@
 
 class Viewport : public Scene {
 private:
-  unsigned int texture = 0;
-  unsigned int framebuffer = 0;
+  unsigned int m_Texture = 0;
+  unsigned int m_Framebuffer = 0;
 
-  const char *title = "Viewport";
+  const char *m_Title = "Viewport";
 
   // Viewport width and height
-  glm::vec2 dimensions{0, 0};
+  glm::ivec2 m_Dimensions{0, 0};
 
   // Viewport position
-  glm::vec2 position{0, 0};
+  glm::vec2 m_Position{0, 0};
 
   /**
    * Resizes the viewport and updates the texture accordingly.
    *
    * @param size This new width and height of the viewport
    */
-  void resize(glm::vec2 size);
+  void resize(glm::ivec2 size);
 
   /**
    * Create the framebuffer and the texture to render to.
@@ -53,7 +53,7 @@ public:
    *
    * @param size This new width and height of the viewport
    */
-  void setDimensions(glm::vec2 size);
+  void setDimensions(glm::ivec2 size);
 
   /**
    * Do not override this method, the implimentation is done in the viewport.
@@ -69,15 +69,15 @@ public:
   /**
    * Get the size of the viewport
    */
-  glm::vec2 *getDimensions();
+  glm::ivec2 &getDimensions();
 
   /**
    * Get the position of the viewport
    */
-  glm::vec2 *getPosition();
+  glm::vec2 &getPosition();
 
   /**
    * Called when the viewport is resized.
    */
-  virtual void onResize(glm::vec2 size){};
+  virtual void onResize(glm::ivec2 size) { (void)size; };
 };

@@ -2,13 +2,13 @@
 #include <glm/glm.hpp>
 
 struct Voxel {
-  uint32_t color = 0;
-  uint32_t material = 0;
+  unsigned int color = 0;
+  unsigned int material = 0;
 
   Voxel() = default;
   Voxel(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  Voxel(uint32_t color);
-  Voxel(uint32_t color, uint32_t material);
+  Voxel(unsigned int color);
+  Voxel(unsigned int color, unsigned int material);
 
   bool operator==(const Voxel &other) const;
   bool operator!=(const Voxel &other) const;

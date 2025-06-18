@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDL3/SDL.h>
-
 class Scene {
 public:
   virtual ~Scene() = default;

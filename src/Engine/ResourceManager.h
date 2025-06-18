@@ -25,7 +25,7 @@ public:
    * @returns A pointer to a Model
    */
   Model *loadModel(const char *path) {
-    unsigned int id = models.size();
+    unsigned int id = static_cast<unsigned int>(models.size());
 
     Model *model = new Model(id, path);
     models.push_back(model);

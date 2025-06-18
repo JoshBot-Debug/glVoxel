@@ -10,7 +10,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-glm::vec2 Window::dimensions = glm::vec2(0.0f, 0.0f);
+glm::ivec2 Window::s_Dimensions = glm::ivec2{0, 0};
 
 void errorCallback(int error, const char *description) {
   std::cerr << "GLFW Error " << error << ":" << description << std::endl;
@@ -19,6 +19,8 @@ void errorCallback(int error, const char *description) {
 void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id,
                               GLenum severity, GLsizei length,
                               const GLchar *message, const void *userParam) {
+  (void)length;
+  (void)userParam;
   std::cerr << "OpenGL Debug Message (" << id << "): " << message << std::endl;
   std::cerr << "Source: " << source << ", Type: " << type
             << ", Severity: " << severity << std::endl;
@@ -36,13 +38,13 @@ static void glDebug() {
 void Window::open() {
   this->onInitialize();
 
-  glfwShowWindow(window);
+  glfwShowWindow(m_Window);
 
-  if (options.maximized)
-    glfwMaximizeWindow(window);
+  if (m_Options.maximized)
+    glfwMaximizeWindow(m_Window);
 
-  while (!glfwWindowShouldClose(window)) {
-    if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+  while (!glfwWindowShouldClose(m_Window)) {
+    if (glfwGetWindowAttrib(m_Window, GLFW_ICONIFIED) != 0) {
       ImGui_ImplGlfw_Sleep(10);
       continue;
     }
@@ -62,22 +64,23 @@ void Window::open() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(m_Window);
     Input::ResetScroll();
   }
 
   this->onCleanUp();
 }
 
-const glm::vec2 &Window::GetDimensions() { return Window::dimensions; }
+const glm::ivec2 &Window::GetDimensions() { return Window::s_Dimensions; }
 
 void Window::setFrameBufferSize(GLFWwindow *window, int w, int h) {
+  (void)window;
   glViewport(0, 0, w, h);
-  dimensions.x = w;
-  dimensions.y = h;
+  s_Dimensions.x = w;
+  s_Dimensions.y = h;
 }
 
-Window::Window(const WindowOptions &options) : options(options) {
+Window::Window(const WindowOptions &options) : m_Options(options) {
   glfwSetErrorCallback(errorCallback);
 
   if (!glfwInit())
@@ -96,19 +99,20 @@ Window::Window(const WindowOptions &options) : options(options) {
   if (options.MSAA)
     glfwWindowHint(GLFW_SAMPLES, options.MSAA);
 
-  window = glfwCreateWindow(options.width, options.height,
-                            options.title.c_str(), nullptr, nullptr);
-  if (!window) {
+  m_Window = glfwCreateWindow(options.width, options.height,
+                              options.title.c_str(), nullptr, nullptr);
+  if (!m_Window) {
     glfwTerminate();
     return;
   }
 
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, setFrameBufferSize);
-  glfwGetFramebufferSize(window, (int *)&dimensions.x, (int *)&dimensions.y);
-  glViewport(0, 0, dimensions.x, dimensions.y);
+  glfwMakeContextCurrent(m_Window);
+  glfwSetFramebufferSizeCallback(m_Window, setFrameBufferSize);
+  glfwGetFramebufferSize(m_Window, (int *)&s_Dimensions.x,
+                         (int *)&s_Dimensions.y);
+  glViewport(0, 0, s_Dimensions.x, s_Dimensions.y);
 
-  const int init = glewInit();
+  const unsigned int init = glewInit();
 
   if (init != GLEW_OK)
     std::cerr << "GLEW initialization failed! Error code: " << init
@@ -125,8 +129,8 @@ Window::Window(const WindowOptions &options) : options(options) {
 
   const GLFWvidmode *screen = glfwGetVideoMode(glfwGetPrimaryMonitor());
   int windowWidth, windowHeight;
-  glfwGetWindowSize(window, &windowWidth, &windowHeight);
-  glfwSetWindowPos(window, (screen->width - windowWidth) / 2,
+  glfwGetWindowSize(m_Window, &windowWidth, &windowHeight);
+  glfwSetWindowPos(m_Window, (screen->width - windowWidth) / 2,
                    (screen->height - windowHeight) / 2);
 
   IMGUI_CHECKVERSION();
@@ -147,14 +151,14 @@ Window::Window(const WindowOptions &options) : options(options) {
   else
     ImGui::StyleColorsLight();
 
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
 
-  Input::SetWindowContext(window);
-  glfwSetScrollCallback(window, Input::ScrollCallback);
+  Input::SetWindowContext(m_Window);
+  glfwSetScrollCallback(m_Window, Input::ScrollCallback);
 }
 
 Window::~Window() {
-  glfwDestroyWindow(window);
+  glfwDestroyWindow(m_Window);
   glfwTerminate();
 }

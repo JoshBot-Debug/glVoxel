@@ -2,12 +2,12 @@
 
 class Time {
 private:
-  static double time;
-  static double deltaTime;
+  static double s_Time;
+  static double s_DeltaTime;
 
-  static int currentFrame;
-  static int averageFPS[60];
-  static int fps;
+  static int s_CurrentFrame;
+  static int s_AverageFPS[60];
+  static int s_Fps;
 
 public:
   /**
@@ -19,15 +19,15 @@ public:
   /**
    * Get the current time since the window initialized
    */
-  static const double GetTime();
+  static double GetTime();
 
   /**
    * Get the delta time for this loop
    */
-  static const double GetDeltaTime();
+  static double GetDeltaTime();
 
   /**
    * Get the average FPS over the last 60 frames
    */
-  static const int GetAverageFPS();
+  static int GetAverageFPS();
 };

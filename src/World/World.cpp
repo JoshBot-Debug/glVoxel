@@ -3,35 +3,35 @@
 
 #include "Components.h"
 
-World::World() { voxels.setHeightMap(&heightMap); }
+World::World() { m_Voxels.setHeightMap(&heightMap); }
 
 void World::initialize() {
-  buffer.generate();
+  m_Buffer.generate();
 
   heightMap.initialize();
-  voxels.initialize(camera->position);
+  m_Voxels.initialize(m_Camera->position);
 }
 
 void World::draw() {
-  buffer.bind();
+  m_Buffer.bind();
 
   /**
    * TODO: Eventually we will get a segment fault here because the vertex buffer
    * has a size limit. The solution is to batch vertices and draw them.
    */
-  for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>())
+  for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
     glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
 
-  buffer.sync();
+  m_Buffer.sync();
 }
 
 void World::update() {
-  voxels.update(camera->position);
+  m_Voxels.update(m_Camera->position);
 
-  for (CVoxelBuffer *voxelBuffer : registry->get<CVoxelBuffer>()) {
-    if (voxelBuffer->isDirty() || buffer.isDirty()) {
+  for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>()) {
+    if (voxelBuffer->isDirty() || m_Buffer.isDirty()) {
       const std::vector<Vertex> verticies = voxelBuffer->getVertices();
-      auto [vao, vbo] = buffer.get();
+      auto [vao, vbo] = m_Buffer.get();
 
       vao->bind();
       vbo->set(verticies);
@@ -50,8 +50,8 @@ void World::update() {
 }
 
 void World::setRegistry(Registry *registry) {
-  this->registry = registry;
-  voxels.setRegistry(registry);
+  m_Registry = registry;
+  m_Voxels.setRegistry(m_Registry);
 }
 
-void World::setCamera(PerspectiveCamera *camera) { this->camera = camera; }
+void World::setCamera(PerspectiveCamera *camera) { m_Camera = camera; }

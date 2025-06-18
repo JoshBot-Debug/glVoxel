@@ -21,20 +21,20 @@ App::App()
               .MSAA = 16,
               .imguiEnableDocking = true,
               .maximized = true}) {
-  controlPanel.setCamera(&camera);
-  controlPanel.setResourceManager(&resource);
-  controlPanel.setWorld(&world);
+  m_ControlPanel.setCamera(&m_Camera);
+  m_ControlPanel.setResourceManager(&m_Resource);
+  m_ControlPanel.setWorld(&m_World);
 
-  camera.setPosition(0.0f, 175.0f, 0.0f);
-  camera.setRotation(-20.0f, 130.0f, 0.0f);
-  camera.setProjection(45, 0.01f, 10000.0f);
+  m_Camera.setPosition(0.0f, 175.0f, 0.0f);
+  m_Camera.setRotation(-20.0f, 130.0f, 0.0f);
+  m_Camera.setProjection(45, 0.01f, 10000.0f);
 
-  world.setCamera(&camera);
-  world.setRegistry(&registry);
+  m_World.setCamera(&m_Camera);
+  m_World.setRegistry(&m_Registry);
 
-  controlPanel.light.position = {0, 512, -128};
+  m_ControlPanel.light.position = {0, 512, -128};
 
-  Shader &shader = resource.getShader();
+  Shader &shader = m_Resource.getShader();
 
   shader.create({
       .name = "voxel",
@@ -50,9 +50,15 @@ App::App()
 
   open();
 
-  // uint64_t mask = 0b0000000000000000000000000000000000000000000000000000000000000000;
+  // uint64_t mask =
+  // 0b0000000000000000000000000000000000000000000000000000000000000000;
 
   // std::cout << std::bitset<64>((mask & ~((1ULL << 63) - 1))) << std::endl;
+}
+
+App::~App() {
+  for (auto &component : m_Registry.get<CVoxelBuffer>())
+    delete component;
 }
 
 void App::onInitialize() {
@@ -60,69 +66,69 @@ void App::onInitialize() {
   glCullFace(GL_BACK);
   glEnable(GL_CULL_FACE);
 
-  world.initialize();
+  m_World.initialize();
 }
 
 void App::onUpdate() {
-  camera.setViewportSize(Window::GetDimensions());
-  camera.update();
-  world.update();
-  controlPanel.update();
+  m_Camera.setViewportSize(Window::GetDimensions());
+  m_Camera.update();
+  m_World.update();
+  m_ControlPanel.update();
 }
 
 void App::onDraw() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  Shader &shader = resource.getShader();
+  Shader &shader = m_Resource.getShader();
 
   /**
    * Skybox
    */
-  skybox.draw(camera, shader, "skybox");
+  m_Skybox.draw(m_Camera, shader, "skybox");
 
   /**
    * Voxels
    */
   shader.bind("voxel");
-  shader.setUniformMatrix4fv("u_View", camera.getViewMatrix());
-  shader.setUniformMatrix4fv("u_Projection", camera.getProjectionMatrix());
+  shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
+  shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
 
-  shader.setUniform3f("u_CameraPosition", camera.position);
+  shader.setUniform3f("u_CameraPosition", m_Camera.position);
 
   /**
    * Material (TODO: Remove this)
    */
-  shader.setUniform3f("u_Material.diffuse", controlPanel.material.diffuse.x,
-                      controlPanel.material.diffuse.y,
-                      controlPanel.material.diffuse.z);
-  shader.setUniform3f("u_Material.specular", controlPanel.material.specular.x,
-                      controlPanel.material.specular.y,
-                      controlPanel.material.specular.z);
-  shader.setUniform1f("u_Material.shininess", controlPanel.material.shininess);
+  shader.setUniform3f("u_Material.diffuse", m_ControlPanel.material.diffuse.x,
+                      m_ControlPanel.material.diffuse.y,
+                      m_ControlPanel.material.diffuse.z);
+  shader.setUniform3f("u_Material.specular", m_ControlPanel.material.specular.x,
+                      m_ControlPanel.material.specular.y,
+                      m_ControlPanel.material.specular.z);
+  shader.setUniform1f("u_Material.shininess", m_ControlPanel.material.shininess);
 
   /**
    * Light
    */
-  shader.setUniform3f("u_Light.position", controlPanel.light.position.x,
-                      controlPanel.light.position.y,
-                      controlPanel.light.position.z);
-  shader.setUniform3f("u_Light.specular", controlPanel.light.specular.x,
-                      controlPanel.light.specular.y,
-                      controlPanel.light.specular.z);
-  shader.setUniform3f("u_Light.ambient", controlPanel.light.ambient.x,
-                      controlPanel.light.ambient.y,
-                      controlPanel.light.ambient.z);
-  shader.setUniform3f("u_Light.diffuse", controlPanel.light.diffuse.x,
-                      controlPanel.light.diffuse.y,
-                      controlPanel.light.diffuse.z);
+  shader.setUniform3f("u_Light.position", m_ControlPanel.light.position.x,
+                      m_ControlPanel.light.position.y,
+                      m_ControlPanel.light.position.z);
+  shader.setUniform3f("u_Light.specular", m_ControlPanel.light.specular.x,
+                      m_ControlPanel.light.specular.y,
+                      m_ControlPanel.light.specular.z);
+  shader.setUniform3f("u_Light.ambient", m_ControlPanel.light.ambient.x,
+                      m_ControlPanel.light.ambient.y,
+                      m_ControlPanel.light.ambient.z);
+  shader.setUniform3f("u_Light.diffuse", m_ControlPanel.light.diffuse.x,
+                      m_ControlPanel.light.diffuse.y,
+                      m_ControlPanel.light.diffuse.z);
 
   /**
-   * Render the world
+   * Render the m_World
    */
-  world.draw();
+  m_World.draw();
 
-  controlPanel.draw();
+  m_ControlPanel.draw();
 }
 
 void App::onCleanUp() {}

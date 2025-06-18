@@ -11,41 +11,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# === Debug Configuration ===
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(-DDEBUG -D_GLIBCXX_DEBUG)
-  message(STATUS "Debug build: STL debug mode and DEBUG macro enabled.")
-
-  add_compile_options(
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wshadow
-    -Wconversion
-    -Wsign-conversion
-    -Wnull-dereference
-    -Wdouble-promotion
-    -Wformat=2
-    -Wunused
-  )
-
-  if(ENABLE_THREAD_SANITIZER)
-    set(SANITIZE_FLAGS "-fsanitize=thread")
-    message(STATUS "Using ThreadSanitizer (no ASan/UBSan).")
-  else()
-    set(SANITIZE_FLAGS "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
-    message(STATUS "Using AddressSanitizer + UndefinedBehaviorSanitizer.")
-  endif()
-
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${SANITIZE_FLAGS}")
-  set(CMAKE_LINKER_FLAGS_DEBUG "${SANITIZE_FLAGS}")
-endif()
-
-# === Release Configuration ===
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto -funroll-loops -fomit-frame-pointer -g0 -s -ffast-math")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto=auto")
-set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "-flto=auto")
-
 # === Optional AVX ===
 if(ENABLE_AVX256)
   add_compile_options(-mavx2)
@@ -55,12 +20,18 @@ else()
 endif()
 
 # === Source Files ===
-file(GLOB_RECURSE SOURCES_FILES
-  ${CMAKE_SOURCE_DIR}/src/*.cpp
-  ${CMAKE_SOURCE_DIR}/lib/*.cpp
-)
+file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
+add_executable(glVoxel ${SRC_FILES})
 
-add_executable(glVoxel ${SOURCES_FILES})
+# --- Add lib separately to supress debug warnings
+file(GLOB_RECURSE LIB_FILES ${CMAKE_SOURCE_DIR}/lib/*.cpp)
+add_library(glVoxelLibrary OBJECT ${LIB_FILES})
+
+# --- Suppress all warnings from glVoxelLibrary
+target_compile_options(glVoxelLibrary PRIVATE -w)
+
+# --- Add glVoxelLibrary to the binary
+target_sources(glVoxel PRIVATE $<TARGET_OBJECTS:glVoxelLibrary>)
 
 # === Static/Shared Object Files ===
 file(GLOB_RECURSE SHARED_LIB ${CMAKE_SOURCE_DIR}/bin/*.o)
@@ -106,6 +77,9 @@ target_include_directories(glVoxel PRIVATE
   ${CMAKE_SOURCE_DIR}/src
   ${CMAKE_SOURCE_DIR}/include/imgui
 )
+target_include_directories(glVoxelLibrary PRIVATE
+  ${CMAKE_SOURCE_DIR}/include/imgui
+)
 
 # === Optional: ccache (speed up rebuilds) ===
 find_program(CCACHE_PROGRAM ccache)
@@ -114,3 +88,38 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
   message(STATUS "ccache is enabled")
 endif()
+
+# === Debug Configuration ===
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_definitions(-DDEBUG -D_GLIBCXX_DEBUG)
+  message(STATUS "Debug build: STL debug mode and DEBUG macro enabled.")
+
+  target_compile_options(glVoxel PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wshadow
+    -Wconversion
+    -Wsign-conversion
+    -Wnull-dereference
+    -Wdouble-promotion
+    -Wformat=2
+    -Wunused
+  )
+
+  if(ENABLE_THREAD_SANITIZER)
+    set(SANITIZE_FLAGS "-fsanitize=thread")
+    message(STATUS "Using ThreadSanitizer (no ASan/UBSan).")
+  else()
+    set(SANITIZE_FLAGS "-fsanitize=undefined,address -fno-omit-frame-pointer")
+    message(STATUS "Using AddressSanitizer + UndefinedBehaviorSanitizer.")
+  endif()
+
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 ${SANITIZE_FLAGS}")
+  set(CMAKE_LINKER_FLAGS_DEBUG "${SANITIZE_FLAGS}")
+endif()
+
+# === Release Configuration ===
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto -funroll-loops -fomit-frame-pointer -g0 -s -ffast-math")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-flto=auto")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "-flto=auto")

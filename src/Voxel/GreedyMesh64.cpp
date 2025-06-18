@@ -115,6 +115,7 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
       continue;
 
     const uint8_t widthOffset = __builtin_ffsll(width) - 1;
+
     uint8_t widthSize =
         ~width == 0 ? CHUNK_SIZE : __builtin_ctzll(~(width >> widthOffset));
 
@@ -139,7 +140,7 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
 
       if (SIZE == 0 ||
           (~SIZE == 0
-               ? CHUNK_SIZE
+               ? 0
                : __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
                      widthSize)) {
         heightSize = i - heightOffset;
@@ -402,10 +403,10 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
   GreedyMesh64Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::LEFT, FaceType::RIGHT);
 
-  // std::memset(widthStart, 0, sizeof(widthStart));
-  // std::memset(heightStart, 0, sizeof(heightStart));
-  // std::memset(widthEnd, 0, sizeof(widthEnd));
-  // std::memset(heightEnd, 0, sizeof(heightEnd));
+  std::memset(widthStart, 0, sizeof(widthStart));
+  std::memset(heightStart, 0, sizeof(heightStart));
+  std::memset(widthEnd, 0, sizeof(widthEnd));
+  std::memset(heightEnd, 0, sizeof(heightEnd));
 
   PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
                           widthEnd, heightEnd);
@@ -413,10 +414,10 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
   GreedyMesh64Axis(coord, columns, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::BOTTOM, FaceType::TOP);
 
-  // std::memset(widthStart, 0, sizeof(widthStart));
-  // std::memset(heightStart, 0, sizeof(heightStart));
-  // std::memset(widthEnd, 0, sizeof(widthEnd));
-  // std::memset(heightEnd, 0, sizeof(heightEnd));
+  std::memset(widthStart, 0, sizeof(widthStart));
+  std::memset(heightStart, 0, sizeof(heightStart));
+  std::memset(widthEnd, 0, sizeof(widthEnd));
+  std::memset(heightEnd, 0, sizeof(heightEnd));
 
   PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart, widthEnd,
                           heightEnd);

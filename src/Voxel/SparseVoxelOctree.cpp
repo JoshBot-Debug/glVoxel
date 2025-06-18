@@ -39,28 +39,28 @@ static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =
         {-1, -1, -1}};
 
 SparseVoxelOctree::SparseVoxelOctree()
-    : size(256), depth(8), root(new Node(8)) {}
+    : m_Size(256), m_Depth(8), m_Root(new Node(8)) {}
 
 SparseVoxelOctree::SparseVoxelOctree(int size)
-    : size(size), depth(std::log2(size)),
-      root(new Node(static_cast<uint8_t>(std::log2(size)))) {}
+    : m_Size(size), m_Depth(static_cast<uint8_t>(std::log2(size))),
+      m_Root(new Node(static_cast<uint8_t>(std::log2(size)))) {}
 
 SparseVoxelOctree::~SparseVoxelOctree() {
   clear();
-  delete root;
-  root = nullptr;
+  delete m_Root;
+  m_Root = nullptr;
 }
 
-const int SparseVoxelOctree::getSize() const { return size; }
+int SparseVoxelOctree::getSize() { return m_Size; }
 
-const int SparseVoxelOctree::getDepth() const { return depth; }
+int SparseVoxelOctree::getDepth() { return m_Depth; }
 
-Node *SparseVoxelOctree::getRoot() { return root; }
+Node *SparseVoxelOctree::getRoot() { return m_Root; }
 
 void SparseVoxelOctree::setBlock(uint64_t (&mask)[], Voxel *voxel) {
-  for (int z = 0; z < size; z += 64)
-    for (int x = 0; x < size; x += 64)
-      for (int y = 0; y < size; y += 64)
+  for (int z = 0; z < m_Size; z += 64)
+    for (int x = 0; x < m_Size; x += 64)
+      for (int y = 0; y < m_Size; y += 64)
         setBlock(mask, x, y, z, voxel, 64);
 }
 
@@ -75,7 +75,7 @@ void SparseVoxelOctree::setBlock(uint64_t (&mask)[], int x, int y, int z,
         int iy = y + dy;
         int iz = z + dz;
 
-        int index = ix + this->size * (iz + this->size * iy);
+        int index = ix + m_Size * (iz + m_Size * iy);
         if (!(mask[index / 64] & (1UL << (index % 64)))) {
           isFullBlock = false;
           break;
@@ -88,7 +88,7 @@ void SparseVoxelOctree::setBlock(uint64_t (&mask)[], int x, int y, int z,
   }
 
   if (size == 1) {
-    int index = x + this->size * (z + this->size * y);
+    int index = x + m_Size * (z + m_Size * y);
     if (mask[index / 64] & (1UL << (index % 64)))
       set(x, y, z, voxel, 1);
     return;
@@ -108,7 +108,7 @@ void SparseVoxelOctree::set(glm::vec3 position, Voxel *voxel, int maxSize) {
 }
 
 void SparseVoxelOctree::set(int x, int y, int z, Voxel *voxel, int maxSize) {
-  set(root, x, y, z, voxel, size, maxSize);
+  set(m_Root, x, y, z, voxel, m_Size, maxSize);
 }
 
 Node *SparseVoxelOctree::get(glm::vec3 position, uint8_t maxDepth,
@@ -119,7 +119,7 @@ Node *SparseVoxelOctree::get(glm::vec3 position, uint8_t maxDepth,
 
 Node *SparseVoxelOctree::get(int x, int y, int z, uint8_t maxDepth,
                              Voxel *filter) {
-  return get(root, x, y, z, size, maxDepth, filter);
+  return get(m_Root, x, y, z, m_Size, maxDepth, filter);
 }
 
 void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel,
@@ -127,11 +127,11 @@ void SparseVoxelOctree::set(Node *node, int x, int y, int z, Voxel *voxel,
   if (size == maxSize) {
     node->voxel = voxel;
 
-    for (const Voxel *v : uniqueVoxels)
+    for (const Voxel *v : m_UniqueVoxels)
       if (v == voxel)
         return;
 
-    uniqueVoxels.push_back(voxel);
+    m_UniqueVoxels.push_back(voxel);
     return;
   }
 
@@ -182,18 +182,17 @@ Node *SparseVoxelOctree::get(Node *node, int x, int y, int z, int size,
     return nullptr;
 
   if (x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size) {
-    const glm::ivec3 np = {floorDiv(x, this->size) + globalPosition.x,
-                           floorDiv(y, this->size) + globalPosition.y,
-                           floorDiv(z, this->size) + globalPosition.z};
+    const glm::ivec3 np = {floorDiv(x, m_Size) + m_GlobalPosition.x,
+                           floorDiv(y, m_Size) + m_GlobalPosition.y,
+                           floorDiv(z, m_Size) + m_GlobalPosition.z};
 
-    auto it = neighbours.find(np);
+    auto it = m_Neighbours.find(np);
 
-    if (it == neighbours.end() || it->second == nullptr)
+    if (it == m_Neighbours.end() || it->second == nullptr)
       return nullptr;
 
-    return it->second->get(
-        {mod(x, this->size), mod(y, this->size), mod(z, this->size)}, -1,
-        filter);
+    return it->second->get({mod(x, m_Size), mod(y, m_Size), mod(z, m_Size)},
+                           maxDepth, filter);
   }
 
   if (node->voxel) {
@@ -219,16 +218,16 @@ void SparseVoxelOctree::clear(Node *node) {
 }
 
 void SparseVoxelOctree::clear() {
-  if (!root)
+  if (!m_Root)
     return;
 
-  root->clear();
+  m_Root->clear();
 }
 
 void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
                                    Voxel *filter) {
   const int chunkSize = GreedyMesh64::CHUNK_SIZE;
-  const int chunksPerAxis = size / chunkSize;
+  const int chunksPerAxis = m_Size / chunkSize;
 
   for (int cz = 0; cz < chunksPerAxis; cz++)
     for (int cy = 0; cy < chunksPerAxis; cy++)
@@ -237,7 +236,7 @@ void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
                              cz * chunkSize, 0, filter);
 }
 
-const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const {
+size_t SparseVoxelOctree::getMemoryUsage(Node *node) {
   if (!node)
     return 0;
 
@@ -252,27 +251,27 @@ const size_t SparseVoxelOctree::getMemoryUsage(Node *node) const {
   return size;
 }
 
-const size_t SparseVoxelOctree::getTotalMemoryUsage() const {
-  return sizeof(SparseVoxelOctree) + getMemoryUsage(root);
+size_t SparseVoxelOctree::getTotalMemoryUsage() {
+  return sizeof(SparseVoxelOctree) + getMemoryUsage(m_Root);
 }
 
 const std::vector<Voxel *> &SparseVoxelOctree::getUniqueVoxels() const {
-  return uniqueVoxels;
+  return m_UniqueVoxels;
 }
 
 void SparseVoxelOctree::setNeighbours(
     const glm::ivec3 &globalPosition,
     std::unordered_map<glm::ivec3, SparseVoxelOctree *> &chunks) {
-  this->globalPosition = globalPosition;
+  this->m_GlobalPosition = globalPosition;
 
-  this->neighbours.clear();
-  this->neighbours.reserve(NEIGHBOUR_DIRECTIONS.size());
+  m_Neighbours.clear();
+  m_Neighbours.reserve(NEIGHBOUR_DIRECTIONS.size());
 
   for (const glm::ivec3 &dir : NEIGHBOUR_DIRECTIONS) {
-    glm::ivec3 np = globalPosition + dir;
+    glm::ivec3 np = m_GlobalPosition + dir;
     if (chunks.contains(np))
-      this->neighbours[np] = chunks.at(np);
+      m_Neighbours[np] = chunks.at(np);
     else
-      this->neighbours[np] = nullptr;
+      m_Neighbours[np] = nullptr;
   }
 }

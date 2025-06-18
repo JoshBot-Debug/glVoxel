@@ -7,8 +7,8 @@
 
 class Input {
 private:
-  static GLFWwindow *window;
-  static glm::vec2 scroll;
+  static GLFWwindow *s_Window;
+  static glm::vec2 s_Scroll;
 
 public:
   static void SetWindowContext(GLFWwindow *window);
@@ -16,31 +16,32 @@ public:
   static const glm::vec2 MousePosition();
 
   static void ResetScroll() {
-    scroll.x = 0.0f;
-    scroll.y = 0.0f;
+    s_Scroll.x = 0.0f;
+    s_Scroll.y = 0.0f;
   }
 
   static void ScrollCallback(GLFWwindow *window, double x, double y) {
-    scroll.x = x;
-    scroll.y = y;
+    (void)window;
+    s_Scroll.x = static_cast<float>(x);
+    s_Scroll.y = static_cast<float>(y);
   }
 
-  static const glm::vec2 GetScroll() { return scroll; }
+  static const glm::vec2 GetScroll() { return s_Scroll; }
 
   /**
    * @param key Expects a KeyboardKey or MouseButton
    */
-  template <typename T> static const bool KeyPress(const T &key) {
-    if (!window)
+  template <typename T> static bool KeyPress(const T &key) {
+    if (!s_Window)
       return false;
 
     int state = 0;
 
     if constexpr (std::is_same_v<T, KeyboardKey>)
-      state = glfwGetKey(window, static_cast<int>(key));
+      state = glfwGetKey(s_Window, static_cast<int>(key));
 
     else if constexpr (std::is_same_v<T, MouseButton>)
-      state = glfwGetMouseButton(window, static_cast<int>(key));
+      state = glfwGetMouseButton(s_Window, static_cast<int>(key));
 
     return state == static_cast<int>(KeyAction::PRESS);
   }
@@ -48,20 +49,20 @@ public:
   /**
    * @param key Expects a KeyboardKey or MouseButton
    */
-  template <typename T> static const bool KeyRelease(const T &key) {
-    if (!window)
+  template <typename T> static bool KeyRelease(const T &key) {
+    if (!s_Window)
       return false;
 
     int state = 0;
 
     if constexpr (std::is_same_v<T, KeyboardKey>)
-      state = glfwGetKey(window, static_cast<int>(key));
+      state = glfwGetKey(s_Window, static_cast<int>(key));
 
     else if constexpr (std::is_same_v<T, MouseButton>)
-      state = glfwGetMouseButton(window, static_cast<int>(key));
+      state = glfwGetMouseButton(s_Window, static_cast<int>(key));
 
     return state == static_cast<int>(KeyAction::RELEASE);
   }
 };
 
-inline glm::vec2 Input::scroll(0.0f);
+inline glm::vec2 Input::s_Scroll(0.0f);

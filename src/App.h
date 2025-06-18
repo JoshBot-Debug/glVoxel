@@ -17,14 +17,14 @@ const std::string EXE_DIRECTORY = getExecutableDir();
 
 class App : Window {
 private:
-  World world;
-  Registry registry;
-  PerspectiveCamera camera;
-  ResourceManager resource;
+  World m_World;
+  Registry m_Registry;
+  PerspectiveCamera m_Camera;
+  ResourceManager m_Resource;
 
-  EngineControlPanel controlPanel;
+  EngineControlPanel m_ControlPanel;
 
-  Skybox skybox{
+  Skybox m_Skybox{
       {EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",
        EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",
        EXE_DIRECTORY + "/../assets/skybox/plain/top.jpg",
@@ -34,7 +34,7 @@ private:
 
 public:
   App();
-  ~App() = default;
+  ~App();
 
   void onInitialize() override;
   void onUpdate() override;

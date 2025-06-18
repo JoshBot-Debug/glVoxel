@@ -14,13 +14,13 @@
 
 class SparseVoxelOctree {
 private:
-  int size;
-  uint8_t depth;
-  Node *root = nullptr;
-  glm::ivec3 globalPosition{0, 0, 0};
+  int m_Size;
+  uint8_t m_Depth;
+  Node *m_Root = nullptr;
+  glm::ivec3 m_GlobalPosition{0, 0, 0};
 
-  std::vector<Voxel *> uniqueVoxels;
-  std::unordered_map<glm::ivec3, SparseVoxelOctree *> neighbours;
+  std::vector<Voxel *> m_UniqueVoxels;
+  std::unordered_map<glm::ivec3, SparseVoxelOctree *> m_Neighbours;
 
   void setBlock(uint64_t (&mask)[], int x, int y, int z, Voxel *voxel,
                 int size);
@@ -31,7 +31,7 @@ private:
             Voxel *filter = nullptr);
   void clear(Node *node);
 
-  const size_t getMemoryUsage(Node *node) const;
+  size_t getMemoryUsage(Node *node);
 
   int floorDiv(int a, int b);
 
@@ -42,8 +42,8 @@ public:
   SparseVoxelOctree(int size);
   ~SparseVoxelOctree();
 
-  const int getSize() const;
-  const int getDepth() const;
+  int getSize();
+  int getDepth();
   Node *getRoot();
 
   /**
@@ -73,7 +73,7 @@ public:
   void clear();
   void greedyMesh(std::vector<Vertex> &vertices, Voxel *filter = nullptr);
 
-  const size_t getTotalMemoryUsage() const;
+  size_t getTotalMemoryUsage();
 
   const std::vector<Voxel *> &getUniqueVoxels() const;
 
