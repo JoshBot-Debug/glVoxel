@@ -23,7 +23,8 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
   for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
     for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
 
-      // unsigned int i = (s_CHUNK_SIZE * (a + (s_CHUNK_SIZE * b))) / s_CHUNK_SIZE;
+      // unsigned int i = (s_CHUNK_SIZE * (a + (s_CHUNK_SIZE * b))) /
+      // s_CHUNK_SIZE;
 
       // /**
       //  * Get the bitmask at index a,b
@@ -81,8 +82,10 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
       //  * Check the padding mask, if the bit at 63 index is on
       //  * turn off the LSB of the end mask
       //  *
-      //  * This is done in order to not set the height & width of the face at the
-      //  * end of the chunk if the neighbour is the same To avoid creating faces
+      //  * This is done in order to not set the height & width of the face at
+      //  the
+      //  * end of the chunk if the neighbour is the same To avoid creating
+      //  faces
       //  * inbetween chunks
       //  *
       //  * If bit 63 of paddingMask is set, then clear bit 31 of endMask.
@@ -278,18 +281,60 @@ void GreedyMeshi256::CullMesh(const glm::ivec3 &offsetPosition,
   }
 }
 
-inline int clzll(const uint64_t (&bits)[4]) {
+/**
+ * Count leading zeros
+ */
+inline int clz256(const uint64_t (&bits)[4]) {
   for (int i = 3; i >= 0; --i)
     if (bits[i] != 0)
       return __builtin_clzll(bits[i]) + (3 - i) * 64;
   return 256;
 }
 
-inline int ctzll(const uint64_t (&bits)[4]) {
+/**
+ * Count trailing zeros
+ */
+inline int ctz256(const uint64_t (&bits)[4]) {
   for (int i = 0; i < 4; ++i)
     if (bits[i] != 0)
       return __builtin_ctzll(bits[i]) + (i * 64);
   return 256;
+}
+
+/**
+ * Shift left
+ */
+inline void sl256(uint64_t (&bits)[4]) {
+  uint64_t carry = 0;
+  for (int i = 0; i < 4; ++i) {
+    uint64_t nextCarry = bits[i] >> 63;
+    bits[i] = (bits[i] << 1) | carry;
+    carry = nextCarry;
+  }
+}
+
+// AND
+// result = _mm256_and_si256(vec, vec);
+
+// OR
+// result = _mm256_or_si256(vec, vec);
+
+// XOR
+// result = _mm256_xor_si256(vec, vec);
+
+// NOT
+// result = _mm256_xor_si256(vec, _mm256_set1_epi64x(-1));
+
+/**
+ * Shift right
+ */
+inline void sr256(uint64_t (&bits)[4]) {
+  uint64_t carry = 0;
+  for (int i = 3; i >= 0; --i) {
+    uint64_t nextCarry = bits[i] & 1;
+    bits[i] = (bits[i] >> 1) | (carry << 63);
+    carry = nextCarry;
+  }
 }
 
 void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
@@ -375,8 +420,8 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
     int slow = (i / s_CHUNK_SIZE) % s_CHUNK_SIZE;
 
     if (!_mm256_testz_si256(row, row)) {
-      int rMSB = (s_CHUNK_SIZE - 1) - clzll(rowBits) + 1;
-      int rLSB = ctzll(rowBits) - 1;
+      int rMSB = (s_CHUNK_SIZE - 1) - clz256(rowBits) + 1;
+      int rLSB = ctz256(rowBits) - 1;
 
       if (tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
         padding[i] |= (1ULL << 1);
@@ -386,8 +431,8 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
     }
 
     if (!_mm256_testz_si256(column, column)) {
-      int cMSB = (s_CHUNK_SIZE - 1) - clzll(columnBits) + 1;
-      int cLSB = ctzll(columnBits) - 1;
+      int cMSB = (s_CHUNK_SIZE - 1) - clz256(columnBits) + 1;
+      int cLSB = ctz256(columnBits) - 1;
 
       if (tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
         padding[i] |= (1ULL << 3);
@@ -397,8 +442,8 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
     }
 
     if (!_mm256_testz_si256(layer, layer)) {
-      int lMSB = (s_CHUNK_SIZE - 1) - clzll(layerBits) + 1;
-      int lLSB = ctzll(layerBits) - 1;
+      int lMSB = (s_CHUNK_SIZE - 1) - clz256(layerBits) + 1;
+      int lLSB = ctz256(layerBits) - 1;
 
       if (tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
         padding[i] |= (1ULL << 5);
