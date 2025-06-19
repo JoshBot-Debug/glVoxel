@@ -11,6 +11,16 @@
 #include "Engine/Types.h"
 
 #include <bitset>
+#include <immintrin.h>
+
+#include "Voxel/GreedyMeshi256.h"
+
+inline void print_m256i(__m256i val) {
+  uint64_t *p = (uint64_t *)&val;
+  std::cout << std::bitset<64>(p[0]) << " " << std::bitset<64>(p[1]) << " "
+            << std::bitset<64>(p[2]) << " " << std::bitset<64>(p[3]) << "\n"
+            << std::endl;
+}
 
 App::App()
     : Window({.title = "glVoxel",
@@ -52,8 +62,87 @@ App::App()
 
   // uint64_t mask =
   // 0b0000000000000000000000000000000000000000000000000000000000000000;
+  // 0b1111111111111111111111111111111111111111111111111111111111111111;
 
   // std::cout << std::bitset<64>((mask & ~((1ULL << 63) - 1))) << std::endl;
+
+  // __m256i shifted = _mm256_slli_epi64(a, n);
+  // __m256i carry = _mm256_srli_epi64(a, 64 - n);
+  // carry = _mm256_permute4x64_epi64(carry, _MM_SHUFFLE(2, 1, 0, 0));
+  // carry = _mm256_and_si256(carry, _mm256_set_epi64x(-1ULL, -1ULL, -1ULL,
+  // 0ULL));
+
+  // alignas(32) uint64_t raw[4] = {
+  //     0b0000111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111100};
+
+  // alignas(32) uint64_t raw[4] = {
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b0111111111111111111111111111111111111111111111111111111111111111,
+  //     0b0011111111111111111111111111111111111111111111111111111111111111,
+  //     0b0001111111111111111111111111111111111111111111111111111111111111};
+
+  // 0b1111111111111111111111111111111111111111111111111111111111110111
+  // 0b1111111111111111111111111111111111111111111111111111111111110011
+  // 0b1111111111111111111111111111111111111111111111111111111111110001
+  // 0b1111111111111111111111111111111111111111111111111111111111110000
+
+  // union {
+  //   __m256i mm_b;
+  //   alignas(32) uint64_t b[4];
+  // };
+  // mm_b = _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+
+  // __m256i left = GreedyMeshi256::sl256(mm_b, 1);
+
+  // union {
+  //   __m256i mm_r;
+  //   alignas(32) uint64_t r[4];
+  // };
+  // mm_r = GreedyMeshi256::sr256(mm_b, 1);
+
+  // print_m256i(left);
+  // print_m256i(mm_r);
+
+  // int b_clz = GreedyMeshi256::clz256(mm_r);
+  // int b_ctz = GreedyMeshi256::ctz256(mm_r);
+
+  // std::cout << b_clz << std::endl;
+  // std::cout << b_ctz << std::endl;
+
+  // int c_clz = GreedyMeshi256::clz256(r);
+  // int c_ctz = GreedyMeshi256::ctz256(r);
+
+  // std::cout << c_clz << std::endl;
+  // std::cout << c_ctz << std::endl;
+
+  // int ffs = GreedyMeshi256::ffs256(mm_r);
+  // std::cout << ffs << std::endl;
+
+  // std::cout
+  //     << __builtin_ctzll(
+  //            0b1111111111111111111111111111111111111111111111111111111111111110)
+  //     << std::endl;
+  // std::cout
+  //     << __builtin_ffsll(
+  //            0b1111111111111111111111111111111111111111111111111111111111111110)
+  //     << std::endl;
+
+  // int n = 4;
+  // uint64_t mask =
+  //     0b1111111111111111111111111111111111111111111111111111111111111110;
+
+  // __m256i clb = GreedyMeshi256::clb256(mm_r, 65);
+  // print_m256i(clb);
+  // std::cout << std::bitset<64>((mask & ~((1ULL << n) - 1))) << std::endl;
+
+  // __m256i full = _mm256_set_epi64x(0ULL,0ULL,0ULL,0ULL);
+  // int isFalse = _mm256_testz_si256(clb, clb);
+  // int isTrue = _mm256_testz_si256(full, full);
+
+  // std::cout << isFalse << " " << isTrue << std::endl;
 }
 
 App::~App() {
@@ -105,7 +194,8 @@ void App::onDraw() {
   shader.setUniform3f("u_Material.specular", m_ControlPanel.material.specular.x,
                       m_ControlPanel.material.specular.y,
                       m_ControlPanel.material.specular.z);
-  shader.setUniform1f("u_Material.shininess", m_ControlPanel.material.shininess);
+  shader.setUniform1f("u_Material.shininess",
+                      m_ControlPanel.material.shininess);
 
   /**
    * Light

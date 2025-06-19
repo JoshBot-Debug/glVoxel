@@ -232,9 +232,12 @@ void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
 
   for (int cz = 0; cz < chunksPerAxis; cz++)
     for (int cy = 0; cy < chunksPerAxis; cy++)
-      for (int cx = 0; cx < chunksPerAxis; cx++)
+      for (int cx = 0; cx < chunksPerAxis; cx++) {
+        LOG_IVEC3("Chunk Loop", {cx, cy, cz});
+        LOG("Filter Color", filter->color);
         GreedyMeshi256::Octree(this, vertices, cx * chunkSize, cy * chunkSize,
-                             cz * chunkSize, 0, filter);
+                               cz * chunkSize, 0, filter);
+      }
 }
 
 size_t SparseVoxelOctree::getMemoryUsage(Node *node) {
