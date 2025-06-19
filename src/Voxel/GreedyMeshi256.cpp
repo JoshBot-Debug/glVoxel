@@ -23,8 +23,8 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
 
   // for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
   // for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
-  for (uint8_t a = 0; a < 64; a++)
-    for (uint8_t b = 0; b < 64; b++) {
+  for (uint16_t a = 0; a < s_CHUNK_SIZE; a++)
+    for (uint16_t b = 0; b < s_CHUNK_SIZE; b++) {
 
       unsigned int ri = a + (s_CHUNK_SIZE * b);
       unsigned int i = ri * s_STEPS;
@@ -173,13 +173,15 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
       const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
       const unsigned int index = rowIndex * s_STEPS;
 
-      __m256i widthSizeMask =
-          (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL << widthSize)) - 1)
-           << widthOffset);
+      // __m256i widthSizeMask =
+      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL <<
+      //     widthSize)) - 1)
+      //      << widthOffset);
 
       // const uint64_t SIZE =
       //     widthMasks[index] &
-      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL << widthSize) - 1)) << widthOffset);
+      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL <<
+      //     widthSize) - 1)) << widthOffset);
 
       // const uint64_t SIZE =
       //     widthMasks[index] &
@@ -250,10 +252,8 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
                                         std::vector<Vertex> &vertices,
                                         FaceType startType, FaceType endType) {
 
-  // for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
-  // for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
-  for (uint8_t a = 0; a < 64; a++)
-    for (uint8_t b = 0; b < 64; b++) {
+  for (uint16_t a = 0; a < s_CHUNK_SIZE; a++)
+    for (uint16_t b = 0; b < s_CHUNK_SIZE; b++) {
       // const uint64_t mask = bits[b + (s_CHUNK_SIZE * a)] & ~0ULL;
       unsigned int ri = b + (s_CHUNK_SIZE * a);
       unsigned int i = ri * s_STEPS;
