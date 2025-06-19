@@ -1,37 +1,33 @@
 #include "GreedyMeshi256.h"
 
-void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i bits,
+void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                                     uint64_t *widthMasks,
                                     uint64_t *heightMasks) {
+  while (!_mm256_testz_si256(bits, bits)) {
+    const uint8_t w = ffs256(bits) - 1;
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-  //   if (widthMasks[i] ==
-  //       0b1111111111111111111111111111111111111111111111111111111111111111)
-  //     LOG("INDEX", i);
-  // }
-      LOG("widthMasks[0]", std::bitset<64>(widthMasks[0]), std::bitset<64>(widthMasks[1]), std::bitset<64>(widthMasks[2]), std::bitset<64>(widthMasks[3]));
-      LOG("widthMasks[1]", std::bitset<64>(widthMasks[4]), std::bitset<64>(widthMasks[5]), std::bitset<64>(widthMasks[6]), std::bitset<64>(widthMasks[7]));
+    const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
+    widthMasks[wi / s_BITS] |= (1ULL << (wi % s_BITS));
 
-  // while (!_mm256_testz_si256(bits, bits)) {
-  //   const uint8_t w = ffs256(bits) - 1;
-  //   const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
-  //   widthMasks[wi / s_CHUNK_SIZE] |= (1ULL << (wi % s_CHUNK_SIZE));
+    const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
+    heightMasks[hi / s_BITS] |= (1ULL << (hi % s_BITS));
 
-  //   const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
-  //   heightMasks[hi / s_CHUNK_SIZE] |= (1ULL << (hi % s_CHUNK_SIZE));
-
-  //   bits = clb256(bits, w + 1);
-  // }
+    bits = clb256(bits, w + 1);
+  }
 }
 
 void GreedyMeshi256::PrepareWidthHeightMasks(
     uint64_t *bits, uint8_t paddingIndex, uint8_t *padding,
     uint64_t *widthStart, uint64_t *heightStart, uint64_t *widthEnd,
     uint64_t *heightEnd) {
-  for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
-    for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
 
-      unsigned int i = (s_CHUNK_SIZE * (a + (s_CHUNK_SIZE * b))) / s_CHUNK_SIZE;
+  // for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
+  // for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
+  for (uint8_t a = 0; a < 64; a++)
+    for (uint8_t b = 0; b < 64; b++) {
+
+      unsigned int ri = a + (s_CHUNK_SIZE * b);
+      unsigned int i = ri * s_STEPS;
 
       /**
        * Get the bitmask at index a,b
@@ -41,7 +37,7 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
        * The first & last will always be a zero because there is no neighbour
        * next to them. 0...1 => 1...1 => 1...0
        */
-      const uint8_t paddingMask = padding[i];
+      const uint8_t paddingMask = padding[ri];
 
       /**
        * Shift right to remove the LSB padding bit and extract the following
@@ -470,6 +466,11 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   uint8_t *padding =
       static_cast<uint8_t *>(_mm_malloc(sizeof(uint8_t) * s_MASK_LENGTH, 32));
 
+  memset(rows, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  memset(columns, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  memset(layers, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  memset(padding, 0, sizeof(uint8_t) * s_MASK_LENGTH);
+
   bool hasVoxels = false;
 
   for (int x = 0; x < s_CHUNK_SIZE; x++)
@@ -493,15 +494,6 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   if (!hasVoxels)
     return;
 
-  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-    if (rows[i] ==
-        0b1111111111111111111111111111111111111111111111111111111111111111)
-      LOG("INDEX", i);
-  }
-
-  LOG("Row Bits", std::bitset<64>(rows[0]), std::bitset<64>(rows[1]),
-      std::bitset<64>(rows[2]), std::bitset<64>(rows[3]));
-
   /**
    * Here we capture the padding bit
    * Every chunk we need to get the neighbour chunks and check
@@ -521,16 +513,17 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
 
     int fast = i % s_CHUNK_SIZE;
     int slow = (i / s_CHUNK_SIZE) % s_CHUNK_SIZE;
+    int pi = i / s_STEPS;
 
     if (!_mm256_testz_si256(row, row)) {
       int rMSB = (s_CHUNK_SIZE - 1) - clz256(&rows[i]) + 1;
       int rLSB = ctz256(&rows[i]) - 1;
 
       if (tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
-        padding[i] |= (1ULL << 1);
+        padding[pi] |= (1ULL << 1);
 
       if (tree->get(originX + rLSB, fast + originY, slow + originZ, depth))
-        padding[i] |= (1ULL << 0);
+        padding[pi] |= (1ULL << 0);
     }
 
     if (!_mm256_testz_si256(column, column)) {
@@ -538,10 +531,10 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
       int cLSB = ctz256(&columns[i]) - 1;
 
       if (tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
-        padding[i] |= (1ULL << 3);
+        padding[pi] |= (1ULL << 3);
 
       if (tree->get(fast + originX, originY + cLSB, slow + originZ, depth))
-        padding[i] |= (1ULL << 2);
+        padding[pi] |= (1ULL << 2);
     }
 
     if (!_mm256_testz_si256(layer, layer)) {
@@ -549,10 +542,10 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
       int lLSB = ctz256(&layers[i]) - 1;
 
       if (tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
-        padding[i] |= (1ULL << 5);
+        padding[pi] |= (1ULL << 5);
 
       if (tree->get(slow + originX, fast + originY, originZ + lLSB, depth))
-        padding[i] |= (1ULL << 4);
+        padding[pi] |= (1ULL << 4);
     }
   }
 
@@ -567,6 +560,11 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
       static_cast<uint64_t *>(_mm_malloc(sizeof(uint64_t) * s_MASK_LENGTH, 32));
   uint64_t *heightEnd =
       static_cast<uint64_t *>(_mm_malloc(sizeof(uint64_t) * s_MASK_LENGTH, 32));
+
+  std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(widthEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
 
   // /**
   //  * Culls the column/row/layer
@@ -586,8 +584,8 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(rows, 0, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
-  // GreedyMeshi256Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
-  //                    vertices, FaceType::LEFT, FaceType::RIGHT);
+  GreedyMeshi256Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
+                     vertices, FaceType::LEFT, FaceType::RIGHT);
 
   // std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
   // std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);

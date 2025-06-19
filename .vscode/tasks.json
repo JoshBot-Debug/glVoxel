@@ -11,6 +11,16 @@
       },
       "problemMatcher": ["$gcc"]
     },
+     {
+      "label": "Build Debug \\w STL",
+      "type": "shell",
+      "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_STL_DEBUG=ON && cmake --build build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
+    },
     {
       "label": "Build Release",
       "type": "shell",

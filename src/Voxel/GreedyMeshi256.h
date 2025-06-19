@@ -17,11 +17,10 @@ public:
   static constexpr uint8_t s_BITS = 64;
   static constexpr uint16_t s_CHUNK_SIZE = 256;
   static constexpr uint16_t s_STEPS = s_CHUNK_SIZE / s_BITS;
-  static constexpr unsigned int s_MASK_LENGTH = (s_BITS * s_BITS) * s_STEPS;
-      // (s_CHUNK_SIZE * s_CHUNK_SIZE * s_CHUNK_SIZE) / s_BITS;
+  static constexpr unsigned int s_MASK_LENGTH = (s_CHUNK_SIZE * s_CHUNK_SIZE * s_CHUNK_SIZE) / s_BITS;
 
 private:
-  static void SetWidthHeight(uint8_t a, uint8_t b, __m256i bits,
+  static void SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                              uint64_t *widthMasks, uint64_t *heightMasks);
 
   static void PrepareWidthHeightMasks(uint64_t *bits, uint8_t paddingIndex,

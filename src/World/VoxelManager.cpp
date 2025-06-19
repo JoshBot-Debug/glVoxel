@@ -153,16 +153,21 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
       for (int x = 0; x < s_ChunkSize; x++)
         for (int y = 0; y < s_ChunkSize; y++) {
           int index = x + s_ChunkSize * (z + s_ChunkSize * y);
+
+          mask[index / 64] =
+              0b1111111111111111111111111111111111111111111111111111111111111111;
           // if (y >= thresholdFrom && y < thresholdTo)
           // mask[index / 64] |= 1ULL << (index % 64);
-          if(z == 0 && y == 0)
-          {
-            mask[index / 64] = 0b1111111111111111111111111111111111111111111111111111111111111111;
-          }
-          else
-          {
-            mask[index / 64] = 0b0111111111111111111111111111111111111111111111111111111111111110;
-          }
+          // if(z == 0 && y == 0)
+          // {
+          //   mask[index / 64] =
+          //   0b1111111111111111111111111111111111111111111111111111111111111111;
+          // }
+          // else
+          // {
+          //   mask[index / 64] =
+          //   0b0111111111111111111111111111111111111111111111111111111111111110;
+          // }
         }
 
     // for (int z = 0; z < s_ChunkSize; z++)
