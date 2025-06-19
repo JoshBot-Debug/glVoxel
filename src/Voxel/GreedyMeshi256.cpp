@@ -131,95 +131,115 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
                                         std::vector<Vertex> &vertices,
                                         FaceType type) {
   while (!_mm256_testz_si256(bits, bits)) {
-    const uint8_t w = ffs256(bits) - 1;
+    const uint16_t w = ffs256(bits) - 1;
     bits = clb256(bits, w + 1);
 
-    const uint64_t &width =
-        widthMasks[(s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE] &
-        ~((1ULL << b) - 1);
+    unsigned int cwi = w + (s_CHUNK_SIZE * a);
+    unsigned int wi = cwi * s_STEPS;
 
-    if (!width)
+    __m256i widthMask =
+        _mm256_load_si256(reinterpret_cast<const __m256i *>(&widthMasks[wi]));
+
+    __m256i width = clb256(widthMask, b);
+
+    if (!_mm256_testz_si256(width, width))
       continue;
 
-    const uint8_t widthOffset = __builtin_ffsll(width) - 1;
+    const uint16_t widthOffset = ffs256(width) - 1;
 
-    uint8_t widthSize =
-        ~width == 0 ? s_CHUNK_SIZE : __builtin_ctzll(~(width >> widthOffset));
-
-    const uint64_t &height =
-        heightMasks[(s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * (int)(widthOffset)))) /
-                    s_CHUNK_SIZE] &
-        ~((1ULL << a) - 1);
-
-    const uint8_t heightOffset = __builtin_ffsll(height) - 1;
-
-    uint8_t heightSize = ~height == 0
+    __m256i wsMask =
+        _mm256_xor_si256(sr256(width, widthOffset), _mm256_set1_epi64x(-1));
+    uint16_t widthSize = _mm256_testc_si256(width, _mm256_set1_epi64x(-1))
                              ? s_CHUNK_SIZE
-                             : __builtin_ctzll(~(height >> heightOffset));
+                             : ctz256(wsMask);
 
-    for (uint8_t i = heightOffset; i < heightOffset + heightSize; i++) {
-      const unsigned int index =
-          (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * i))) / s_CHUNK_SIZE;
+    unsigned int chi = w + (s_CHUNK_SIZE * (int)(widthOffset));
+    unsigned int hi = chi * s_STEPS;
 
-      const uint64_t SIZE =
-          widthMasks[index] &
-          (((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+    __m256i heightMask =
+        _mm256_load_si256(reinterpret_cast<const __m256i *>(&heightMasks[hi]));
+
+    __m256i height = clb256(heightMask, b);
+
+    const uint16_t heightOffset = ffs256(height) - 1;
+
+    __m256i hsMask =
+        _mm256_xor_si256(sr256(height, heightOffset), _mm256_set1_epi64x(-1));
+    uint16_t heightSize = _mm256_testc_si256(height, _mm256_set1_epi64x(-1))
+                              ? s_CHUNK_SIZE
+                              : ctz256(hsMask);
+
+    for (uint16_t i = heightOffset; i < heightOffset + heightSize; i++) {
+      const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
+      const unsigned int index = rowIndex * s_STEPS;
+
+      __m256i widthSizeMask =
+          (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL << widthSize)) - 1)
            << widthOffset);
 
-      if (SIZE == 0 ||
-          (~SIZE == 0
-               ? 0
-               : __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
-                     widthSize)) {
-        heightSize = i - heightOffset;
-        break;
-      }
+      // const uint64_t SIZE =
+      //     widthMasks[index] &
+      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL << widthSize) - 1)) << widthOffset);
 
-      widthMasks[index] &=
-          ~(((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
-            << widthOffset);
+      // const uint64_t SIZE =
+      //     widthMasks[index] &
+      //     (((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+      //      << widthOffset);
+
+      // if (SIZE == 0 ||
+      //     (~SIZE == 0
+      //          ? 0
+      //          : __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
+      //                widthSize)) {
+      //   heightSize = i - heightOffset;
+      //   break;
+      // }
+
+      // widthMasks[index] &=
+      //     ~(((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+      //       << widthOffset);
     }
 
-    switch (type) {
-    case FaceType::TOP:
-      Face::Top(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
-                w + (offsetPosition.y * s_CHUNK_SIZE),
-                a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
-                heightSize);
-      break;
-    case FaceType::BOTTOM:
-      Face::Bottom(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
-                   w + (offsetPosition.y * s_CHUNK_SIZE),
-                   a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
-                   heightSize);
-      break;
+    // switch (type) {
+    // case FaceType::TOP:
+    //   Face::Top(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
+    //             w + (offsetPosition.y * s_CHUNK_SIZE),
+    //             a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
+    //             heightSize);
+    //   break;
+    // case FaceType::BOTTOM:
+    //   Face::Bottom(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
+    //                w + (offsetPosition.y * s_CHUNK_SIZE),
+    //                a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
+    //                heightSize);
+    //   break;
 
-    case FaceType::LEFT:
-      Face::Left(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
-                 widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-                 a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
-                 heightSize);
-      break;
-    case FaceType::RIGHT:
-      Face::Right(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
-                  widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-                  a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
-                  heightSize);
+    // case FaceType::LEFT:
+    //   Face::Left(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
+    //              widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+    //              a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
+    //              heightSize);
+    //   break;
+    // case FaceType::RIGHT:
+    //   Face::Right(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
+    //               widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+    //               a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
+    //               heightSize);
 
-      break;
-    case FaceType::FRONT:
-      Face::Front(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
-                  widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-                  w + (offsetPosition.z * s_CHUNK_SIZE), heightSize, widthSize,
-                  1.0f);
-      break;
-    case FaceType::BACK:
-      Face::Back(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
-                 widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-                 w + (offsetPosition.z * s_CHUNK_SIZE), heightSize, widthSize,
-                 1.0f);
-      break;
-    }
+    //   break;
+    // case FaceType::FRONT:
+    //   Face::Front(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
+    //               widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+    //               w + (offsetPosition.z * s_CHUNK_SIZE), heightSize,
+    //               widthSize, 1.0f);
+    //   break;
+    // case FaceType::BACK:
+    //   Face::Back(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
+    //              widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+    //              w + (offsetPosition.z * s_CHUNK_SIZE), heightSize,
+    //              widthSize, 1.0f);
+    //   break;
+    // }
   }
 }
 
@@ -230,13 +250,16 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
                                         std::vector<Vertex> &vertices,
                                         FaceType startType, FaceType endType) {
 
-  for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
-    for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
-      // const uint64_t mask =
-      //     bits[(s_CHUNK_SIZE * (b + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE] &
-      //     ~0ULL;
-      __m256i mask = _mm256_load_si256(reinterpret_cast<const __m256i *>(
-          &bits[(s_CHUNK_SIZE * (b + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE]));
+  // for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
+  // for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
+  for (uint8_t a = 0; a < 64; a++)
+    for (uint8_t b = 0; b < 64; b++) {
+      // const uint64_t mask = bits[b + (s_CHUNK_SIZE * a)] & ~0ULL;
+      unsigned int ri = b + (s_CHUNK_SIZE * a);
+      unsigned int i = ri * s_STEPS;
+
+      __m256i mask =
+          _mm256_load_si256(reinterpret_cast<const __m256i *>(&bits[i]));
       mask = _mm256_and_si256(mask, _mm256_set1_epi64x(~0ULL));
 
       // mask & ~(mask << 1)
@@ -246,10 +269,10 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
       __m256i endMask = _mm256_and_si256(
           mask, _mm256_xor_si256(sr256(mask, 1), _mm256_set1_epi64x(-1)));
 
-      GreedyMeshi256Face(offsetPosition, a, b, startMask, widthStart,
-                         heightStart, vertices, startType);
-      GreedyMeshi256Face(offsetPosition, a, b, endMask, widthEnd, heightEnd,
-                         vertices, endType);
+      // GreedyMeshi256Face(offsetPosition, a, b, startMask, widthStart,
+      //                    heightStart, vertices, startType);
+      // GreedyMeshi256Face(offsetPosition, a, b, endMask, widthEnd, heightEnd,
+      //                    vertices, endType);
     }
 }
 
@@ -259,12 +282,9 @@ void GreedyMeshi256::CullMesh(const glm::ivec3 &offsetPosition,
                               uint64_t (&layers)[]) {
   for (uint8_t a = 0; a < s_CHUNK_SIZE; a++) {
     for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
-      uint64_t &column =
-          columns[(s_CHUNK_SIZE * (b + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE];
-      uint64_t &row =
-          rows[(s_CHUNK_SIZE * (b + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE];
-      uint64_t &depth =
-          layers[(s_CHUNK_SIZE * (b + (s_CHUNK_SIZE * a))) / s_CHUNK_SIZE];
+      uint64_t &column = columns[b + (s_CHUNK_SIZE * a)];
+      uint64_t &row = rows[b + (s_CHUNK_SIZE * a)];
+      uint64_t &depth = layers[b + (s_CHUNK_SIZE * a)];
 
       while (column) {
         const unsigned int offset = __builtin_ffsll(column) - 1;

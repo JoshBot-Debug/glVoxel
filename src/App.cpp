@@ -60,13 +60,39 @@ App::App()
 
   open();
 
+  // int widthSize = 8;
+  // int widthOffset = 16;
+  // int s_CHUNK_SIZE = 64;
+  // uint64_t widthMask64 =
+  //     0b11111111000000001111111100000000111111110000000011111111;
+
+  // // const uint64_t SIZE = widthMask64 &
+  // //                       (((widthSize >= s_CHUNK_SIZE ? 0ULL
+  // //                                                    : (1ULL << widthSize) -
+  // //                                                    1))
+  // //                        << widthOffset);
+
+  // const uint64_t SIZE =
+  //     widthMask64 & (((1ULL << widthSize) - 1) << widthOffset);
+
+  // std::cout << std::bitset<64>(widthMask64 &= (((1ULL << widthSize) - 1) << widthOffset)) << std::endl;
+  // std::cout << SIZE << std::endl;
+  // std::cout << std::bitset<64>(widthMask64) << std::endl;
   // alignas(32) uint64_t raw[4] = {
   //     0b0000000000000000000000000000000000000000000000000000000000000000,
   //     0b0000000000000000000000000000000000000000000000000000000000000000,
   //     0b0000000000000000000000000000000000000000000000000000000000000000,
   //     0b0000000000000000000000000000000000000000000000000000000000000000};
 
-  // __m256i vec = _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+  // __m256i widthMask =
+  //     _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+
+  // uint64_t widthMask64 =
+  //     0b1111111111111111111111111111111111111111111111111111111111111111;
+  // const uint64_t &width = widthMask64 & ~((1ULL << 1) - 1);
+
+  // std::cout << std::bitset<64>(width) << std::endl;
+  // print_m256i(widthMask);
 
   // std::cout << GreedyMeshi256::ctz256(vec) << std::endl;
   // std::cout << _mm256_testz_si256(vec, vec) << std::endl;
