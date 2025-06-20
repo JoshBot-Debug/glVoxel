@@ -236,6 +236,8 @@ void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
         GreedyMeshi256::Octree(this, vertices, cx * chunkSize, cy * chunkSize,
                                cz * chunkSize, 0, filter);
 
+  GreedyMesh64::Octree(this, vertices, 0, 0, 0, 0, filter);
+
   // const int chunkSize = GreedyMesh64::CHUNK_SIZE;
   // const int chunksPerAxis = std::max(1, m_Size / chunkSize);
 

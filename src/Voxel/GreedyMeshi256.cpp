@@ -4,7 +4,7 @@ void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                                     uint64_t *widthMasks,
                                     uint64_t *heightMasks) {
   while (!_mm256_testz_si256(bits, bits)) {
-    const uint8_t w = ffs256(bits) - 1;
+    const uint16_t w = ffs256(bits) - 1;
 
     const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
     widthMasks[wi / s_BITS] |= (1ULL << (wi % s_BITS));
@@ -13,7 +13,26 @@ void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
     heightMasks[hi / s_BITS] |= (1ULL << (hi % s_BITS));
 
     bits = clb256(bits, w + 1);
+    // LOG_TO_FILE("128", (int)a, (int)w, (int)b, (int)wi, (int)w);
   }
+  // uint64_t *p = (uint64_t *)&bits;
+  // LOG_TO_FILE("256", std::bitset<64>(p[0]), std::bitset<64>(p[1]),
+  //             std::bitset<64>(p[2]), std::bitset<64>(p[3]));
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
+  //   if (i >= 65536)
+  //     break;
+  //   __m256i mask =
+  //       _mm256_load_si256(reinterpret_cast<const __m256i *>(&widthMasks[i]));
+
+  //   if (!_mm256_testz_si256(mask, mask))
+  //     LOG(mask);
+  //     // LOG_256(mask);
+  //   // LOG_TO_FILE("128", i, std::bitset<64>(widthMasks[i]),
+  //   //             std::bitset<64>(widthMasks[i + 1]),
+  //   //             std::bitset<64>(widthMasks[i + 2]),
+  //   //                 std::bitset<64>(widthMasks[i + 3]));
+  // }
 }
 
 void GreedyMeshi256::PrepareWidthHeightMasks(
@@ -21,8 +40,6 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
     uint64_t *widthStart, uint64_t *heightStart, uint64_t *widthEnd,
     uint64_t *heightEnd) {
 
-  // for (uint8_t a = 0; a < s_CHUNK_SIZE; a++)
-  // for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
   for (uint16_t a = 0; a < s_CHUNK_SIZE; a++)
     for (uint16_t b = 0; b < s_CHUNK_SIZE; b++) {
 
@@ -106,10 +123,8 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
        * Check the padding mask, if the bit at 63 index is on
        * turn off the LSB of the end mask
        *
-       * This is done in order to not set the height & width of the face at
-       the
-       * end of the chunk if the neighbour is the same To avoid creating
-       faces
+       * This is done in order to not set the height & width of the face at the
+       * end of the chunk if the neighbour is the same To avoid creating faces
        * inbetween chunks
        *
        * If bit 63 of paddingMask is set, then clear bit 31 of endMask.
@@ -120,7 +135,7 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
         endMaskBits[msbIndex / s_BITS] &= ~(1ULL << (msbIndex % s_BITS));
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart);
-      SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
+      // SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
     }
 }
 
@@ -130,6 +145,18 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
                                         uint64_t *heightMasks,
                                         std::vector<Vertex> &vertices,
                                         FaceType type) {
+
+  // uint64_t *p = (uint64_t *)&bits;
+  // LOG_TO_FILE("128", std::bitset<64>(p[0]), std::bitset<64>(p[1]),
+  //             std::bitset<64>(p[2]), std::bitset<64>(p[3]));
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
+  //   LOG_TO_FILE("128", std::bitset<64>(heightMasks[i]),
+  //               std::bitset<64>(heightMasks[i + 1]),
+  //               std::bitset<64>(heightMasks[i + 2]),
+  //               std::bitset<64>(heightMasks[i + 3]));
+  // }
+
   while (!_mm256_testz_si256(bits, bits)) {
     const uint16_t w = ffs256(bits) - 1;
     bits = clb256(bits, w + 1);
@@ -142,13 +169,14 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
 
     __m256i width = clb256(widthMask, b);
 
-    if (!_mm256_testz_si256(width, width))
+    if (_mm256_testz_si256(width, width))
       continue;
 
     const uint16_t widthOffset = ffs256(width) - 1;
 
     __m256i wsMask =
         _mm256_xor_si256(sr256(width, widthOffset), _mm256_set1_epi64x(-1));
+
     uint16_t widthSize = _mm256_testc_si256(width, _mm256_set1_epi64x(-1))
                              ? s_CHUNK_SIZE
                              : ctz256(wsMask);
@@ -169,79 +197,78 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
                               ? s_CHUNK_SIZE
                               : ctz256(hsMask);
 
-    for (uint16_t i = heightOffset; i < heightOffset + heightSize; i++) {
-      const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
-      const unsigned int index = rowIndex * s_STEPS;
+    // LOG_TO_FILE("128", (int)widthSize, (int)heightSize);
 
-      // __m256i widthSizeMask =
-      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL <<
-      //     widthSize)) - 1)
-      //      << widthOffset);
+    // for (uint16_t i = heightOffset; i < heightOffset + heightSize; i++) {
+    //   const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
+    //   const unsigned int index = rowIndex * s_STEPS;
 
-      // const uint64_t SIZE =
-      //     widthMasks[index] &
-      //     (((widthSize >= s_CHUNK_SIZE ? _mm256_set1_epi64x(0) : (1ULL <<
-      //     widthSize) - 1)) << widthOffset);
+    //   __m256i widthSizeMask = GreedyMeshi256::mmr(widthSize, widthOffset);
+    //   __m256i widthMask = _mm256_load_si256(
+    //       reinterpret_cast<const __m256i *>(&widthMasks[index]));
 
-      // const uint64_t SIZE =
-      //     widthMasks[index] &
-      //     (((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
-      //      << widthOffset);
+    //   __m256i size = _mm256_and_si256(widthMask, widthSizeMask);
 
-      // if (SIZE == 0 ||
-      //     (~SIZE == 0
-      //          ? 0
-      //          : __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) - 1))) !=
-      //                widthSize)) {
-      //   heightSize = i - heightOffset;
-      //   break;
-      // }
+    //   __m256i sizeMask = _mm256_xor_si256(sr256(size, ffs256(size) - 1),
+    //   _mm256_set1_epi64x(-1));
 
-      // widthMasks[index] &=
-      //     ~(((widthSize >= s_CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
-      //       << widthOffset);
-    }
+    //   // LOG(widthSize, widthOffset);
+    //   // LOG_256(size);
 
-    // switch (type) {
-    // case FaceType::TOP:
-    //   Face::Top(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
-    //             w + (offsetPosition.y * s_CHUNK_SIZE),
-    //             a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
-    //             heightSize);
-    //   break;
-    // case FaceType::BOTTOM:
-    //   Face::Bottom(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
-    //                w + (offsetPosition.y * s_CHUNK_SIZE),
-    //                a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
-    //                heightSize);
-    //   break;
+    //   if (!_mm256_testz_si256(size, size) ||
+    //       !_mm256_testc_si256(size, _mm256_set1_epi64x(~0ULL)) &&
+    //           ctz256(sizeMask) != widthSize) {
+    //     heightSize = i - heightOffset;
+    //     break;
+    //   }
 
-    // case FaceType::LEFT:
-    //   Face::Left(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
-    //              widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-    //              a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
-    //              heightSize);
-    //   break;
-    // case FaceType::RIGHT:
-    //   Face::Right(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
-    //               widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-    //               a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
-    //               heightSize);
+    //   widthMask = _mm256_xor_si256(_mm256_and_si256(widthMask,
+    //   widthSizeMask),  _mm256_set1_epi64x(-1));
 
-    //   break;
-    // case FaceType::FRONT:
-    //   Face::Front(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
-    //               widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-    //               w + (offsetPosition.z * s_CHUNK_SIZE), heightSize,
-    //               widthSize, 1.0f);
-    //   break;
-    // case FaceType::BACK:
-    //   Face::Back(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
-    //              widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
-    //              w + (offsetPosition.z * s_CHUNK_SIZE), heightSize,
-    //              widthSize, 1.0f);
-    //   break;
+    //   _mm256_store_si256(reinterpret_cast<__m256i *>(&widthMasks[index]),
+    //                      widthMask);
     // }
+
+    switch (type) {
+    case FaceType::TOP:
+      Face::Top(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
+                w + (offsetPosition.y * s_CHUNK_SIZE),
+                a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
+                heightSize);
+      break;
+    case FaceType::BOTTOM:
+      Face::Bottom(vertices, widthOffset + (offsetPosition.x * s_CHUNK_SIZE),
+                   w + (offsetPosition.y * s_CHUNK_SIZE),
+                   a + (offsetPosition.z * s_CHUNK_SIZE), widthSize, 1.0f,
+                   heightSize);
+      break;
+
+    case FaceType::LEFT:
+      Face::Left(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
+                 widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+                 a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
+                 heightSize);
+      break;
+    case FaceType::RIGHT:
+      Face::Right(vertices, w + (offsetPosition.x * s_CHUNK_SIZE),
+                  widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+                  a + (offsetPosition.z * s_CHUNK_SIZE), 1.0f, widthSize,
+                  heightSize);
+
+      break;
+    case FaceType::FRONT:
+      Face::Front(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
+                  widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+                  w + (offsetPosition.z * s_CHUNK_SIZE), heightSize, widthSize,
+                  1.0f);
+      break;
+    case FaceType::BACK:
+      Face::Back(vertices, a + (offsetPosition.x * s_CHUNK_SIZE),
+                 widthOffset + (offsetPosition.y * s_CHUNK_SIZE),
+                 w + (offsetPosition.z * s_CHUNK_SIZE), heightSize, widthSize,
+                 1.0f);
+      break;
+    }
   }
 }
 
@@ -251,7 +278,6 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
                                         uint64_t *widthEnd, uint64_t *heightEnd,
                                         std::vector<Vertex> &vertices,
                                         FaceType startType, FaceType endType) {
-
   for (uint16_t a = 0; a < s_CHUNK_SIZE; a++)
     for (uint16_t b = 0; b < s_CHUNK_SIZE; b++) {
       // const uint64_t mask = bits[b + (s_CHUNK_SIZE * a)] & ~0ULL;
@@ -260,7 +286,6 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
 
       __m256i mask =
           _mm256_load_si256(reinterpret_cast<const __m256i *>(&bits[i]));
-      mask = _mm256_and_si256(mask, _mm256_set1_epi64x(~0ULL));
 
       // mask & ~(mask << 1)
       __m256i startMask = _mm256_and_si256(
@@ -269,71 +294,18 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
       __m256i endMask = _mm256_and_si256(
           mask, _mm256_xor_si256(sr256(mask, 1), _mm256_set1_epi64x(-1)));
 
-      // GreedyMeshi256Face(offsetPosition, a, b, startMask, widthStart,
-      //                    heightStart, vertices, startType);
+      // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
+      //   LOG_TO_FILE("128", std::bitset<64>(widthStart[i]),
+      //   std::bitset<64>(widthStart[i + 1]),
+      //               std::bitset<64>(widthStart[i + 2]),
+      //               std::bitset<64>(widthStart[i + 3]));
+      // }
+
+      GreedyMeshi256Face(offsetPosition, a, b, startMask, widthStart,
+                         heightStart, vertices, startType);
       // GreedyMeshi256Face(offsetPosition, a, b, endMask, widthEnd, heightEnd,
       //                    vertices, endType);
     }
-}
-
-void GreedyMeshi256::CullMesh(const glm::ivec3 &offsetPosition,
-                              std::vector<Vertex> &vertices,
-                              uint64_t (&columns)[], uint64_t (&rows)[],
-                              uint64_t (&layers)[]) {
-  for (uint8_t a = 0; a < s_CHUNK_SIZE; a++) {
-    for (uint8_t b = 0; b < s_CHUNK_SIZE; b++) {
-      uint64_t &column = columns[b + (s_CHUNK_SIZE * a)];
-      uint64_t &row = rows[b + (s_CHUNK_SIZE * a)];
-      uint64_t &depth = layers[b + (s_CHUNK_SIZE * a)];
-
-      while (column) {
-        const unsigned int offset = __builtin_ffsll(column) - 1;
-        unsigned int size =
-            __builtin_ctzll(~(column >> (__builtin_ffsll(column) - 1)));
-
-        column &= ~((1ULL << (size + offset)) - 1);
-
-        Face::Top(vertices, (offsetPosition.x * s_CHUNK_SIZE) + b,
-                  (offsetPosition.y * s_CHUNK_SIZE) + offset,
-                  (offsetPosition.z * s_CHUNK_SIZE) + a, 1.0f, size, 1.0f);
-        Face::Bottom(vertices, (offsetPosition.x * s_CHUNK_SIZE) + b,
-                     (offsetPosition.y * s_CHUNK_SIZE) + offset,
-                     (offsetPosition.z * s_CHUNK_SIZE) + a, 1.0f, size, 1.0f);
-      }
-
-      while (row) {
-        const unsigned int offset = __builtin_ffsll(row) - 1;
-        unsigned int size =
-            __builtin_ctzll(~(row >> (__builtin_ffsll(row) - 1)));
-
-        row &= ~((1ULL << (size + offset)) - 1);
-
-        Face::Left(vertices, (offsetPosition.x * s_CHUNK_SIZE) + offset,
-                   (offsetPosition.y * s_CHUNK_SIZE) + b,
-                   (offsetPosition.z * s_CHUNK_SIZE) + a, size, 1.0f, 1.0f);
-        Face::Right(vertices, (offsetPosition.x * s_CHUNK_SIZE) + offset,
-                    (offsetPosition.y * s_CHUNK_SIZE) + b,
-                    (offsetPosition.z * s_CHUNK_SIZE) + a, size, 1.0f, 1.0f);
-      }
-
-      while (depth) {
-        const unsigned int offset = __builtin_ffsll(depth) - 1;
-        unsigned int size =
-            __builtin_ctzll(~(depth >> (__builtin_ffsll(depth) - 1)));
-
-        depth &= ~((1ULL << (size + offset)) - 1);
-
-        Face::Front(vertices, (offsetPosition.x * s_CHUNK_SIZE) + a,
-                    (offsetPosition.y * s_CHUNK_SIZE) + b,
-                    (offsetPosition.z * s_CHUNK_SIZE) + offset, 1.0f, 1.0f,
-                    size);
-        Face::Back(vertices, (offsetPosition.x * s_CHUNK_SIZE) + a,
-                   (offsetPosition.y * s_CHUNK_SIZE) + b,
-                   (offsetPosition.z * s_CHUNK_SIZE) + offset, 1.0f, 1.0f,
-                   size);
-      }
-    }
-  }
 }
 
 /**
@@ -381,15 +353,27 @@ __m256i GreedyMeshi256::sl256(__m256i &bits, int n) {
     return _mm256_setzero_si256();
 
   // Shift all lanes left
-  __m256i shifted = _mm256_slli_epi64(bits, n);
+  __m256i shifted = _mm256_slli_epi64(bits, n % 64);
 
   // Shift all lanes right by 64 - n
   // This moves n MSB of each lane to the LSB side
-  __m256i carry = _mm256_srli_epi64(bits, 64 - n);
+  __m256i carry = _mm256_srli_epi64(bits, 64 - (n % 64));
 
   carry = _mm256_permute4x64_epi64(carry, _MM_SHUFFLE(0, 3, 2, 1));
   carry = _mm256_and_si256(carry, _mm256_set_epi64x(0LL, -1LL, -1LL, -1LL));
+
   __m256i result = _mm256_or_si256(shifted, carry);
+
+  if ((n / 64) == 1) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(0, 3, 2, 1));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(0LL, -1LL, -1LL, -1LL));
+  } else if ((n / 64) == 2) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(0, 0, 3, 2));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(0LL, 0LL, -1LL, -1LL));
+  } else if ((n / 64) == 3) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(0, 0, 0, 3));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(0LL, 0LL, 0LL, -1LL));
+  }
 
   return result;
 }
@@ -403,15 +387,26 @@ __m256i GreedyMeshi256::sr256(__m256i &bits, int n) {
     return _mm256_setzero_si256();
 
   // Shift all lanes right
-  __m256i shifted = _mm256_srli_epi64(bits, n);
+  __m256i shifted = _mm256_srli_epi64(bits, n % 64);
 
   // Shift all lanes left by 64 - n
   // This moves n LSB of each lane to the MSB side
-  __m256i carry = _mm256_slli_epi64(bits, 64 - n);
+  __m256i carry = _mm256_slli_epi64(bits, 64 - (n % 64));
 
   carry = _mm256_permute4x64_epi64(carry, _MM_SHUFFLE(2, 1, 0, 0));
   carry = _mm256_and_si256(carry, _mm256_set_epi64x(-1LL, -1LL, -1LL, 0LL));
   __m256i result = _mm256_or_si256(shifted, carry);
+
+  if ((n / 64) == 1) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(2, 1, 0, 0));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(-1LL, -1LL, -1LL, 0LL));
+  } else if ((n / 64) == 2) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(1, 0, 0, 0));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(-1LL, -1LL, 0LL, 0LL));
+  } else if ((n / 64) == 3) {
+    result = _mm256_permute4x64_epi64(result, _MM_SHUFFLE(0, 0, 0, 0));
+    result = _mm256_and_si256(result, _mm256_set_epi64x(-1LL, 0LL, 0LL, 0LL));
+  }
 
   return result;
 }
@@ -432,15 +427,15 @@ int GreedyMeshi256::ffs256(__m256i &bits) {
 }
 
 __m256i GreedyMeshi256::clb256(__m256i &bits, int n) {
-  if (n >= s_CHUNK_SIZE)
+  if (n >= 256)
     return _mm256_setzero_si256();
 
-  uint64_t maskArr[4] = {~0ULL, ~0ULL, ~0ULL, ~0ULL};
+  alignas(32) uint64_t maskArr[4] = {~0ULL, ~0ULL, ~0ULL, ~0ULL};
 
   for (int i = 3; i >= 0; --i) {
-    if (n >= s_BITS) {
+    if (n >= 64) {
       maskArr[i] = 0ULL;
-      n -= s_BITS;
+      n -= 64;
     } else {
       maskArr[i] = (maskArr[i] & ~((1ULL << n) - 1));
       break;
@@ -449,6 +444,27 @@ __m256i GreedyMeshi256::clb256(__m256i &bits, int n) {
 
   __m256i mask = _mm256_load_si256(reinterpret_cast<const __m256i *>(&maskArr));
   return _mm256_and_si256(bits, mask);
+}
+
+__m256i GreedyMeshi256::mmr(int size, int offset) {
+  if (size >= 256 || offset >= 256)
+    return _mm256_setzero_si256();
+
+  alignas(32) uint64_t arr[4] = {0ULL, 0ULL, 0ULL, 0ULL};
+
+  for (int i = 3; i >= 0; --i) {
+    if (size >= 64) {
+      arr[i] = ~0ULL;
+      size -= 64;
+    } else {
+      arr[i] = ((1ULL << size) - 1);
+      break;
+    }
+  }
+
+  __m256i mask = _mm256_load_si256(reinterpret_cast<const __m256i *>(&arr));
+
+  return sl256(mask, offset);
 }
 
 // AND
@@ -569,8 +585,6 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
     }
   }
 
-  LOG("Padding at Index 0", std::bitset<8>(padding[0]));
-
   uint64_t *widthStart =
       static_cast<uint64_t *>(_mm_malloc(sizeof(uint64_t) * s_MASK_LENGTH, 32));
   uint64_t *heightStart =
@@ -604,6 +618,16 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(rows, 0, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
+  //   __m256i mask =
+  //       _mm256_load_si256(reinterpret_cast<const __m256i
+  //       *>(&heightStart[i]));
+
+  //   if (!_mm256_testz_si256(mask, mask))
+  //     LOG_256(mask);
+  // }
+
   GreedyMeshi256Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
                      vertices, FaceType::LEFT, FaceType::RIGHT);
 
@@ -616,8 +640,7 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   //                         widthEnd, heightEnd);
 
   // GreedyMeshi256Axis(coord, columns, widthStart, heightStart, widthEnd,
-  // heightEnd,
-  //                  vertices, FaceType::BOTTOM, FaceType::TOP);
+  //                    heightEnd, vertices, FaceType::BOTTOM, FaceType::TOP);
 
   // std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
   // std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
@@ -628,8 +651,7 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   // widthEnd,
   //                         heightEnd);
   // GreedyMeshi256Axis(coord, layers, widthStart, heightStart, widthEnd,
-  // heightEnd,
-  //                  vertices, FaceType::FRONT, FaceType::BACK);
+  //                    heightEnd, vertices, FaceType::FRONT, FaceType::BACK);
 
   _mm_free(rows);
   _mm_free(columns);

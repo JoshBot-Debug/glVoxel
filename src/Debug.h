@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <bitset>
+#include <immintrin.h>
 
 template <typename... Args>
 inline void Log(const char *file, int line, const char *functionName,
@@ -62,11 +64,19 @@ inline void EndTimer(const char *file, int line, const char *functionName,
   Log(file, line, functionName, duration.count(), "ms");
 }
 
+inline void Log256(const char *file, int line, const char *functionName,
+                   __m256i val) {
+  uint64_t *p = (uint64_t *)&val;
+  Log(file, line, functionName, std::bitset<64>(p[0]), std::bitset<64>(p[1]),
+      std::bitset<64>(p[2]), std::bitset<64>(p[3]));
+}
+
 #define LOG(...) Log(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define BENCHMARK(...) Benchmark(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define START_TIMER std::chrono::high_resolution_clock::now()
 #define END_TIMER(...) EndTimer(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_IVEC3(...) LogIVec3(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_256(...) Log256(__FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_TO_FILE(outputFile, ...)                                           \
   LogToFile(__FILE__, __LINE__, __func__, outputFile, __VA_ARGS__)
 
@@ -77,4 +87,5 @@ inline void EndTimer(const char *file, int line, const char *functionName,
 #define END_TIMER(...)
 #define LOG_IVEC3(...)
 #define LOG_TO_FILE(...)
+#define LOG_256(...)
 #endif

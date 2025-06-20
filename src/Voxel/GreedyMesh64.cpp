@@ -13,7 +13,13 @@ void GreedyMesh64::SetWidthHeight(uint8_t a, uint8_t b, uint64_t bits,
     heightMasks[hi / CHUNK_SIZE] |= (1ULL << (hi % CHUNK_SIZE));
 
     bits = ClearLowestBits(bits, w + 1);
+    // LOG_TO_FILE("64", (int)a, (int)w, (int)b, (int)wi, (int)w);
   }
+  // LOG_TO_FILE("64", std::bitset<64>(bits));
+  // for (size_t i = 0; i < MASK_LENGTH; i++) {
+  //   if (widthMasks[i] != 0)
+  //     LOG_TO_FILE("64", i, std::bitset<64>(widthMasks[i]));
+  // }
 }
 
 void GreedyMesh64::PrepareWidthHeightMasks(
@@ -94,7 +100,7 @@ void GreedyMesh64::PrepareWidthHeightMasks(
         endMask &= ~(1ULL << msbIndex);
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart);
-      SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
+      // SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
     }
 }
 
@@ -104,15 +110,26 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
                                     uint64_t (&heightMasks)[],
                                     std::vector<Vertex> &vertices,
                                     FaceType type) {
+
+  // LOG_TO_FILE("64", std::bitset<64>(bits));
+
+  // for (size_t i = 0; i < MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("64", std::bitset<64>(heightMasks[i]));
+  // }
+
   while (bits) {
     const uint8_t w = __builtin_ffsll(bits) - 1;
     bits = ClearLowestBits(bits, w + 1);
 
     const uint64_t &width =
-        widthMasks[(w + (CHUNK_SIZE * a))] & ~((1ULL << b) - 1);
+        ClearLowestBits(widthMasks[(w + (CHUNK_SIZE * a))], b);
+
+    // LOG(std::bitset<64>(widthMasks[(w + (CHUNK_SIZE * a))]));
 
     if (!width)
       continue;
+
+    // LOG(std::bitset<64>(width));
 
     const uint8_t widthOffset = __builtin_ffsll(width) - 1;
 
@@ -120,31 +137,35 @@ void GreedyMesh64::GreedyMesh64Face(const glm::ivec3 &offsetPosition, uint8_t a,
         ~width == 0 ? CHUNK_SIZE : __builtin_ctzll(~(width >> widthOffset));
 
     const uint64_t &height =
-        heightMasks[w + (CHUNK_SIZE * (int)(widthOffset))] & ~((1ULL << a) - 1);
+        ClearLowestBits(heightMasks[w + (CHUNK_SIZE * (int)(widthOffset))], a);
 
     const uint8_t heightOffset = __builtin_ffsll(height) - 1;
 
     uint8_t heightSize =
         ~height == 0 ? CHUNK_SIZE : __builtin_ctzll(~(height >> heightOffset));
 
-    for (uint8_t i = heightOffset; i < heightOffset + heightSize; i++) {
-      const unsigned int index = w + (CHUNK_SIZE * i);
+    // LOG_TO_FILE("64", (int)widthSize, (int)heightSize);
 
-      const uint64_t widthSizeMask =
-          (((widthSize >= CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
-           << widthOffset);
+    // for (uint8_t i = heightOffset; i < heightOffset + heightSize; i++) {
+    //   const unsigned int index = w + (CHUNK_SIZE * i);
 
-      const uint64_t SIZE = widthMasks[index] & widthSizeMask;
+    //   const uint64_t widthSizeMask =
+    //       (((widthSize >= CHUNK_SIZE ? 0ULL : (1ULL << widthSize)) - 1)
+    //        << widthOffset);
 
-      if (SIZE == 0 ||
-          (SIZE != ~0ULL && __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE) -
-                                                       1))) != widthSize)) {
-        heightSize = i - heightOffset;
-        break;
-      }
+    //   const uint64_t SIZE = widthMasks[index] & widthSizeMask;
 
-      widthMasks[index] &= ~widthSizeMask;
-    }
+    //   // LOG((int)widthSize, (int)widthOffset);
+    //   // LOG(std::bitset<64>(widthSizeMask));
+    //   if (SIZE == 0 ||
+    //       (SIZE != ~0ULL && __builtin_ctzll(~(SIZE >> (__builtin_ffsll(SIZE)
+    //       - 1))) != widthSize)) {
+    //     heightSize = i - heightOffset;
+    //     break;
+    //   }
+
+    //   widthMasks[index] &= ~widthSizeMask;
+    // }
 
     switch (type) {
     case FaceType::TOP:
@@ -194,15 +215,18 @@ void GreedyMesh64::GreedyMesh64Axis(
     uint64_t (&widthStart)[], uint64_t (&heightStart)[], uint64_t (&widthEnd)[],
     uint64_t (&heightEnd)[], std::vector<Vertex> &vertices, FaceType startType,
     FaceType endType) {
-
   for (uint8_t a = 0; a < CHUNK_SIZE; a++)
     for (uint8_t b = 0; b < CHUNK_SIZE; b++) {
-      const uint64_t mask = bits[b + (CHUNK_SIZE * a)] & 0xFFFFFFFFFFFFFFFFULL;
+      const uint64_t mask = bits[b + (CHUNK_SIZE * a)];
+
+      //  for (size_t i = 0; i < MASK_LENGTH; i++) {
+      //     LOG_TO_FILE("64", std::bitset<64>(widthStart[i]));
+      //   }
 
       GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                        heightStart, vertices, startType);
-      GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
-                       heightEnd, vertices, endType);
+      // GreedyMesh64Face(offsetPosition, a, b, mask & ~(mask >> 1), widthEnd,
+      //                  heightEnd, vertices, endType);
     }
 }
 
@@ -390,27 +414,36 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
 
   PrepareWidthHeightMasks(rows, 0, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
+
+  // for (size_t i = 0; i < MASK_LENGTH; i++) {
+  //   if (heightStart[i])
+  //     LOG(std::bitset<64>(heightStart[i]));
+  // }
+
   GreedyMesh64Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
                    vertices, FaceType::LEFT, FaceType::RIGHT);
 
-  std::memset(widthStart, 0, sizeof(widthStart));
-  std::memset(heightStart, 0, sizeof(heightStart));
-  std::memset(widthEnd, 0, sizeof(widthEnd));
-  std::memset(heightEnd, 0, sizeof(heightEnd));
+  // std::memset(widthStart, 0, sizeof(widthStart));
+  // std::memset(heightStart, 0, sizeof(heightStart));
+  // std::memset(widthEnd, 0, sizeof(widthEnd));
+  // std::memset(heightEnd, 0, sizeof(heightEnd));
 
-  PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
-                          widthEnd, heightEnd);
+  // PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
+  //                         widthEnd, heightEnd);
 
-  GreedyMesh64Axis(coord, columns, widthStart, heightStart, widthEnd, heightEnd,
-                   vertices, FaceType::BOTTOM, FaceType::TOP);
+  // GreedyMesh64Axis(coord, columns, widthStart, heightStart, widthEnd,
+  // heightEnd,
+  //                  vertices, FaceType::BOTTOM, FaceType::TOP);
 
-  std::memset(widthStart, 0, sizeof(widthStart));
-  std::memset(heightStart, 0, sizeof(heightStart));
-  std::memset(widthEnd, 0, sizeof(widthEnd));
-  std::memset(heightEnd, 0, sizeof(heightEnd));
+  // std::memset(widthStart, 0, sizeof(widthStart));
+  // std::memset(heightStart, 0, sizeof(heightStart));
+  // std::memset(widthEnd, 0, sizeof(widthEnd));
+  // std::memset(heightEnd, 0, sizeof(heightEnd));
 
-  PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart, widthEnd,
-                          heightEnd);
-  GreedyMesh64Axis(coord, layers, widthStart, heightStart, widthEnd, heightEnd,
-                   vertices, FaceType::FRONT, FaceType::BACK);
+  // PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart,
+  // widthEnd,
+  //                         heightEnd);
+  // GreedyMesh64Axis(coord, layers, widthStart, heightStart, widthEnd,
+  // heightEnd,
+  //                  vertices, FaceType::FRONT, FaceType::BACK);
 }

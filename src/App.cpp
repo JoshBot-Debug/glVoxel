@@ -35,8 +35,10 @@ App::App()
   m_ControlPanel.setResourceManager(&m_Resource);
   m_ControlPanel.setWorld(&m_World);
 
-  m_Camera.setPosition(0.0f, 175.0f, 0.0f);
-  m_Camera.setRotation(-20.0f, 130.0f, 0.0f);
+  // m_Camera.setPosition(0.0f, 175.0f, 0.0f);
+  // m_Camera.setRotation(-20.0f, 130.0f, 0.0f);
+  m_Camera.setPosition(90.892f, 65.799f, 45.004f);
+  m_Camera.setRotation(-16.000f, -84.600f, 0.0f);
   m_Camera.setProjection(45, 0.01f, 10000.0f);
 
   m_World.setCamera(&m_Camera);
@@ -60,32 +62,48 @@ App::App()
 
   open();
 
-  // int widthSize = 8;
-  // int widthOffset = 16;
+  // int size = 8;
+  // int offset = 0;
   // int s_CHUNK_SIZE = 64;
   // uint64_t widthMask64 =
   //     0b11111111000000001111111100000000111111110000000011111111;
 
-  // // const uint64_t SIZE = widthMask64 &
-  // //                       (((widthSize >= s_CHUNK_SIZE ? 0ULL
-  // //                                                    : (1ULL << widthSize) -
-  // //                                                    1))
-  // //                        << widthOffset);
+  // const uint64_t mask64 =
+  //     (((size >= s_CHUNK_SIZE ? 0ULL : (1ULL << size)) - 1) << offset);
+
+  // const uint64_t result64 = widthMask64 & mask64;
+
+  // std::cout << std::bitset<64>(mask64) << std::endl;
+  // std::cout << std::bitset<64>(result64) << std::endl;
+  // std::cout << std::bitset<64>(widthMask64) << std::endl;
+  // widthMask64 &= ~mask64;
+  // std::cout << std::bitset<64>(widthMask64) << std::endl;
+
+  // alignas(32) uint64_t raw[4] = {
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111111,
+  //     0b1111111111111111111111111111111111111111111111111111111111111111};
+
+  // // size = 65;
+  // // offset = 191;
+  // __m256i widthMask256 =
+  //     _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+
+  // __m256i result = GreedyMeshi256::clb256(widthMask256, 128);
+
+  // print_m256i(result);
+
+  // __m256i mask256 = GreedyMeshi256::mmr(size, offset);
+
+  // print_m256i(mask256);
 
   // const uint64_t SIZE =
   //     widthMask64 & (((1ULL << widthSize) - 1) << widthOffset);
 
-  // std::cout << std::bitset<64>(widthMask64 &= (((1ULL << widthSize) - 1) << widthOffset)) << std::endl;
-  // std::cout << SIZE << std::endl;
-  // std::cout << std::bitset<64>(widthMask64) << std::endl;
-  // alignas(32) uint64_t raw[4] = {
-  //     0b0000000000000000000000000000000000000000000000000000000000000000,
-  //     0b0000000000000000000000000000000000000000000000000000000000000000,
-  //     0b0000000000000000000000000000000000000000000000000000000000000000,
-  //     0b0000000000000000000000000000000000000000000000000000000000000000};
-
-  // __m256i widthMask =
-  //     _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+  // std::cout << std::bitset<64>(widthMask64 &= (((1ULL << widthSize) - 1) <<
+  // widthOffset)) << std::endl; std::cout << SIZE << std::endl; std::cout <<
+  // std::bitset<64>(widthMask64) << std::endl;
 
   // uint64_t widthMask64 =
   //     0b1111111111111111111111111111111111111111111111111111111111111111;

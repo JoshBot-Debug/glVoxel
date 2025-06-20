@@ -107,7 +107,7 @@ void GreedyMesh32::GreedyMesh32Face(const glm::ivec3 &offsetPosition, uint8_t a,
     const uint8_t w = __builtin_ffs(bits) - 1;
     bits = ClearLowestBits(bits, w + 1);
 
-    const uint32_t &width = widthMasks[w + (CHUNK_SIZE * a)] & ~((1U << b) - 1);
+    const uint32_t &width = ClearLowestBits(widthMasks[(w + (CHUNK_SIZE * a))], b);
 
     if (!width)
       continue;
@@ -117,8 +117,7 @@ void GreedyMesh32::GreedyMesh32Face(const glm::ivec3 &offsetPosition, uint8_t a,
     uint8_t widthSize =
         ~width == 0 ? CHUNK_SIZE : __builtin_ctz(~(width >> widthOffset));
 
-    const uint32_t &height =
-        heightMasks[w + (CHUNK_SIZE * (int)(widthOffset))] & ~((1U << a) - 1);
+    const uint32_t &height = ClearLowestBits(heightMasks[w + (CHUNK_SIZE * (int)(widthOffset))], a);
 
     const uint8_t heightOffset = __builtin_ffs(height) - 1;
 
@@ -194,7 +193,7 @@ void GreedyMesh32::GreedyMesh32Axis(
     FaceType endType) {
   for (uint8_t a = 0; a < CHUNK_SIZE; a++)
     for (uint8_t b = 0; b < CHUNK_SIZE; b++) {
-      const uint32_t mask = bits[b + (CHUNK_SIZE * a)] & 0xFFFFFFFF;
+      const uint32_t mask = bits[b + (CHUNK_SIZE * a)];
 
       GreedyMesh32Face(offsetPosition, a, b, mask & ~(mask << 1), widthStart,
                        heightStart, vertices, startType);

@@ -210,8 +210,7 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   for (size_t i = 0; i < filters.size(); i++) {
     std::vector<Vertex> vertices;
-    it->second->greedyMesh(vertices, filters[i]);
-
+    it->second->greedyMesh(vertices, filters[i]);    
     Voxel *filter = filters[i];
 
     for (size_t j = 0; j < vertices.size(); j++) {
@@ -220,6 +219,8 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
       vertices[j].z += static_cast<float>(coord.z * s_ChunkSize);
       vertices[j].color = filter->color;
       vertices[j].material = filter->material;
+      // LOG("vertices.size()", vertices[j].x, vertices[j].y, vertices[j].z);
+
     }
 
     for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
