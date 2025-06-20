@@ -22,8 +22,6 @@ void VoxelManager::initialize(const glm::vec3 &position) {
 }
 
 void VoxelManager::update(const glm::vec3 &position) {
-  return;
-
   const glm::ivec3 currentChunkPosition = getChunkPosition(position);
 
   if (m_PlayerChunkPosition == currentChunkPosition)
@@ -127,8 +125,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
 }
 
 void VoxelManager::generateChunk(const glm::ivec3 &coord) {
-  // if (coord.y != 0)
-  //   return;
+  if (coord.y != 0)
+    return;
 
   std::unique_lock lock(m_Mutex.get(coord));
 
@@ -151,72 +149,24 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
     uint64_t mask[(s_ChunkSize * s_ChunkSize) * (s_ChunkSize / 64)] = {0};
 
     for (int z = 0; z < s_ChunkSize; z++)
-      for (int x = 0; x < s_ChunkSize; x++)
-        for (int y = 0; y < s_ChunkSize; y++) {
+      for (int x = 0; x < s_ChunkSize; x++) {
+        float n = map.GetValue(x, z);
+        int height = static_cast<int>(
+            std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (s_ChunkSize / 2)));
+        for (int y = 0; y < height; y++) {
           int index = x + s_ChunkSize * (z + s_ChunkSize * y);
-
-          // if (y == 0)
-          //   continue;
-
-          // mask[index / 64] =
-          //     0b1111111111111111111111111111111111111111111111111111111111111111;
-          // if (y >= thresholdFrom && y < thresholdTo)
-          //   mask[index / 64] |= 1ULL << (index % 64);
-          // if(z == 0 && y == 0 && x == 0)
-          // {
-          //   mask[index / 64] =
-          //   0b1111111111111111111111111111111111111111111111111111111111111111;
-          // }
-          // else
-          // {
-          // }
-          mask[index / 64] =
-              0b1111111111111111111111111111111111111111111111111111111111111111;
+          if (y >= thresholdFrom && y < thresholdTo)
+            mask[index / 64] |= 1ULL << (index % 64);
         }
-
-    // for (int z = 0; z < s_ChunkSize; z++)
-    //   for (int x = 0; x < s_ChunkSize; x++)
-    //     for (int y = 0; y < s_ChunkSize; y++) {
-    //       int index = x + s_ChunkSize * (z + s_ChunkSize * y);
-
-    //       // mask[index / 64] =
-    //       //
-    //       0b1111111111111111111111111111111111111111111111111111111111111111;
-    //       if (y >= thresholdFrom && y < thresholdTo)
-    //         mask[index / 64] |= 1ULL << (index % 64);
-    //       // if(z == 0 && y == 0 && x == 0)
-    //       // {
-    //       //   mask[index / 64] =
-    //       //
-    //       0b1111111111111111111111111111111111111111111111111111111111111111;
-    //       // }
-    //       // else
-    //       // {
-    //       // }
-    //       // mask[index / 64] =
-    //       //
-    //       0b0111111111111111111111111111111111111111111111111111111111111110;
-    //     }
-
-    // for (int z = 0; z < s_ChunkSize; z++)
-    //   for (int x = 0; x < s_ChunkSize; x++) {
-    //     float n = map.GetValue(x, z);
-    //     int height = static_cast<int>(
-    //         std::round((std::clamp(n, -1.0f, 1.0f) + 1) * s_ChunkSize));
-    //     for (int y = 0; y < height; y++) {
-    //       int index = x + s_ChunkSize * (z + s_ChunkSize * y);
-    //       if (y >= thresholdFrom && y < thresholdTo)
-    //         mask[index / 64] |= 1ULL << (index % 64);
-    //     }
-    //   }
+      }
 
     tree->setBlock(mask, voxel);
   };
 
   generateBlockChunks(0, 16, m_VoxelPalette[VoxelPalette::STONE]);
-  // generateBlockChunks(16, 24, m_VoxelPalette[VoxelPalette::DIRT]);
-  // generateBlockChunks(24, 64, m_VoxelPalette[VoxelPalette::GRASS]);
-  // generateBlockChunks(64, 128, m_VoxelPalette[VoxelPalette::SNOW]);
+  generateBlockChunks(16, 24, m_VoxelPalette[VoxelPalette::DIRT]);
+  generateBlockChunks(24, 64, m_VoxelPalette[VoxelPalette::GRASS]);
+  generateBlockChunks(64, 128, m_VoxelPalette[VoxelPalette::SNOW]);
 
   END_TIMER(t1);
 }
@@ -236,14 +186,6 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   const std::vector<Voxel *> &filters = it->second->getUniqueVoxels();
 
   for (size_t i = 0; i < filters.size(); i++) {
-
-    BENCHMARK(
-        [&]() {
-          std::vector<Vertex> vertices;
-          it->second->greedyMesh(vertices, filters[i]);
-        },
-        50);
-
     std::vector<Vertex> vertices;
     it->second->greedyMesh(vertices, filters[i]);
     Voxel *filter = filters[i];
@@ -254,7 +196,6 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
       vertices[j].z += static_cast<float>(coord.z * s_ChunkSize);
       vertices[j].color = filter->color;
       vertices[j].material = filter->material;
-      // LOG("vertices.size()", vertices[j].x, vertices[j].y, vertices[j].z);
     }
 
     for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())

@@ -227,25 +227,14 @@ void SparseVoxelOctree::clear() {
 
 void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
                                    Voxel *filter) {
-  // const int chunkSize = GreedyMeshi256::s_CHUNK_SIZE;
-  // const int chunksPerAxis = std::max(1, m_Size / chunkSize);
+  const int chunkSize = GreedyMesh64::CHUNK_SIZE;
+  const int chunksPerAxis = std::max(1, m_Size / chunkSize);
 
-  // for (int cz = 0; cz < chunksPerAxis; cz++)
-  //   for (int cy = 0; cy < chunksPerAxis; cy++)
-  //     for (int cx = 0; cx < chunksPerAxis; cx++)
-  //       GreedyMeshi256::Octree(this, vertices, cx * chunkSize, cy *
-  //       chunkSize,
-  //                              cz * chunkSize, 0, filter);
-
-  const int chunkSize1 = GreedyMesh64::CHUNK_SIZE;
-  const int chunksPerAxis1 = std::max(1, m_Size / chunkSize1);
-
-  for (int cz = 0; cz < chunksPerAxis1; cz++)
-    for (int cy = 0; cy < chunksPerAxis1; cy++)
-      for (int cx = 0; cx < chunksPerAxis1; cx++)
-        GreedyMesh64::Octree(this, vertices, cx * chunkSize1, cy *
-        chunkSize1,
-                               cz * chunkSize1, 0, filter);
+  for (int cz = 0; cz < chunksPerAxis; cz++)
+    for (int cy = 0; cy < chunksPerAxis; cy++)
+      for (int cx = 0; cx < chunksPerAxis; cx++)
+        GreedyMesh64::Octree(this, vertices, cx * chunkSize, cy * chunkSize,
+                             cz * chunkSize, 0, filter);
 }
 
 size_t SparseVoxelOctree::getMemoryUsage(Node *node) {
