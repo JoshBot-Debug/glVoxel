@@ -544,7 +544,7 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   glm::vec3 coord = {originX / s_CHUNK_SIZE, originY / s_CHUNK_SIZE,
                      originZ / s_CHUNK_SIZE};
 
-  LOG_IVEC3("coord", coord);
+  // LOG_IVEC3("coord", coord);
 
   /**
    * I align by 32 bytes here because I want to _mm256_load_si256 not
@@ -580,8 +580,8 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
           const unsigned int layerIndex =
               z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
 
-          LOG("initial col index",
-              FlipScalarIndex(static_cast<int>(columnIndex / s_BITS)));
+          // LOG("initial col index",
+          //     FlipScalarIndex(static_cast<int>(columnIndex / s_BITS)));
 
           rows[FlipScalarIndex(static_cast<int>(rowIndex / s_BITS))] |=
               (1ULL << (rowIndex % s_BITS));
@@ -594,41 +594,24 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   if (!hasVoxels)
     return;
 
-  for (int z = 0; z < s_CHUNK_SIZE; z++)
-    for (int x = 0; x < s_CHUNK_SIZE; x++)
-      for (int y = 0; y < s_CHUNK_SIZE; y++) {
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("columns-256", std::bitset<64>(columns[i]),
+  //               std::bitset<64>(columns[i + 1]),
+  //               std::bitset<64>(columns[i + 2]),
+  //               std::bitset<64>(columns[i + 3]));
+  // }
 
-        const unsigned int columnIndex =
-            y + (s_CHUNK_SIZE * (x + (s_CHUNK_SIZE * z)));
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("rows-256", std::bitset<64>(rows[i]),
+  //               std::bitset<64>(rows[i + 1]), std::bitset<64>(rows[i + 2]),
+  //               std::bitset<64>(rows[i + 3]));
+  // }
 
-        if (x > 8 || y > 8 || z > 8)
-          continue;
-
-        LOG("later col index",
-            FlipScalarIndex(static_cast<int>(columnIndex / s_BITS)));
-
-        LOG(std::bitset<64>(
-            columns[FlipScalarIndex(static_cast<int>(columnIndex / s_BITS))]));
-      }
-
-  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-    LOG_TO_FILE("columns-256", std::bitset<64>(columns[i]),
-                std::bitset<64>(columns[i + 1]),
-                std::bitset<64>(columns[i + 2]),
-                std::bitset<64>(columns[i + 3]));
-  }
-
-  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-    LOG_TO_FILE("rows-256", std::bitset<64>(rows[i]),
-                std::bitset<64>(rows[i + 1]), std::bitset<64>(rows[i + 2]),
-                std::bitset<64>(rows[i + 3]));
-  }
-
-  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-    LOG_TO_FILE("layers-256", std::bitset<64>(layers[i]),
-                std::bitset<64>(layers[i + 1]), std::bitset<64>(layers[i +
-                2]), std::bitset<64>(layers[i + 3]));
-  }
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("layers-256", std::bitset<64>(layers[i]),
+  //               std::bitset<64>(layers[i + 1]), std::bitset<64>(layers[i +
+  //               2]), std::bitset<64>(layers[i + 3]));
+  // }
 
   /**
    * Here we capture the padding bit

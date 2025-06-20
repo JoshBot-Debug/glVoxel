@@ -276,10 +276,10 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
    * 0  0 z0 x3 0  0  0  0 z1 x0 0  0  0  0 z1 x1 0  0  0  0 z1 x2 0  0  0  0 z1
    * x3 0  0  0  0
    */
-  uint32_t rows[MASK_LENGTH] = {};
-  uint32_t columns[MASK_LENGTH] = {};
-  uint32_t layers[MASK_LENGTH] = {};
-  uint8_t padding[MASK_LENGTH] = {};
+  alignas(32) uint32_t rows[MASK_LENGTH] = {};
+  alignas(32) uint32_t columns[MASK_LENGTH] = {};
+  alignas(32) uint32_t layers[MASK_LENGTH] = {};
+  alignas(32) uint8_t padding[MASK_LENGTH] = {};
 
   bool hasVoxels = false;
 
@@ -360,11 +360,11 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
     }
   }
 
-  uint32_t widthStart[MASK_LENGTH] = {};
-  uint32_t heightStart[MASK_LENGTH] = {};
+  alignas(32) uint32_t widthStart[MASK_LENGTH] = {};
+  alignas(32) uint32_t heightStart[MASK_LENGTH] = {};
 
-  uint32_t widthEnd[MASK_LENGTH] = {};
-  uint32_t heightEnd[MASK_LENGTH] = {};
+  alignas(32) uint32_t widthEnd[MASK_LENGTH] = {};
+  alignas(32) uint32_t heightEnd[MASK_LENGTH] = {};
 
   /**
    * Culls the column/row/layer

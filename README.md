@@ -80,3 +80,13 @@ LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:171 (generateChunk)
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 14.0636 ms (average) over 200 iterations
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 15.9212 ms (average) over 200 iterations
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:192 (meshChunk): Took: 15.6241 ms (average) over 200 iterations
+
+
+64bit
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:240 (meshChunk): Took: 262.552 ms (average) over 50 iterations
+
+32bit
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:240 (meshChunk): Took: 283.879 ms (average) over 50 iterations
+
+256bit
+LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:240 (meshChunk): Took: 398.598 ms (average) over 50 iterations

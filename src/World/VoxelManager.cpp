@@ -155,8 +155,8 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
         for (int y = 0; y < s_ChunkSize; y++) {
           int index = x + s_ChunkSize * (z + s_ChunkSize * y);
 
-          if (x > 8 || y > 8 || z > 8)
-            continue;
+          // if (y == 0)
+          //   continue;
 
           // mask[index / 64] =
           //     0b1111111111111111111111111111111111111111111111111111111111111111;
@@ -171,7 +171,7 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
           // {
           // }
           mask[index / 64] =
-              0b0000111111110000000000000000000000000000000000000000000000000000;
+              0b1111111111111111111111111111111111111111111111111111111111111111;
         }
 
     // for (int z = 0; z < s_ChunkSize; z++)
@@ -236,6 +236,14 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   const std::vector<Voxel *> &filters = it->second->getUniqueVoxels();
 
   for (size_t i = 0; i < filters.size(); i++) {
+
+    BENCHMARK(
+        [&]() {
+          std::vector<Vertex> vertices;
+          it->second->greedyMesh(vertices, filters[i]);
+        },
+        50);
+
     std::vector<Vertex> vertices;
     it->second->greedyMesh(vertices, filters[i]);
     Voxel *filter = filters[i];
