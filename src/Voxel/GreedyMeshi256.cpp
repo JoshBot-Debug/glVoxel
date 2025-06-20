@@ -1,37 +1,53 @@
 #include "GreedyMeshi256.h"
 
+int GreedyMeshi256::GetRawIndex(int i) {
+  return i + s_RAW_INDEX_MAP[(i % s_CHUNK_SIZE) % s_STEPS];
+}
+
 void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                                     uint64_t *widthMasks,
                                     uint64_t *heightMasks) {
+
+  // LOG_TO_FILE("bits-256", std::bitset<64>(((uint64_t *)&bits)[0]),
+  //             std::bitset<64>(((uint64_t *)&bits)[1]),
+  //             std::bitset<64>(((uint64_t *)&bits)[2]),
+  //             std::bitset<64>(((uint64_t *)&bits)[3]));
+
   while (!_mm256_testz_si256(bits, bits)) {
     const uint16_t w = ffs256(bits) - 1;
 
-    const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
-    widthMasks[wi / s_BITS] |= (1ULL << (wi % s_BITS));
+    // const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
+    // const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
 
-    const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
-    heightMasks[hi / s_BITS] |= (1ULL << (hi % s_BITS));
+    // widthMasks[wi / s_BITS] |= (1ULL << (wi % s_BITS));
+    // heightMasks[hi / s_BITS] |= (1ULL << (hi % s_BITS));
+
+    const unsigned int widthIndex =
+        a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
+    const unsigned int widthBit256Index = (widthIndex % s_CHUNK_SIZE);
+    const unsigned int widthTrueIndex =
+        (widthIndex / s_CHUNK_SIZE) * s_STEPS + (widthBit256Index / s_BITS);
+
+    const unsigned int heightIndex =
+        b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
+    const unsigned int heightBit256Index = (heightIndex % s_CHUNK_SIZE);
+    const unsigned int heightTrueIndex =
+        (heightIndex / s_CHUNK_SIZE) * s_STEPS + (heightBit256Index / s_BITS);
+
+    widthMasks[GetRawIndex(widthTrueIndex)] |=
+        (1ULL << (widthBit256Index % s_BITS));
+    heightMasks[GetRawIndex(heightTrueIndex)] |=
+        (1ULL << (heightBit256Index % s_BITS));
 
     bits = clb256(bits, w + 1);
-    // LOG_TO_FILE("128", (int)a, (int)w, (int)b, (int)wi, (int)w);
   }
-  // uint64_t *p = (uint64_t *)&bits;
-  // LOG_TO_FILE("256", std::bitset<64>(p[0]), std::bitset<64>(p[1]),
-  //             std::bitset<64>(p[2]), std::bitset<64>(p[3]));
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
-  //   if (i >= 65536)
-  //     break;
-  //   __m256i mask =
-  //       _mm256_load_si256(reinterpret_cast<const __m256i *>(&widthMasks[i]));
-
-  //   if (!_mm256_testz_si256(mask, mask))
-  //     LOG(mask);
-  //     // LOG_256(mask);
-  //   // LOG_TO_FILE("128", i, std::bitset<64>(widthMasks[i]),
-  //   //             std::bitset<64>(widthMasks[i + 1]),
-  //   //             std::bitset<64>(widthMasks[i + 2]),
-  //   //                 std::bitset<64>(widthMasks[i + 3]));
+  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_BITS) {
+  //   if (widthMasks[i + 3] != 0)
+  //     LOG_TO_FILE("widthMasks-256", std::bitset<64>(widthMasks[i]),
+  //                 std::bitset<64>(widthMasks[i + 1]),
+  //                 std::bitset<64>(widthMasks[i + 2]),
+  //                 std::bitset<64>(widthMasks[i + 3]));
   // }
 }
 
@@ -64,6 +80,15 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
       // const uint64_t mask = bits[i];
       __m256i mask =
           _mm256_load_si256(reinterpret_cast<const __m256i *>(&bits[i]));
+
+      // if (!_mm256_testz_si256(mask, mask)) {
+      //   // LOG(i);
+      //   // LOG_256(mask);
+      //   LOG_TO_FILE("mask-256", std::bitset<64>(((uint64_t *)&mask)[0]),
+      //               std::bitset<64>(((uint64_t *)&mask)[1]),
+      //               std::bitset<64>(((uint64_t *)&mask)[2]),
+      //               std::bitset<64>(((uint64_t *)&mask)[3]));
+      // }
 
       int isEmpty = _mm256_testz_si256(mask, mask);
 
@@ -116,8 +141,8 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
        * if ((paddingMask >> 0) & 1)
        *   startMask &= ~(1ULL << 0);
        */
-      if ((paddingMask >> paddingIndex) & 1)
-        startMaskBits[lsbIndex / s_BITS] &= ~(1ULL << (lsbIndex % s_BITS));
+      // if ((paddingMask >> paddingIndex) & 1)
+      //   startMaskBits[lsbIndex / s_BITS] &= ~(1ULL << (lsbIndex % s_BITS));
 
       /**
        * Check the padding mask, if the bit at 63 index is on
@@ -131,11 +156,11 @@ void GreedyMeshi256::PrepareWidthHeightMasks(
        * if ((paddingMask >> 63) & 1)
        *   endMask &= ~(1ULL << 31);
        */
-      if ((paddingMask >> (paddingIndex + 1)) & 1)
-        endMaskBits[msbIndex / s_BITS] &= ~(1ULL << (msbIndex % s_BITS));
+      // if ((paddingMask >> (paddingIndex + 1)) & 1)
+      //   endMaskBits[msbIndex / s_BITS] &= ~(1ULL << (msbIndex % s_BITS));
 
       SetWidthHeight(a, b, startMask, widthStart, heightStart);
-      // SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
+      SetWidthHeight(a, b, endMask, widthEnd, heightEnd);
     }
 }
 
@@ -169,6 +194,16 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
 
     __m256i width = clb256(widthMask, b);
 
+    // LOG_TO_FILE("widthMasks-256", std::bitset<64>(((uint64_t
+    // *)&widthMask)[0]),
+    //             std::bitset<64>(((uint64_t *)&widthMask)[1]),
+    //             std::bitset<64>(((uint64_t *)&widthMask)[2]),
+    //             std::bitset<64>(((uint64_t *)&widthMask)[3]));
+    // LOG_TO_FILE("width-256", std::bitset<64>(((uint64_t *)&width)[0]),
+    //             std::bitset<64>(((uint64_t *)&width)[1]),
+    //             std::bitset<64>(((uint64_t *)&width)[2]),
+    //             std::bitset<64>(((uint64_t *)&width)[3]));
+
     if (_mm256_testz_si256(width, width))
       continue;
 
@@ -181,13 +216,26 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
                              ? s_CHUNK_SIZE
                              : ctz256(wsMask);
 
+    // LOG_TO_FILE("widthOffset-widthSize-256", (int)widthOffset,
+    // (int)widthSize);
+
     unsigned int chi = w + (s_CHUNK_SIZE * (int)(widthOffset));
     unsigned int hi = chi * s_STEPS;
 
     __m256i heightMask =
         _mm256_load_si256(reinterpret_cast<const __m256i *>(&heightMasks[hi]));
 
-    __m256i height = clb256(heightMask, b);
+    __m256i height = clb256(heightMask, a);
+
+    // LOG_TO_FILE("heightMask-256", std::bitset<64>(((uint64_t
+    // *)&heightMask)[0]),
+    //             std::bitset<64>(((uint64_t *)&heightMask)[1]),
+    //             std::bitset<64>(((uint64_t *)&heightMask)[2]),
+    //             std::bitset<64>(((uint64_t *)&heightMask)[3]));
+    // LOG_TO_FILE("height-256", std::bitset<64>(((uint64_t *)&height)[0]),
+    //             std::bitset<64>(((uint64_t *)&height)[1]),
+    //             std::bitset<64>(((uint64_t *)&height)[2]),
+    //             std::bitset<64>(((uint64_t *)&height)[3]));
 
     const uint16_t heightOffset = ffs256(height) - 1;
 
@@ -197,37 +245,62 @@ void GreedyMeshi256::GreedyMeshi256Face(const glm::ivec3 &offsetPosition,
                               ? s_CHUNK_SIZE
                               : ctz256(hsMask);
 
-    // LOG_TO_FILE("128", (int)widthSize, (int)heightSize);
+    // LOG_TO_FILE("heightOffset-heightSize-256", (int)heightOffset,
+    // (int)heightSize);
 
-    // for (uint16_t i = heightOffset; i < heightOffset + heightSize; i++) {
-    //   const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
-    //   const unsigned int index = rowIndex * s_STEPS;
+    for (uint16_t i = heightOffset; i < heightOffset + heightSize; i++) {
+      const unsigned int rowIndex = w + (s_CHUNK_SIZE * i);
+      const unsigned int index = rowIndex * s_STEPS;
 
-    //   __m256i widthSizeMask = GreedyMeshi256::mmr(widthSize, widthOffset);
-    //   __m256i widthMask = _mm256_load_si256(
-    //       reinterpret_cast<const __m256i *>(&widthMasks[index]));
+      __m256i widthSizeMask = GreedyMeshi256::mmr(widthSize, widthOffset);
+      __m256i widthMask = _mm256_load_si256(
+          reinterpret_cast<const __m256i *>(&widthMasks[index]));
 
-    //   __m256i size = _mm256_and_si256(widthMask, widthSizeMask);
+      // LOG("i-widthSizeMask-256", std::bitset<64>(((uint64_t
+      // *)&widthSizeMask)[0]),
+      //             std::bitset<64>(((uint64_t *)&widthSizeMask)[1]),
+      //             std::bitset<64>(((uint64_t *)&widthSizeMask)[2]),
+      //             std::bitset<64>(((uint64_t *)&widthSizeMask)[3]));
+      // LOG("i-widthMask-256", std::bitset<64>(((uint64_t *)&widthMask)[0]),
+      //             std::bitset<64>(((uint64_t *)&widthMask)[1]),
+      //             std::bitset<64>(((uint64_t *)&widthMask)[2]),
+      //             std::bitset<64>(((uint64_t *)&widthMask)[3]));
 
-    //   __m256i sizeMask = _mm256_xor_si256(sr256(size, ffs256(size) - 1),
-    //   _mm256_set1_epi64x(-1));
+      __m256i size = _mm256_and_si256(widthMask, widthSizeMask);
 
-    //   // LOG(widthSize, widthOffset);
-    //   // LOG_256(size);
+      __m256i sizeMask = _mm256_xor_si256(sr256(size, ffs256(size) - 1),
+                                          _mm256_set1_epi64x(-1));
 
-    //   if (!_mm256_testz_si256(size, size) ||
-    //       !_mm256_testc_si256(size, _mm256_set1_epi64x(~0ULL)) &&
-    //           ctz256(sizeMask) != widthSize) {
-    //     heightSize = i - heightOffset;
-    //     break;
-    //   }
+      // LOG(widthSize, widthOffset);
+      // LOG_256(size);
 
-    //   widthMask = _mm256_xor_si256(_mm256_and_si256(widthMask,
-    //   widthSizeMask),  _mm256_set1_epi64x(-1));
+      // LOG(!_mm256_testz_si256(size, size));
 
-    //   _mm256_store_si256(reinterpret_cast<__m256i *>(&widthMasks[index]),
-    //                      widthMask);
-    // }
+      if (_mm256_testz_si256(size, size) ||
+          !_mm256_testc_si256(size, _mm256_set1_epi64x(~0ULL)) &&
+              ctz256(sizeMask) != widthSize) {
+        heightSize = i - heightOffset;
+        break;
+      }
+
+      // LOG_TO_FILE("i-widthSizeMask-256",
+      //     std::bitset<64>(((uint64_t *)&widthSizeMask)[0]),
+      //     std::bitset<64>(((uint64_t *)&widthSizeMask)[1]),
+      //     std::bitset<64>(((uint64_t *)&widthSizeMask)[2]),
+      //     std::bitset<64>(((uint64_t *)&widthSizeMask)[3]));
+      // LOG_TO_FILE("i-widthMask-256", std::bitset<64>(((uint64_t
+      // *)&widthMask)[0]),
+      //     std::bitset<64>(((uint64_t *)&widthMask)[1]),
+      //     std::bitset<64>(((uint64_t *)&widthMask)[2]),
+      //     std::bitset<64>(((uint64_t *)&widthMask)[3]));
+
+      // LOG_256(size);
+
+      widthMask = _mm256_xor_si256(size, _mm256_set1_epi64x(-1));
+
+      _mm256_store_si256(reinterpret_cast<__m256i *>(&widthMasks[index]),
+                         widthMask);
+    }
 
     switch (type) {
     case FaceType::TOP:
@@ -303,8 +376,8 @@ void GreedyMeshi256::GreedyMeshi256Axis(const glm::ivec3 &offsetPosition,
 
       GreedyMeshi256Face(offsetPosition, a, b, startMask, widthStart,
                          heightStart, vertices, startType);
-      // GreedyMeshi256Face(offsetPosition, a, b, endMask, widthEnd, heightEnd,
-      //                    vertices, endType);
+      GreedyMeshi256Face(offsetPosition, a, b, endMask, widthEnd, heightEnd,
+                         vertices, endType);
     }
 }
 
@@ -447,8 +520,8 @@ __m256i GreedyMeshi256::clb256(__m256i &bits, int n) {
 }
 
 __m256i GreedyMeshi256::mmr(int size, int offset) {
-  if (size >= 256 || offset >= 256)
-    return _mm256_setzero_si256();
+  if (size >= 256)
+    return _mm256_set1_epi64x(~0ULL);
 
   alignas(32) uint64_t arr[4] = {0ULL, 0ULL, 0ULL, 0ULL};
 
@@ -464,7 +537,7 @@ __m256i GreedyMeshi256::mmr(int size, int offset) {
 
   __m256i mask = _mm256_load_si256(reinterpret_cast<const __m256i *>(&arr));
 
-  return sl256(mask, offset);
+  return sl256(mask, offset % 256);
 }
 
 // AND
@@ -525,10 +598,72 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
           rows[rowIndex / s_BITS] |= (1ULL << (rowIndex % s_BITS));
           columns[columnIndex / s_BITS] |= (1ULL << (columnIndex % s_BITS));
           layers[layerIndex / s_BITS] |= (1ULL << (layerIndex % s_BITS));
+
+          // const unsigned int rowIndex =
+          //     x + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * z)));
+          // const unsigned int rowBit256Index = (rowIndex % s_CHUNK_SIZE);
+          // const unsigned int rowTrueIndex =
+          //     (rowIndex / s_CHUNK_SIZE) * s_STEPS + (rowBit256Index / s_BITS);
+
+          // const unsigned int columnIndex =
+          //     y + (s_CHUNK_SIZE * (x + (s_CHUNK_SIZE * z)));
+          // const unsigned int columnBit256Index = (columnIndex % s_CHUNK_SIZE);
+          // const unsigned int columnTrueIndex =
+          //     (columnIndex / s_CHUNK_SIZE) * s_STEPS +
+          //     (columnBit256Index / s_BITS);
+
+          // const unsigned int layerIndex =
+          //     z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
+          // const unsigned int layerBit256Index = (layerIndex % s_CHUNK_SIZE);
+          // const unsigned int layerTrueIndex =
+          //     (layerIndex / s_CHUNK_SIZE) * s_STEPS +
+          //     (layerBit256Index / s_BITS);
+
+          // rows[GetRawIndex(rowTrueIndex)] |=
+          //     (1ULL << (rowBit256Index % s_BITS));
+          // columns[GetRawIndex(columnTrueIndex)] |=
+          //     (1ULL << (columnBit256Index % s_BITS));
+          // layers[GetRawIndex(layerTrueIndex)] |=
+          //     (1ULL << (layerBit256Index % s_BITS));
         }
 
   if (!hasVoxels)
     return;
+
+  for (int z = 0; z < s_CHUNK_SIZE; z++)
+    for (int x = 0; x < s_CHUNK_SIZE; x++)
+      for (int y = 0; y < s_CHUNK_SIZE; y++) {
+        const unsigned int rowIndex =
+            x + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * z)));
+        const unsigned int columnIndex =
+            y + (s_CHUNK_SIZE * (x + (s_CHUNK_SIZE * z)));
+        const unsigned int layerIndex =
+            z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
+
+        if (x > 8 || y > 8 || z > 8)
+          continue;
+
+        LOG(std::bitset<64>(columns[columnIndex / s_BITS]));
+      }
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("columns-256", std::bitset<64>(columns[i]),
+  //               std::bitset<64>(columns[i + 1]),
+  //               std::bitset<64>(columns[i + 2]),
+  //               std::bitset<64>(columns[i + 3]));
+  // }
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("rows-256", std::bitset<64>(rows[i]),
+  //               std::bitset<64>(rows[i + 1]), std::bitset<64>(rows[i + 2]),
+  //               std::bitset<64>(rows[i + 3]));
+  // }
+
+  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+  //   LOG_TO_FILE("layers-256", std::bitset<64>(layers[i]),
+  //               std::bitset<64>(layers[i + 1]), std::bitset<64>(layers[i +
+  //               2]), std::bitset<64>(layers[i + 3]));
+  // }
 
   /**
    * Here we capture the padding bit
@@ -619,39 +754,29 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   PrepareWidthHeightMasks(rows, 0, padding, widthStart, heightStart, widthEnd,
                           heightEnd);
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i += s_STEPS) {
-  //   __m256i mask =
-  //       _mm256_load_si256(reinterpret_cast<const __m256i
-  //       *>(&heightStart[i]));
-
-  //   if (!_mm256_testz_si256(mask, mask))
-  //     LOG_256(mask);
-  // }
-
   GreedyMeshi256Axis(coord, rows, widthStart, heightStart, widthEnd, heightEnd,
                      vertices, FaceType::LEFT, FaceType::RIGHT);
 
-  // std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(widthEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(heightEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(widthEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
 
-  // PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
-  //                         widthEnd, heightEnd);
+  PrepareWidthHeightMasks(columns, 2, padding, widthStart, heightStart,
+                          widthEnd, heightEnd);
 
-  // GreedyMeshi256Axis(coord, columns, widthStart, heightStart, widthEnd,
-  //                    heightEnd, vertices, FaceType::BOTTOM, FaceType::TOP);
+  GreedyMeshi256Axis(coord, columns, widthStart, heightStart, widthEnd,
+                     heightEnd, vertices, FaceType::BOTTOM, FaceType::TOP);
 
-  // std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(widthEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
-  // std::memset(heightEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(widthStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightStart, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(widthEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
+  std::memset(heightEnd, 0, sizeof(uint64_t) * s_MASK_LENGTH);
 
-  // PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart,
-  // widthEnd,
-  //                         heightEnd);
-  // GreedyMeshi256Axis(coord, layers, widthStart, heightStart, widthEnd,
-  //                    heightEnd, vertices, FaceType::FRONT, FaceType::BACK);
+  PrepareWidthHeightMasks(layers, 4, padding, widthStart, heightStart, widthEnd,
+                          heightEnd);
+  GreedyMeshi256Axis(coord, layers, widthStart, heightStart, widthEnd,
+                     heightEnd, vertices, FaceType::FRONT, FaceType::BACK);
 
   _mm_free(rows);
   _mm_free(columns);

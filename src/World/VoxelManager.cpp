@@ -148,28 +148,55 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
 
   auto generateBlockChunks = [&](int thresholdFrom, int thresholdTo,
                                  Voxel *voxel) mutable {
-    uint64_t mask[s_ChunkSize * s_ChunkSize * (s_ChunkSize / 64)] = {0};
+    uint64_t mask[(s_ChunkSize * s_ChunkSize) * (s_ChunkSize / 64)] = {0};
 
     for (int z = 0; z < s_ChunkSize; z++)
       for (int x = 0; x < s_ChunkSize; x++)
         for (int y = 0; y < s_ChunkSize; y++) {
           int index = x + s_ChunkSize * (z + s_ChunkSize * y);
 
-          mask[index / 64] =
-              0b1111111111111111111111111111111111111111111111111111111111111111;
+          if (x > 8 || y > 8 || z > 8)
+            continue;
+
+          // mask[index / 64] =
+          //     0b1111111111111111111111111111111111111111111111111111111111111111;
           // if (y >= thresholdFrom && y < thresholdTo)
-          // mask[index / 64] |= 1ULL << (index % 64);
-          // if(z == 0 && y == 0)
+          //   mask[index / 64] |= 1ULL << (index % 64);
+          // if(z == 0 && y == 0 && x == 0)
           // {
           //   mask[index / 64] =
           //   0b1111111111111111111111111111111111111111111111111111111111111111;
           // }
           // else
           // {
-          //   mask[index / 64] =
-          //   0b0111111111111111111111111111111111111111111111111111111111111110;
           // }
+          mask[index / 64] =
+              0b0000111111110000000000000000000000000000000000000000000000000000;
         }
+
+    // for (int z = 0; z < s_ChunkSize; z++)
+    //   for (int x = 0; x < s_ChunkSize; x++)
+    //     for (int y = 0; y < s_ChunkSize; y++) {
+    //       int index = x + s_ChunkSize * (z + s_ChunkSize * y);
+
+    //       // mask[index / 64] =
+    //       //
+    //       0b1111111111111111111111111111111111111111111111111111111111111111;
+    //       if (y >= thresholdFrom && y < thresholdTo)
+    //         mask[index / 64] |= 1ULL << (index % 64);
+    //       // if(z == 0 && y == 0 && x == 0)
+    //       // {
+    //       //   mask[index / 64] =
+    //       //
+    //       0b1111111111111111111111111111111111111111111111111111111111111111;
+    //       // }
+    //       // else
+    //       // {
+    //       // }
+    //       // mask[index / 64] =
+    //       //
+    //       0b0111111111111111111111111111111111111111111111111111111111111110;
+    //     }
 
     // for (int z = 0; z < s_ChunkSize; z++)
     //   for (int x = 0; x < s_ChunkSize; x++) {
@@ -210,7 +237,7 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   for (size_t i = 0; i < filters.size(); i++) {
     std::vector<Vertex> vertices;
-    it->second->greedyMesh(vertices, filters[i]);    
+    it->second->greedyMesh(vertices, filters[i]);
     Voxel *filter = filters[i];
 
     for (size_t j = 0; j < vertices.size(); j++) {
@@ -220,7 +247,6 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
       vertices[j].color = filter->color;
       vertices[j].material = filter->material;
       // LOG("vertices.size()", vertices[j].x, vertices[j].y, vertices[j].z);
-
     }
 
     for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())

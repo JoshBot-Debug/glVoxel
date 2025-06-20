@@ -21,6 +21,8 @@ public:
       (s_CHUNK_SIZE * s_CHUNK_SIZE) * s_STEPS;
 
 private:
+  static constexpr int s_RAW_INDEX_MAP[4] = {3, 1, -1, -3};
+  static int GetRawIndex(int i);
   static void SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                              uint64_t *widthMasks, uint64_t *heightMasks);
 

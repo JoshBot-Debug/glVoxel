@@ -37,8 +37,8 @@ App::App()
 
   // m_Camera.setPosition(0.0f, 175.0f, 0.0f);
   // m_Camera.setRotation(-20.0f, 130.0f, 0.0f);
-  m_Camera.setPosition(90.892f, 65.799f, 45.004f);
-  m_Camera.setRotation(-16.000f, -84.600f, 0.0f);
+  m_Camera.setPosition(56.637f, 16.244f, 37.515f);
+  m_Camera.setRotation(-20.500f, 0.0f, 0.0f);
   m_Camera.setProjection(45, 0.01f, 10000.0f);
 
   m_World.setCamera(&m_Camera);
@@ -61,6 +61,31 @@ App::App()
   });
 
   open();
+
+  // alignas(32) uint64_t raw[4] = {
+  //     0b1111111111111111111111111111111111111111111111111111111111110000,
+  //     0b1111111111111111111111111111111111111111111111111111111111111000,
+  //     0b1111111111111111111111111111111111111111111111111111111111111100,
+  //     0b1111111111111111111111111111111111111111111111111111111111111110};
+
+  // size = 65;
+  // offset = 191;
+  // __m256i widthMask256 =
+  //     _mm256_load_si256(reinterpret_cast<const __m256i *>(&raw));
+
+  // LOG_256(widthMask256);
+
+  // int size = 1;
+  // int offset = 63;
+  // int CHUNK_SIZE = 64;
+
+  // const uint64_t widthSizeMask64 =
+  //     (((size >= CHUNK_SIZE ? 0ULL : (1ULL << size)) - 1) << offset);
+
+  // __m256i widthSizeMask256 = GreedyMeshi256::mmr(1, 256);
+
+  // LOG(std::bitset<64>(widthSizeMask64));
+  // LOG_256(widthSizeMask256);
 
   // int size = 8;
   // int offset = 0;

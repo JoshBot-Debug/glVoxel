@@ -131,11 +131,11 @@ void GreedyMesh32::GreedyMesh32Face(const glm::ivec3 &offsetPosition, uint8_t a,
           (((widthSize >= CHUNK_SIZE ? 0U : (1U << widthSize)) - 1)
            << widthOffset);
 
-      const uint32_t SIZE = widthMasks[index] & widthSizeMask;
+      const uint32_t size = widthMasks[index] & widthSizeMask;
 
-      if (SIZE == 0 ||
-          (SIZE != ~0U &&
-           __builtin_ctz(~(SIZE >> (__builtin_ffs(SIZE) - 1))) != widthSize)) {
+      if (size == 0 ||
+          (size != ~0U &&
+           __builtin_ctz(~(size >> (__builtin_ffs(size) - 1))) != widthSize)) {
         heightSize = i - heightOffset;
         break;
       }
