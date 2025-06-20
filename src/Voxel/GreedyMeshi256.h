@@ -17,12 +17,17 @@ public:
   static constexpr uint8_t s_BITS = 64;
   static constexpr uint16_t s_CHUNK_SIZE = 256;
   static constexpr uint16_t s_STEPS = s_CHUNK_SIZE / s_BITS;
-  static constexpr unsigned int s_MASK_LENGTH =
-      (s_CHUNK_SIZE * s_CHUNK_SIZE) * s_STEPS;
+  static constexpr unsigned int s_MASK_LENGTH = (s_CHUNK_SIZE * s_CHUNK_SIZE) * s_STEPS;
 
 private:
   static constexpr int s_RAW_INDEX_MAP[4] = {3, 1, -1, -3};
-  static int GetRawIndex(int i);
+
+  /**
+   * Input Indexes => 0,1,2,3,4,5,6,7,8,9
+   * Output Indexes => 3,2,1,0,7,6,5,4,12,11
+   */
+  static int FlipScalarIndex(int i);
+
   static void SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
                              uint64_t *widthMasks, uint64_t *heightMasks);
 

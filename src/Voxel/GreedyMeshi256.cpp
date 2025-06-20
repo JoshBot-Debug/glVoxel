@@ -1,7 +1,7 @@
 #include "GreedyMeshi256.h"
 
-int GreedyMeshi256::GetRawIndex(int i) {
-  return i + s_RAW_INDEX_MAP[(i % s_CHUNK_SIZE) % s_STEPS];
+int GreedyMeshi256::FlipScalarIndex(int i) {
+  return (static_cast<int>((i / s_STEPS)) * s_STEPS) + ((s_STEPS - 1) - (i % s_STEPS));
 }
 
 void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
@@ -16,28 +16,13 @@ void GreedyMeshi256::SetWidthHeight(uint8_t a, uint8_t b, __m256i &bits,
   while (!_mm256_testz_si256(bits, bits)) {
     const uint16_t w = ffs256(bits) - 1;
 
-    // const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
-    // const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
+    const unsigned int wi = a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
+    const unsigned int hi = b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
 
-    // widthMasks[wi / s_BITS] |= (1ULL << (wi % s_BITS));
-    // heightMasks[hi / s_BITS] |= (1ULL << (hi % s_BITS));
-
-    const unsigned int widthIndex =
-        a + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * b)));
-    const unsigned int widthBit256Index = (widthIndex % s_CHUNK_SIZE);
-    const unsigned int widthTrueIndex =
-        (widthIndex / s_CHUNK_SIZE) * s_STEPS + (widthBit256Index / s_BITS);
-
-    const unsigned int heightIndex =
-        b + (s_CHUNK_SIZE * (w + (s_CHUNK_SIZE * a)));
-    const unsigned int heightBit256Index = (heightIndex % s_CHUNK_SIZE);
-    const unsigned int heightTrueIndex =
-        (heightIndex / s_CHUNK_SIZE) * s_STEPS + (heightBit256Index / s_BITS);
-
-    widthMasks[GetRawIndex(widthTrueIndex)] |=
-        (1ULL << (widthBit256Index % s_BITS));
-    heightMasks[GetRawIndex(heightTrueIndex)] |=
-        (1ULL << (heightBit256Index % s_BITS));
+    widthMasks[FlipScalarIndex(static_cast<int>(wi / s_BITS))] |=
+        (1ULL << (wi % s_BITS));
+    heightMasks[FlipScalarIndex(static_cast<int>(hi / s_BITS))] |=
+        (1ULL << (hi % s_BITS));
 
     bits = clb256(bits, w + 1);
   }
@@ -595,36 +580,15 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
           const unsigned int layerIndex =
               z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
 
-          rows[rowIndex / s_BITS] |= (1ULL << (rowIndex % s_BITS));
-          columns[columnIndex / s_BITS] |= (1ULL << (columnIndex % s_BITS));
-          layers[layerIndex / s_BITS] |= (1ULL << (layerIndex % s_BITS));
+          LOG("initial col index",
+              FlipScalarIndex(static_cast<int>(columnIndex / s_BITS)));
 
-          // const unsigned int rowIndex =
-          //     x + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * z)));
-          // const unsigned int rowBit256Index = (rowIndex % s_CHUNK_SIZE);
-          // const unsigned int rowTrueIndex =
-          //     (rowIndex / s_CHUNK_SIZE) * s_STEPS + (rowBit256Index / s_BITS);
-
-          // const unsigned int columnIndex =
-          //     y + (s_CHUNK_SIZE * (x + (s_CHUNK_SIZE * z)));
-          // const unsigned int columnBit256Index = (columnIndex % s_CHUNK_SIZE);
-          // const unsigned int columnTrueIndex =
-          //     (columnIndex / s_CHUNK_SIZE) * s_STEPS +
-          //     (columnBit256Index / s_BITS);
-
-          // const unsigned int layerIndex =
-          //     z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
-          // const unsigned int layerBit256Index = (layerIndex % s_CHUNK_SIZE);
-          // const unsigned int layerTrueIndex =
-          //     (layerIndex / s_CHUNK_SIZE) * s_STEPS +
-          //     (layerBit256Index / s_BITS);
-
-          // rows[GetRawIndex(rowTrueIndex)] |=
-          //     (1ULL << (rowBit256Index % s_BITS));
-          // columns[GetRawIndex(columnTrueIndex)] |=
-          //     (1ULL << (columnBit256Index % s_BITS));
-          // layers[GetRawIndex(layerTrueIndex)] |=
-          //     (1ULL << (layerBit256Index % s_BITS));
+          rows[FlipScalarIndex(static_cast<int>(rowIndex / s_BITS))] |=
+              (1ULL << (rowIndex % s_BITS));
+          columns[FlipScalarIndex(static_cast<int>(columnIndex / s_BITS))] |=
+              (1ULL << (columnIndex % s_BITS));
+          layers[FlipScalarIndex(static_cast<int>(layerIndex / s_BITS))] |=
+              (1ULL << (layerIndex % s_BITS));
         }
 
   if (!hasVoxels)
@@ -633,37 +597,38 @@ void GreedyMeshi256::Octree(SparseVoxelOctree *tree,
   for (int z = 0; z < s_CHUNK_SIZE; z++)
     for (int x = 0; x < s_CHUNK_SIZE; x++)
       for (int y = 0; y < s_CHUNK_SIZE; y++) {
-        const unsigned int rowIndex =
-            x + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * z)));
+
         const unsigned int columnIndex =
             y + (s_CHUNK_SIZE * (x + (s_CHUNK_SIZE * z)));
-        const unsigned int layerIndex =
-            z + (s_CHUNK_SIZE * (y + (s_CHUNK_SIZE * x)));
 
         if (x > 8 || y > 8 || z > 8)
           continue;
 
-        LOG(std::bitset<64>(columns[columnIndex / s_BITS]));
+        LOG("later col index",
+            FlipScalarIndex(static_cast<int>(columnIndex / s_BITS)));
+
+        LOG(std::bitset<64>(
+            columns[FlipScalarIndex(static_cast<int>(columnIndex / s_BITS))]));
       }
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-  //   LOG_TO_FILE("columns-256", std::bitset<64>(columns[i]),
-  //               std::bitset<64>(columns[i + 1]),
-  //               std::bitset<64>(columns[i + 2]),
-  //               std::bitset<64>(columns[i + 3]));
-  // }
+  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+    LOG_TO_FILE("columns-256", std::bitset<64>(columns[i]),
+                std::bitset<64>(columns[i + 1]),
+                std::bitset<64>(columns[i + 2]),
+                std::bitset<64>(columns[i + 3]));
+  }
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-  //   LOG_TO_FILE("rows-256", std::bitset<64>(rows[i]),
-  //               std::bitset<64>(rows[i + 1]), std::bitset<64>(rows[i + 2]),
-  //               std::bitset<64>(rows[i + 3]));
-  // }
+  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+    LOG_TO_FILE("rows-256", std::bitset<64>(rows[i]),
+                std::bitset<64>(rows[i + 1]), std::bitset<64>(rows[i + 2]),
+                std::bitset<64>(rows[i + 3]));
+  }
 
-  // for (size_t i = 0; i < s_MASK_LENGTH; i++) {
-  //   LOG_TO_FILE("layers-256", std::bitset<64>(layers[i]),
-  //               std::bitset<64>(layers[i + 1]), std::bitset<64>(layers[i +
-  //               2]), std::bitset<64>(layers[i + 3]));
-  // }
+  for (size_t i = 0; i < s_MASK_LENGTH; i++) {
+    LOG_TO_FILE("layers-256", std::bitset<64>(layers[i]),
+                std::bitset<64>(layers[i + 1]), std::bitset<64>(layers[i +
+                2]), std::bitset<64>(layers[i + 3]));
+  }
 
   /**
    * Here we capture the padding bit

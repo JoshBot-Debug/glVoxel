@@ -345,10 +345,8 @@ void GreedyMesh64::Octree(SparseVoxelOctree *tree,
               z + (CHUNK_SIZE * (y + (CHUNK_SIZE * x)));
 
           rows[rowIndex / CHUNK_SIZE] |= (1ULL << (rowIndex % CHUNK_SIZE));
-          columns[columnIndex / CHUNK_SIZE] |=
-              (1ULL << (columnIndex % CHUNK_SIZE));
-          layers[layerIndex / CHUNK_SIZE] |=
-              (1ULL << (layerIndex % CHUNK_SIZE));
+          columns[columnIndex / CHUNK_SIZE] |= (1ULL << (columnIndex % CHUNK_SIZE));
+          layers[layerIndex / CHUNK_SIZE] |= (1ULL << (layerIndex % CHUNK_SIZE));
         }
 
   if (!hasVoxels)

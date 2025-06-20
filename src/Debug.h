@@ -11,6 +11,8 @@
 #include <thread>
 #include <bitset>
 #include <immintrin.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 template <typename... Args>
 inline void Log(const char *file, int line, const char *functionName,
@@ -30,7 +32,10 @@ inline void LogIVec3(const char *file, int line, const char *functionName,
 template <typename... Args>
 inline void LogToFile(const char *file, int line, const char *functionName,
                       const std::string &outputFile, const Args &...args) {
-  std::ofstream ofs(outputFile, std::ios::app); // append mode
+  const std::string logDir = "logs/";
+  fs::create_directories(logDir);
+
+  std::ofstream ofs(logDir + outputFile, std::ios::app);
   if (!ofs.is_open())
     return;
 
