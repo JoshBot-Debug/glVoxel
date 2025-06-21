@@ -39,9 +39,9 @@ App::App()
   Shader &shader = m_Resource.getShader();
 
   shader.create({
-      .name = "raytracer",
-      .vertex = (EXE_DIRECTORY + "/../src/Shaders/raytracer.vs").c_str(),
-      .fragment = (EXE_DIRECTORY + "/../src/Shaders/raytracer.fs").c_str(),
+      .name = "raytracer-cpu",
+      .vertex = (EXE_DIRECTORY + "/../src/Shaders/raytracer-cpu.vs").c_str(),
+      .fragment = (EXE_DIRECTORY + "/../src/Shaders/raytracer-cpu.fs").c_str(),
   });
 
   // shader.create({
@@ -94,7 +94,7 @@ void App::onDraw() {
   /**
    * Texture Image Shader
    */
-  shader.bind("raytracer");
+  shader.bind("raytracer-cpu");
   // shader.bind("raster");
   // shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
   // shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
