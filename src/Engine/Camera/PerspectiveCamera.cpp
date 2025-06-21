@@ -85,8 +85,8 @@ const glm::vec3 PerspectiveCamera::getRayDirection(int pixelX,
                                                    int pixelY) const {
   // 1. Convert pixel to Normalized Device Coordinates [-1, 1]
   float ndcX = (2.0f * pixelX) / viewportWidth - 1.0f;
-  float ndcY = 1.0f - (2.0f * pixelY) / viewportHeight;
-
+  float ndcY = (2.0f * pixelY) / viewportHeight - 1.0f;
+  
   // 2. Clip space position
   glm::vec4 clipCoords(ndcX, ndcY, -1.0f, 1.0f); // -1 for near plane
 

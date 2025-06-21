@@ -27,8 +27,8 @@ App::App()
   m_ControlPanel.setWorld(&m_World);
   m_ControlPanel.setRegistry(&m_Registry);
 
-  m_Camera.setPosition(-1.0f, 1.5f, 4.0f);
-  m_Camera.setRotation(-15.0f, 20.0f, 0.0f);
+  m_Camera.setPosition(70.0f, 10.0f, 80.0f);
+  m_Camera.setRotation(0.0f, -50.0f, 0.0f);
   m_Camera.setProjection(45, 0.01f, 10000.0f);
 
   m_World.setCamera(&m_Camera);

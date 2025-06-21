@@ -42,14 +42,16 @@ private:
   glm::vec3 m_LastCameraPosition{-999, -999, -999};
   glm::ivec3 m_PlayerChunkPosition{-999, -999, -999};
 
-  std::vector<Voxel *> m_VoxelPalette = {
-      new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
-      new Voxel(34, 139, 34, 255), new Voxel(255, 255, 255, 255)};
+  std::vector<std::tuple<Voxel *, int, int>> m_VoxelPalette = {
+      std::tuple{new Voxel(45, 45, 45, 255), 0, 16},
+      std::tuple{new Voxel(101, 67, 33, 255), 16, 24},
+      std::tuple{new Voxel(34, 139, 34, 255), 24, 64},
+      std::tuple{new Voxel(255, 255, 255, 255), 64, 128},
+  };
 
   IVecMutex m_Mutex;
   std::mutex m_UpdateMutex;
   std::shared_mutex m_SharedUpdateMutex;
-  std::vector<std::future<void>> m_Futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> m_Chunks;
 
 public:

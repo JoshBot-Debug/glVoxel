@@ -1,4 +1,5 @@
 #include "VoxelManager.h"
+#include <execution>
 #include <future>
 #include <iostream>
 #include <mutex>
@@ -13,7 +14,7 @@
 using namespace RaytracerCPU;
 
 VoxelManager::~VoxelManager() {
-  for (Voxel *voxel : m_VoxelPalette)
+  for (auto &[voxel, from, to] : m_VoxelPalette)
     delete voxel;
 
   for (auto &[coord, tree] : m_Chunks)
@@ -68,14 +69,8 @@ void VoxelManager::update() {
 
       auto t1 = START_TIMER;
 
-      for (const auto &coord : create)
-        m_Futures.push_back(std::async(
-            std::launch::async, &VoxelManager::generateChunk, this, coord));
-
-      for (auto &f : m_Futures)
-        f.get();
-
-      m_Futures.clear();
+      std::for_each(std::execution::par, create.begin(), create.end(),
+                    [this](auto &chunk) { generateChunk(chunk); });
 
       LOG("Chunks", create.size());
       END_TIMER(t1);
@@ -85,9 +80,6 @@ void VoxelManager::update() {
       m_UpdateMutex.unlock();
     }).detach();
 }
-
-// for (CTextureBuffer *textureBuffer : m_Registry->get<CTextureBuffer>())
-//   textureBuffer->flush();
 
 void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   if (coord.y != 0)
@@ -109,31 +101,32 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   utils::NoiseMap map = m_HeightMap->build(coord.x, coord.x + s_HeightMapStep,
                                            coord.z, coord.z + s_HeightMapStep);
 
-  auto generateBlockChunks = [&](int thresholdFrom, int thresholdTo,
-                                 Voxel *voxel) mutable {
-    uint64_t mask[(s_ChunkSize * s_ChunkSize) * (s_ChunkSize / 64)] = {0};
+  // std::for_each(
+  //     std::execution::par, m_VoxelPalette.begin(), m_VoxelPalette.end(),
+  //     [this, tree, map](std::tuple<Voxel *, int, int> &t) {
+  //       auto &[voxel, from, to] = t;
 
-    for (int z = 0; z < s_ChunkSize; z++)
-      for (int x = 0; x < s_ChunkSize; x++) {
-        float n = map.GetValue(x, z);
-        int height = static_cast<int>(
-            std::round((std::clamp(n, -1.0f, 1.0f) + 1) * (s_ChunkSize / 2)));
-        for (int y = 0; y < height; y++) {
-          int index = x + s_ChunkSize * (z + s_ChunkSize * y);
-          if (y >= thresholdFrom && y < thresholdTo)
-            mask[index / 64] |= 1ULL << (index % 64);
-        }
-      }
+  //       uint64_t mask[(s_ChunkSize * s_ChunkSize) * (s_ChunkSize / 64)] =
+  //       {0};
 
-    tree->set(mask, voxel);
-  };
+  //       for (int z = 0; z < s_ChunkSize; z++)
+  //         for (int x = 0; x < s_ChunkSize; x++) {
+  //           float n = map.GetValue(x, z);
+  //           int height = static_cast<int>(std::round(
+  //               (std::clamp(n, -1.0f, 1.0f) + 1) * (s_ChunkSize / 2)));
+  //           for (int y = 0; y < height; y++) {
+  //             int index = x + s_ChunkSize * (z + s_ChunkSize * y);
+  //             if (y >= from && y < to)
+  //               mask[index / 64] |= 1ULL << (index % 64);
+  //           }
+  //         }
 
-  // generateBlockChunks(0, 16, m_VoxelPalette[VoxelPalette::STONE]);
-  // generateBlockChunks(16, 24, m_VoxelPalette[VoxelPalette::DIRT]);
-  // generateBlockChunks(24, 64, m_VoxelPalette[VoxelPalette::GRASS]);
-  // generateBlockChunks(64, 128, m_VoxelPalette[VoxelPalette::SNOW]);
+  //       tree->set(mask, voxel);
+  //     });
 
-  tree->set(0, 0, 0, m_VoxelPalette[VoxelPalette::GRASS], 32);
+  auto &[voxel, from, to] = m_VoxelPalette[2];
+
+  tree->set(1, 0, 0, voxel, 16);
 
   END_TIMER(t1);
 }
@@ -155,24 +148,28 @@ void VoxelManager::raytrace(const glm::ivec3 &coord) {
 
   CTextureBuffer *textureBuffer = m_Registry->get<CTextureBuffer>()[0];
 
-  std::vector<uint32_t> &buffer = textureBuffer->getUpdateBuffer();
-
   textureBuffer->setDimension(m_Camera->viewportWidth,
                               m_Camera->viewportHeight);
 
+  std::vector<uint32_t> &buffer = textureBuffer->getUpdateBuffer();
+
   const glm::ivec2 &dimension = textureBuffer->getDimension();
+  const std::vector<int> &dx = textureBuffer->getDimensionXIter();
+  const std::vector<int> &dy = textureBuffer->getDimensionYIter();
 
-  for (int y = 0; y < dimension.y; y++)
-    for (int x = 0; x < dimension.x; x++) {
-      const int i = x + y * dimension.x;
-      const glm::vec3 rayDirection = m_Camera->getRayDirection(x, y);
-      Voxel *hitVoxel = tree->rayTrace(m_Camera->position, rayDirection);
+  std::for_each(
+      std::execution::par, dy.begin(), dy.end(), [&, dimension](int y) {
+        for (int x = 0; x < dimension.x; x++) {
+          const int i = x + y * dimension.x;
+          const glm::vec3 rayDirection = m_Camera->getRayDirection(x, y);
+          Voxel *hitVoxel = tree->rayTrace(m_Camera->position, rayDirection);
 
-      if (hitVoxel) {
-        buffer[i] = hitVoxel->color;
-      } else
-        buffer[i] = 0x00000000;
-    }
+          if (hitVoxel) {
+            buffer[i] = hitVoxel->color;
+          } else
+            buffer[i] = 0x00000000;
+        }
+      });
 
   LOG_IVEC3("Raytraced", coord);
   END_TIMER(t1);

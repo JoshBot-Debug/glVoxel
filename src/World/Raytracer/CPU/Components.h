@@ -16,11 +16,13 @@ private:
   bool m_Dirty = false;
   std::shared_mutex m_Mutex;
 
-  uint8_t m_Current;
+  uint8_t m_Current = 0;
 
-  std::array<std::vector<uint32_t>, 2> m_Buffer;
+  std::array<std::vector<uint32_t>, 2> m_Buffer = {};
 
   glm::ivec2 m_Dimensions = {0, 0};
+  std::vector<int> m_DimensionXIter = {};
+  std::vector<int> m_DimensionYIter = {};
 
 public:
   CTextureBuffer() = default;
@@ -54,14 +56,31 @@ public:
 
   void setDimension(int width, int height) {
     std::unique_lock lock(m_Mutex);
+
+    // if (m_Dimensions.x == width && m_Dimensions.y == height)
+    //   return;
+      
     m_Dimensions.x = width;
     m_Dimensions.y = height;
+
+    m_DimensionXIter.resize(width);
+    for (int i = 0; i < width; i++)
+      m_DimensionXIter[i] = i;
+
+    m_DimensionYIter.resize(height);
+    for (int i = 0; i < height; i++)
+      m_DimensionYIter[i] = i;
+
 
     m_Buffer[m_Next[m_Current]].clear();
     m_Buffer[m_Next[m_Current]].resize(width * height);
   }
 
   const glm::ivec2 &getDimension() { return m_Dimensions; }
+
+  const std::vector<int> &getDimensionXIter() { return m_DimensionXIter; }
+
+  const std::vector<int> &getDimensionYIter() { return m_DimensionYIter; }
 };
 
 } // namespace RaytracerCPU
