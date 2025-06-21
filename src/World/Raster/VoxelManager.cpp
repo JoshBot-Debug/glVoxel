@@ -7,6 +7,7 @@
 
 #include "Components.h"
 #include "Debug.h"
+#include "Voxel/GreedyMesh64.h"
 
 VoxelManager::~VoxelManager() {
   for (Voxel *voxel : m_VoxelPalette)
@@ -187,7 +188,16 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   for (size_t i = 0; i < filters.size(); i++) {
     std::vector<Vertex> vertices;
-    it->second->greedyMesh(vertices, filters[i]);
+
+    const int chunkSize = GreedyMesh64::CHUNK_SIZE;
+    const int chunksPerAxis = std::max(1, it->second->getSize() / chunkSize);
+
+    for (int cz = 0; cz < chunksPerAxis; cz++)
+      for (int cy = 0; cy < chunksPerAxis; cy++)
+        for (int cx = 0; cx < chunksPerAxis; cx++)
+          GreedyMesh64::Octree(it->second, vertices, cx * chunkSize,
+                               cy * chunkSize, cz * chunkSize, 0, filters[i]);
+
     Voxel *filter = filters[i];
 
     for (size_t j = 0; j < vertices.size(); j++) {

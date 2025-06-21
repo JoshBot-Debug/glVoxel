@@ -47,16 +47,16 @@ public:
   Node *getRoot();
 
   /**
-   * Requires you to pass in a mask
+   * Requires you to create a mask and pass it.
    *
    * const int size = 256;
-   * uint64_t mask[size * size * (size / 64)] = {0};
+   * uint64_t mask[(size * size) * (size / 64)] = {0};
    *
    * for (int z = 0; z < size; z++)
    *   for (int x = 0; x < size; x++)
    *      for (int y= 0; y < size; y++)
    *      {
-   *          int index = x + size * (z + size * y);
+   *          int index = x + size * (z + (size * y));
    *          if(blockIsGrass)
    *            mask[index / 64] |= 1UL << (index % 64);
    *      }
@@ -71,7 +71,6 @@ public:
   Node *get(int x, int y, int z, uint8_t maxDepth = 0, Voxel *filter = nullptr);
 
   void clear();
-  void greedyMesh(std::vector<Vertex> &vertices, Voxel *filter = nullptr);
 
   size_t getTotalMemoryUsage();
 

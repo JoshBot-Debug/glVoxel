@@ -13,8 +13,6 @@
 #include <bitset>
 #include <immintrin.h>
 
-#include "Voxel/GreedyMeshi256.h"
-
 App::App()
     : Window({.title = "glVoxel",
               .width = 800,

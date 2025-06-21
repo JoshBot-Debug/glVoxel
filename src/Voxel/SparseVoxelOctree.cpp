@@ -1,9 +1,7 @@
+#include "SparseVoxelOctree.h"
+
 #include <cmath>
 #include <iostream>
-
-#include "SparseVoxelOctree.h"
-#include "Voxel/GreedyMesh32.h"
-#include "Voxel/GreedyMesh64.h"
 
 static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =
     {               // Cardinal directions (6)
@@ -222,18 +220,6 @@ void SparseVoxelOctree::clear() {
     return;
 
   m_Root->clear();
-}
-
-void SparseVoxelOctree::greedyMesh(std::vector<Vertex> &vertices,
-                                   Voxel *filter) {
-  const int chunkSize = GreedyMesh64::CHUNK_SIZE;
-  const int chunksPerAxis = std::max(1, m_Size / chunkSize);
-
-  for (int cz = 0; cz < chunksPerAxis; cz++)
-    for (int cy = 0; cy < chunksPerAxis; cy++)
-      for (int cx = 0; cx < chunksPerAxis; cx++)
-        GreedyMesh64::Octree(this, vertices, cx * chunkSize, cy * chunkSize,
-                             cz * chunkSize, 0, filter);
 }
 
 size_t SparseVoxelOctree::getMemoryUsage(Node *node) {
