@@ -8,37 +8,36 @@ using namespace RaytracerCPU;
 World::World() { m_Voxels.setHeightMap(&heightMap); }
 
 void World::initialize() {
-  texture.generate();
-  texture.bind();
-  texture.setWidth(m_Camera->viewportWidth);
-  texture.setHeight(m_Camera->viewportHeight);
-  texture.setFilter(TextureFilter::LINEAR, TextureFilter::LINEAR);
-  texture.setTexture(GL_RGBA8);
-  texture.unbind();
+  m_Texture.generate();
+  m_Texture.bind();
+  m_Texture.setWidth(m_Camera->viewportWidth);
+  m_Texture.setHeight(m_Camera->viewportHeight);
+  m_Texture.setFilter(TextureFilter::LINEAR, TextureFilter::LINEAR);
+  m_Texture.setTexture(GL_RGBA8);
+  m_Texture.unbind();
 
   heightMap.initialize();
   m_Voxels.initialize(m_Camera);
 }
 
 void World::draw() {
-  texture.bind();
-
+  m_Texture.bind();
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void World::update() {
   m_Voxels.update();
 
-  texture.resize(m_Camera->viewportWidth, m_Camera->viewportHeight);
-
-  for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>()) {
-    if (voxelBuffer->isDirty()) {
-      const std::vector<uint32_t> &buffer = voxelBuffer->getBuffer();
+  for (CTextureBuffer *textureBuffer : m_Registry->get<CTextureBuffer>()) {
+    if (textureBuffer->isDirty()) {
+      const std::vector<uint32_t> &buffer = textureBuffer->getBuffer();
 
       LOG("Texture Updated");
-      texture.update((unsigned char *)buffer.data());
+      const glm::ivec2 &dimension = textureBuffer->getDimension();
+      m_Texture.update((unsigned char *)buffer.data(), dimension.x,
+                       dimension.y);
 
-      voxelBuffer->clean();
+      textureBuffer->clean();
     }
   }
 }

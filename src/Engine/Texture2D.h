@@ -74,6 +74,11 @@ public:
   void update(unsigned char *data);
 
   /**
+   * Sets the texture pixel data directly & set the widht and height
+   */
+  void update(unsigned char *data, unsigned int width, unsigned int height);
+
+  /**
    * Generates an OpenGL texture object.
    */
   void generate();

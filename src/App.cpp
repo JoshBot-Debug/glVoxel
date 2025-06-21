@@ -21,7 +21,7 @@ App::App()
               .enableVSync = true,
               .MSAA = 16,
               .imguiEnableDocking = true,
-              .maximized = true}) {
+              .maximized = false}) {
   m_ControlPanel.setCamera(&m_Camera);
   m_ControlPanel.setResourceManager(&m_Resource);
   m_ControlPanel.setWorld(&m_World);
@@ -60,7 +60,7 @@ App::App()
 }
 
 App::~App() {
-  for (auto &component : m_Registry.get<CVoxelBuffer>())
+  for (auto &component : m_Registry.get<CTextureBuffer>())
     delete component;
 }
 

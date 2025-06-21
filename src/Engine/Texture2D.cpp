@@ -52,6 +52,13 @@ void Texture2D::update(unsigned char *data) {
   unbind();
 }
 
+void Texture2D::update(unsigned char *data, unsigned int width, unsigned int height) {
+  bind();
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA,
+                  GL_UNSIGNED_BYTE, data);
+  unbind();
+}
+
 void Texture2D::generate() { glGenTextures(1, &m_Texture); }
 
 void Texture2D::generateMipmap() { glGenerateMipmap(GL_TEXTURE_2D); }
@@ -63,9 +70,11 @@ void Texture2D::setHeight(int height) { m_Height = height; }
 void Texture2D::resize(int width, int height) {
   if (m_Width == width || m_Height == height)
     return;
-  bind();
+
   m_Width = width;
   m_Height = height;
+
+  bind();
   setTexture(m_InternalFormat);
   unbind();
 }

@@ -35,11 +35,12 @@ private:
 
   HeightMap *m_HeightMap = nullptr;
 
-  CVoxelBuffer *m_VoxelBuffer = nullptr;
+  CTextureBuffer *m_TextureBuffer = nullptr;
 
   PerspectiveCamera *m_Camera = nullptr;
 
-  glm::vec3 m_LastPosition{0, 0, 0};
+  glm::vec3 m_LastCameraPosition{-999, -999, -999};
+  glm::ivec3 m_PlayerChunkPosition{-999, -999, -999};
 
   std::vector<Voxel *> m_VoxelPalette = {
       new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
@@ -62,8 +63,6 @@ public:
   void initialize(PerspectiveCamera *camera);
 
   void update();
-
-  void generateTerrain(const std::vector<glm::ivec3> &coords);
 
   void generateChunk(const glm::ivec3 &coord);
 
