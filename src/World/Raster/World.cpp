@@ -18,6 +18,7 @@ void World::draw() {
   /**
    * TODO: Eventually we will get a segment fault here because the vertex buffer
    * has a size limit. The solution is to batch vertices and draw them.
+   * Anyways I'd want to create indices or something so just ignoring this for now
    */
   for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
     glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
