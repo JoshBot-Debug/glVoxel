@@ -27,7 +27,6 @@ void VoxelManager::update() {
 
   const glm::ivec3 currentChunkPosition = getChunkPosition(m_Camera->position);
 
-  // if (m_LastCameraPosition != m_Camera->position) {
   std::thread([this, currentChunkPosition]() {
     if (!m_UpdateMutex.try_lock())
       return;
@@ -40,7 +39,6 @@ void VoxelManager::update() {
 
     m_UpdateMutex.unlock();
   }).detach();
-  // }
 
   if (m_PlayerChunkPosition != currentChunkPosition)
     std::thread([this, currentChunkPosition]() {
