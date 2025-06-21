@@ -90,3 +90,9 @@ LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:240 (meshChunk): To
 
 256bit
 LOG /home/joshua/Projects/glVoxel/src/World/VoxelManager.cpp:240 (meshChunk): Took: 398.598 ms (average) over 50 iterations
+
+
+# Performance Tool
+valgrind --tool=callgrind ./build/glVoxel
+gprof2dot --format=callgrind --output=out.dot ./callgrind.out.264922
+dot -Tpng out.dot -o graph.png
