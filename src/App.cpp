@@ -28,8 +28,6 @@ App::App()
   m_ControlPanel.setResourceManager(&m_Resource);
   m_ControlPanel.setWorld(&m_World);
 
-  // m_Camera.setPosition(0.0f, 175.0f, 0.0f);
-  // m_Camera.setRotation(-20.0f, 130.0f, 0.0f);
   m_Camera.setPosition(56.637f, 16.244f, 37.515f);
   m_Camera.setRotation(-20.500f, 0.0f, 0.0f);
   m_Camera.setProjection(45, 0.01f, 10000.0f);
