@@ -4,7 +4,6 @@
 #include "SparseVoxelOctree.h"
 #include "Voxel/GreedyMesh32.h"
 #include "Voxel/GreedyMesh64.h"
-#include "Voxel/GreedyMeshi256.h"
 
 static const std::vector<glm::ivec3> NEIGHBOUR_DIRECTIONS =
     {               // Cardinal directions (6)
