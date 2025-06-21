@@ -52,6 +52,5 @@ private:
 
 public:
   static void Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices,
-                     int originX, int originY, int originZ, int depth,
-                     Voxel *filter = nullptr);
+                     int originX, int originY, int originZ, Voxel *filter = nullptr);
 };

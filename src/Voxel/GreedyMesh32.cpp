@@ -261,7 +261,7 @@ void GreedyMesh32::CullMesh(const glm::ivec3 &offsetPosition,
 
 void GreedyMesh32::Octree(SparseVoxelOctree *tree,
                           std::vector<Vertex> &vertices, int originX,
-                          int originY, int originZ, int depth, Voxel *filter) {
+                          int originY, int originZ, Voxel *filter) {
   glm::vec3 coord = {originX / CHUNK_SIZE, originY / CHUNK_SIZE,
                      originZ / CHUNK_SIZE};
 
@@ -286,7 +286,7 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
   for (int x = 0; x < CHUNK_SIZE; x++)
     for (int y = 0; y < CHUNK_SIZE; y++)
       for (int z = 0; z < CHUNK_SIZE; z++)
-        if (tree->get(x + originX, y + originY, z + originZ, depth, filter)) {
+        if (tree->get(x + originX, y + originY, z + originZ, filter)) {
           hasVoxels = true;
 
           const unsigned int rowIndex =
@@ -330,10 +330,10 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
       int rMSB = (CHUNK_SIZE - 1) - __builtin_clz(row) + 1;
       int rLSB = __builtin_ctz(row) - 1;
 
-      if (tree->get(originX + rMSB, fast + originY, slow + originZ, depth))
+      if (tree->get(originX + rMSB, fast + originY, slow + originZ))
         padding[i] |= (1U << 1);
 
-      if (tree->get(originX + rLSB, fast + originY, slow + originZ, depth))
+      if (tree->get(originX + rLSB, fast + originY, slow + originZ))
         padding[i] |= (1U << 0);
     }
 
@@ -341,10 +341,10 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
       int cMSB = (CHUNK_SIZE - 1) - __builtin_clz(column) + 1;
       int cLSB = __builtin_ctz(column) - 1;
 
-      if (tree->get(fast + originX, originY + cMSB, slow + originZ, depth))
+      if (tree->get(fast + originX, originY + cMSB, slow + originZ))
         padding[i] |= (1U << 3);
 
-      if (tree->get(fast + originX, originY + cLSB, slow + originZ, depth))
+      if (tree->get(fast + originX, originY + cLSB, slow + originZ))
         padding[i] |= (1U << 2);
     }
 
@@ -352,10 +352,10 @@ void GreedyMesh32::Octree(SparseVoxelOctree *tree,
       int lMSB = (CHUNK_SIZE - 1) - __builtin_clz(layer) + 1;
       int lLSB = __builtin_ctz(layer) - 1;
 
-      if (tree->get(slow + originX, fast + originY, originZ + lMSB, depth))
+      if (tree->get(slow + originX, fast + originY, originZ + lMSB))
         padding[i] |= (1U << 5);
 
-      if (tree->get(slow + originX, fast + originY, originZ + lLSB, depth))
+      if (tree->get(slow + originX, fast + originY, originZ + lLSB))
         padding[i] |= (1U << 4);
     }
   }

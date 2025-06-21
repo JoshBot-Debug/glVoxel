@@ -33,16 +33,18 @@ private:
                           uint32_t (&heightEnd)[]);
 
   static void GreedyMesh32Face(const glm::ivec3 &offsetPosition, uint8_t a,
-                             uint8_t b, uint32_t bits, uint32_t (&widthMasks)[],
-                             uint32_t (&heightMasks)[],
-                             std::vector<Vertex> &vertices, FaceType type);
+                               uint8_t b, uint32_t bits,
+                               uint32_t (&widthMasks)[],
+                               uint32_t (&heightMasks)[],
+                               std::vector<Vertex> &vertices, FaceType type);
 
   static void GreedyMesh32Axis(const glm::ivec3 &offsetPosition,
-                             const uint32_t (&bits)[], uint32_t (&widthStart)[],
-                             uint32_t (&heightStart)[], uint32_t (&widthEnd)[],
-                             uint32_t (&heightEnd)[],
-                             std::vector<Vertex> &vertices, FaceType startType,
-                             FaceType endType);
+                               const uint32_t (&bits)[],
+                               uint32_t (&widthStart)[],
+                               uint32_t (&heightStart)[],
+                               uint32_t (&widthEnd)[], uint32_t (&heightEnd)[],
+                               std::vector<Vertex> &vertices,
+                               FaceType startType, FaceType endType);
 
   static void CullMesh(const glm::ivec3 &offsetPosition,
                        std::vector<Vertex> &vertices, uint32_t (&columns)[],
@@ -50,6 +52,6 @@ private:
 
 public:
   static void Octree(SparseVoxelOctree *tree, std::vector<Vertex> &vertices,
-                     int originX, int originY, int originZ, int depth,
+                     int originX, int originY, int originZ,
                      Voxel *filter = nullptr);
 };

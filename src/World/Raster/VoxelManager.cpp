@@ -161,7 +161,7 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
         }
       }
 
-    tree->setBlock(mask, voxel);
+    tree->set(mask, voxel);
   };
 
   generateBlockChunks(0, 16, m_VoxelPalette[VoxelPalette::STONE]);
@@ -184,9 +184,7 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   it->second->setNeighbours(coord, m_Chunks);
 
-  const std::vector<Voxel *> &filters = it->second->getUniqueVoxels();
-
-  for (size_t i = 0; i < filters.size(); i++) {
+  for (size_t i = 0; i < m_VoxelPalette.size(); i++) {
     std::vector<Vertex> vertices;
 
     const int chunkSize = GreedyMesh64::CHUNK_SIZE;
@@ -196,9 +194,9 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
       for (int cy = 0; cy < chunksPerAxis; cy++)
         for (int cx = 0; cx < chunksPerAxis; cx++)
           GreedyMesh64::Octree(it->second, vertices, cx * chunkSize,
-                               cy * chunkSize, cz * chunkSize, 0, filters[i]);
+                               cy * chunkSize, cz * chunkSize, m_VoxelPalette[i]);
 
-    Voxel *filter = filters[i];
+    Voxel *filter = m_VoxelPalette[i];
 
     for (size_t j = 0; j < vertices.size(); j++) {
       vertices[j].x += static_cast<float>(coord.x * s_ChunkSize);
