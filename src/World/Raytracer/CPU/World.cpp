@@ -8,13 +8,11 @@ using namespace RaytracerCPU;
 World::World() { m_Voxels.setHeightMap(&heightMap); }
 
 void World::initialize() {
-  // m_Buffer.generate();
-
   texture.generate();
   texture.bind();
   texture.setWidth(m_Camera->viewportWidth);
   texture.setHeight(m_Camera->viewportHeight);
-  texture.setFilter(TextureFilter::NEAREST, TextureFilter::NEAREST);
+  texture.setFilter(TextureFilter::LINEAR, TextureFilter::LINEAR);
   texture.setTexture(GL_RGBA8);
   texture.unbind();
 
@@ -23,14 +21,9 @@ void World::initialize() {
 }
 
 void World::draw() {
-  // m_Buffer.bind();
   texture.bind();
 
   glDrawArrays(GL_TRIANGLES, 0, 6);
-  // for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
-  //   glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
-
-  // m_Buffer.sync();
 }
 
 void World::update() {
@@ -42,6 +35,7 @@ void World::update() {
     if (voxelBuffer->isDirty()) {
       const std::vector<uint32_t> &buffer = voxelBuffer->getBuffer();
 
+      LOG("Texture Updated");
       texture.update((unsigned char *)buffer.data());
 
       voxelBuffer->clean();

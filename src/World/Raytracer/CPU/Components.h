@@ -25,7 +25,8 @@ namespace RaytracerCPU
     CVoxelBuffer() = default;
   
     std::vector<uint32_t> &getUpdateBuffer() {
-      return m_Buffer[m_Next[m_Current]];
+      // return m_Buffer[m_Next[m_Current]];
+      return m_Buffer[m_Current];
     }
   
     const std::vector<uint32_t> &getBuffer() {
@@ -44,9 +45,9 @@ namespace RaytracerCPU
       std::unique_lock lock(m_Mutex);
       m_Dirty = true;
     
-      m_Current = m_Next[m_Current];
+      // m_Current = m_Next[m_Current];
   
-      m_Buffer[m_Next[m_Current]].clear();
+      // m_Buffer[m_Next[m_Current]].clear();
     }
   
     bool isDirty() { return m_Dirty; }

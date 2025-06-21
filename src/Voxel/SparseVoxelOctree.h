@@ -123,6 +123,8 @@ private:
    */
   int mod(int a, int b);
 
+  Voxel *rayTrace(Node *node, const glm::vec3 &origin, const glm::vec3 &direction, glm::vec3 nodeMin, int size);
+
 public:
   /**
    * Constructs an empty Sparse Voxel Octree with default settings.
@@ -273,4 +275,7 @@ public:
    * This does not include neighbours.
    */
   size_t getTotalMemoryUsage();
+
+
+  Voxel *rayTrace(const glm::vec3 &origin, const glm::vec3 &direction);
 };

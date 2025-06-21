@@ -24,8 +24,9 @@ void PerspectiveCamera::update() {
 
   view = glm::lookAt(position, position + front, up);
 
-  projection = glm::perspective(
-      glm::radians(fov), glm::max(viewportWidth / viewportHeight, 1.0f), nearPlane, farPlane);
+  projection = glm::perspective(glm::radians(fov),
+                                glm::max(viewportWidth / viewportHeight, 1.0f),
+                                nearPlane, farPlane);
 }
 
 void PerspectiveCamera::setViewportSize(const glm::vec2 &size) {
@@ -79,3 +80,24 @@ const glm::mat4 PerspectiveCamera::getProjectionMatrix() const {
 }
 
 const glm::mat4 PerspectiveCamera::getViewMatrix() const { return view; }
+
+const glm::vec3 PerspectiveCamera::getRayDirection(int pixelX,
+                                                   int pixelY) const {
+  // 1. Convert pixel to Normalized Device Coordinates [-1, 1]
+  float ndcX = (2.0f * pixelX) / viewportWidth - 1.0f;
+  float ndcY = 1.0f - (2.0f * pixelY) / viewportHeight;
+
+  // 2. Clip space position
+  glm::vec4 clipCoords(ndcX, ndcY, -1.0f, 1.0f); // -1 for near plane
+
+  // 3. Inverse of view-projection
+  glm::mat4 invVP = glm::inverse(projection * view);
+
+  // 4. Unproject to world space
+  glm::vec4 worldCoords = invVP * clipCoords;
+  worldCoords /= worldCoords.w;
+
+  // 5. Ray direction = from camera position to world point
+  glm::vec3 rayDir = glm::normalize(glm::vec3(worldCoords) - position);
+  return rayDir;
+}

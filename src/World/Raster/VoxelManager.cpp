@@ -25,6 +25,7 @@ void VoxelManager::initialize(const glm::vec3 &position) {
 }
 
 void VoxelManager::update(const glm::vec3 &position) {
+  return;
   const glm::ivec3 currentChunkPosition = getChunkPosition(position);
 
   if (m_PlayerChunkPosition == currentChunkPosition)
@@ -188,7 +189,6 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
 
   END_TIMER(t1);
 }
-
 
 void VoxelManager::setHeightMap(HeightMap *heightMap) {
   m_HeightMap = heightMap;

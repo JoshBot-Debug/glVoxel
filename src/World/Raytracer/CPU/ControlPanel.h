@@ -35,6 +35,7 @@ private:
   PerspectiveCamera *m_Camera;
   ResourceManager *m_Resource;
   World *m_World;
+  Registry *m_Registry;
 
   glm::vec2 m_Mouse;
 
@@ -50,6 +51,8 @@ public:
 
   void setWorld(World *world) { m_World = world; }
 
+  void setRegistry(Registry *registry) { m_Registry = registry; }
+
   void setResourceManager(ResourceManager *resource) {
     this->m_Resource = resource;
   }
@@ -61,6 +64,9 @@ public:
 
     if (ImGui::Button("Recompile shaders"))
       m_Resource->getShader().recompile();
+
+    if (ImGui::Button("Raytrace"))
+      m_Registry->get<CVoxelBuffer>()[0]->flush();
 
     ImGui::SeparatorText("Terrain");
 
@@ -297,4 +303,4 @@ public:
   }
 };
 
-} // namespace Raster
+} // namespace RaytracerCPU

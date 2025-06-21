@@ -11,9 +11,13 @@
 #include "World/Raytracer/CPU/ControlPanel.h"
 #include "World/Raytracer/CPU/World.h"
 
+// #include "World/Raster/ControlPanel.h"
+// #include "World/Raster/World.h"
+
 #include "Utility.h"
 
 using namespace RaytracerCPU;
+// using namespace Raster;
 
 const std::string EXE_DIRECTORY = getExecutableDir();
 

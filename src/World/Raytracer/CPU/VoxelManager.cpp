@@ -3,8 +3,8 @@
 #include <iostream>
 #include <mutex>
 #include <noise/noiseutils.h>
-#include <unordered_set>
 #include <string>
+#include <unordered_set>
 
 #include "Components.h"
 #include "Debug.h"
@@ -22,45 +22,71 @@ VoxelManager::~VoxelManager() {
 
 void VoxelManager::initialize(PerspectiveCamera *camera) {
   m_Camera = camera;
-  m_PlayerChunkPosition = getChunkPosition(m_Camera->position);
-  generateTerrain(
-      getChunkPositionsInRadius(getChunkPosition(m_Camera->position)));
+  // m_PlayerPosition = getChunkPosition(m_Camera->position);
+  // generateTerrain(getChunkPositionsInRadius(getChunkPosition(m_Camera->position)));
 }
 
 void VoxelManager::update() {
-  const glm::ivec3 currentChunkPosition = getChunkPosition(m_Camera->position);
-
-  if (m_PlayerChunkPosition == currentChunkPosition)
+  if (m_LastPosition == m_Camera->position)
     return;
 
-  std::thread([this, currentChunkPosition]() {
-    if (!m_UpdateMutex.try_lock())
+  std::thread([&]() {
+    if (!m_SharedUpdateMutex.try_lock())
       return;
 
-    m_PlayerChunkPosition = currentChunkPosition;
+    m_LastPosition = m_Camera->position;
 
-    std::vector<glm::ivec3> create =
-        getChunkPositionsInRadius(currentChunkPosition);
-    std::vector<glm::ivec3> remove;
+    glm::ivec3 coord = {0, 0, 0};
+    auto it = m_Chunks.find(coord);
 
-    for (auto it = m_Chunks.begin(); it != m_Chunks.end();) {
-      auto vit = std::find(create.begin(), create.end(), it->first);
-      if (vit == create.end()) {
-        std::unique_lock lock(m_Mutex.get(it->first));
-        LOG_IVEC3("deleted", it->first);
-        remove.push_back(it->first);
-        delete it->second;
-        it = m_Chunks.erase(it);
-      } else {
-        create.erase(vit);
-        ++it;
-      }
-    }
+    if (it == m_Chunks.end() || it->second == nullptr)
+      m_Chunks[coord] = new SparseVoxelOctree(s_ChunkSize);
 
-    m_UpdateMutex.unlock();
+    SparseVoxelOctree *tree = m_Chunks.at(coord);
 
-    generateTerrain(create);
+    tree->set(0, 0, 0, m_VoxelPalette[VoxelPalette::GRASS]);
+
+    raytrace(coord);
+
+    m_SharedUpdateMutex.unlock();
   }).detach();
+
+  return;
+
+  // const glm::ivec3 currentChunkPosition =
+  // getChunkPosition(m_Camera->position);
+
+  // if (m_PlayerPosition == currentChunkPosition)
+  //   return;
+
+  // std::thread([this, currentChunkPosition]() {
+  //   if (!m_UpdateMutex.try_lock())
+  //     return;
+
+  //   m_PlayerPosition = currentChunkPosition;
+
+  //   std::vector<glm::ivec3> create =
+  //       getChunkPositionsInRadius(currentChunkPosition);
+  //   std::vector<glm::ivec3> remove;
+
+  //   for (auto it = m_Chunks.begin(); it != m_Chunks.end();) {
+  //     auto vit = std::find(create.begin(), create.end(), it->first);
+  //     if (vit == create.end()) {
+  //       std::unique_lock lock(m_Mutex.get(it->first));
+  //       LOG_IVEC3("deleted", it->first);
+  //       remove.push_back(it->first);
+  //       delete it->second;
+  //       it = m_Chunks.erase(it);
+  //     } else {
+  //       create.erase(vit);
+  //       ++it;
+  //     }
+  //   }
+
+  //   m_UpdateMutex.unlock();
+
+  //   generateTerrain(create);
+  // }).detach();
 }
 
 void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
@@ -80,7 +106,17 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
 
     m_Futures.clear();
 
-    raytrace();
+    // for (const auto &coord : coords)
+    //   m_Futures.push_back(
+    //       std::async(std::launch::async, &VoxelManager::raytrace, this,
+    //       coord));
+
+    // for (auto &f : m_Futures)
+    //   f.get();
+
+    raytrace({0, 0, 0});
+
+    m_Futures.clear();
 
     for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
       voxelBuffer->flush();
@@ -139,22 +175,48 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   END_TIMER(t1);
 }
 
-void VoxelManager::raytrace() {
+void VoxelManager::raytrace(const glm::ivec3 &coord) {
+
+  std::unique_lock lock(m_Mutex.get(coord));
+
+  auto it = m_Chunks.find(coord);
+
+  if (it == m_Chunks.end() || it->second == nullptr)
+    return;
+
+  auto t1 = START_TIMER;
+
+  it->second->setNeighbours(coord, m_Chunks);
+
   CVoxelBuffer *voxelBuffer = m_Registry->get<CVoxelBuffer>()[0];
 
   std::vector<uint32_t> &buffer = voxelBuffer->getUpdateBuffer();
 
-  buffer.resize(m_Camera->viewportWidth * m_Camera->viewportHeight);
+  buffer.clear();
+  buffer.resize(1920 * 1016);
+  // buffer.resize(m_Camera->viewportWidth * m_Camera->viewportHeight);
 
   for (int y = 0; y < m_Camera->viewportHeight; y++)
     for (int x = 0; x < m_Camera->viewportWidth; x++) {
-      const int i = x + (m_Camera->viewportWidth * y);
+      const int i = x + y * m_Camera->viewportWidth;
 
-      uint8_t r = (uint8_t)((x / m_Camera->viewportWidth) * 255.0f);
-      uint8_t g = (uint8_t)((y / m_Camera->viewportHeight) * 255.0f);
+      const glm::vec3 rayDirection = m_Camera->getRayDirection(x, y);
+      Voxel *hitVoxel = it->second->rayTrace(m_Camera->position, rayDirection);
 
-      buffer[i] = 0xFF000000  | (g << 8) | r;
+      if (hitVoxel)
+      {
+        buffer[i] = 0xFF000000 | hitVoxel->color;
+      }
+      else
+        buffer[i] = 0x00000000;
+
+      // uint8_t r = (uint8_t)((x / m_Camera->viewportWidth) * 255.0f);
+      // uint8_t g = (uint8_t)((y / m_Camera->viewportHeight) * 255.0f);
+
+      // buffer[i] = 0xFF000000 | (g << 8) | r;
     }
+
+  END_TIMER(t1);
 }
 
 void VoxelManager::setHeightMap(HeightMap *heightMap) {

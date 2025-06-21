@@ -25,9 +25,10 @@ App::App()
   m_ControlPanel.setCamera(&m_Camera);
   m_ControlPanel.setResourceManager(&m_Resource);
   m_ControlPanel.setWorld(&m_World);
+  m_ControlPanel.setRegistry(&m_Registry);
 
-  m_Camera.setPosition(56.637f, 16.244f, 37.515f);
-  m_Camera.setRotation(-20.500f, 0.0f, 0.0f);
+  m_Camera.setPosition(-1.0f, 1.5f, 4.0f);
+  m_Camera.setRotation(-15.0f, 20.0f, 0.0f);
   m_Camera.setProjection(45, 0.01f, 10000.0f);
 
   m_World.setCamera(&m_Camera);
@@ -38,10 +39,16 @@ App::App()
   Shader &shader = m_Resource.getShader();
 
   shader.create({
-      .name = "image",
-      .vertex = (EXE_DIRECTORY + "/../src/Shaders/image.vs").c_str(),
-      .fragment = (EXE_DIRECTORY + "/../src/Shaders/image.fs").c_str(),
+      .name = "raytracer",
+      .vertex = (EXE_DIRECTORY + "/../src/Shaders/raytracer.vs").c_str(),
+      .fragment = (EXE_DIRECTORY + "/../src/Shaders/raytracer.fs").c_str(),
   });
+
+  // shader.create({
+  //     .name = "raster",
+  //     .vertex = (EXE_DIRECTORY + "/../src/Shaders/raster.vs").c_str(),
+  //     .fragment = (EXE_DIRECTORY + "/../src/Shaders/raster.fs").c_str(),
+  // });
 
   shader.create({
       .name = "skybox",
@@ -87,7 +94,8 @@ void App::onDraw() {
   /**
    * Texture Image Shader
    */
-  shader.bind("image");
+  shader.bind("raytracer");
+  // shader.bind("raster");
   // shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
   // shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
   shader.setUniform3f("u_Camera", m_Camera.position);
@@ -107,6 +115,18 @@ void App::onDraw() {
   shader.setUniform3f("u_Light.diffuse", m_ControlPanel.light.diffuse.x,
                       m_ControlPanel.light.diffuse.y,
                       m_ControlPanel.light.diffuse.z);
+
+  /**
+   * Material (TODO: Remove this)
+   */
+  // shader.setUniform3f("u_Material.diffuse", m_ControlPanel.material.diffuse.x,
+  //                     m_ControlPanel.material.diffuse.y,
+  //                     m_ControlPanel.material.diffuse.z);
+  // shader.setUniform3f("u_Material.specular", m_ControlPanel.material.specular.x,
+  //                     m_ControlPanel.material.specular.y,
+  //                     m_ControlPanel.material.specular.z);
+  // shader.setUniform1f("u_Material.shininess",
+  //                     m_ControlPanel.material.shininess);
 
   /**
    * Render the m_World

@@ -63,7 +63,7 @@ void SparseVoxelOctree::set(uint64_t (&mask)[], Voxel *voxel) {
 }
 
 void SparseVoxelOctree::set(uint64_t (&mask)[], int x, int y, int z,
-                                 Voxel *voxel, int size) {
+                            Voxel *voxel, int size) {
   bool isFullBlock = true;
 
   for (int dz = 0; dz < size && isFullBlock; ++dz)
@@ -239,4 +239,82 @@ void SparseVoxelOctree::setNeighbours(
 
 size_t SparseVoxelOctree::getTotalMemoryUsage() {
   return sizeof(SparseVoxelOctree) + getMemoryUsage(m_Root);
+}
+
+Voxel *SparseVoxelOctree::rayTrace(const glm::vec3 &origin,
+                                   const glm::vec3 &direction) {
+
+  // glm::ivec3 coord = glm::floor(glm::vec3(origin / (float)m_Size));
+
+  // if (coord != m_ChunkCoord) {
+  //   glm::ivec3 relative = coord - m_ChunkCoord;
+
+  //   auto it = m_Neighbours.find(relative);
+  //   if (it == m_Neighbours.end())
+  //     return nullptr;
+
+  //   glm::vec3 localOrigin = origin - glm::vec3(relative * m_Size);
+  //   return it->second->rayTrace(localOrigin, direction);
+  // }
+
+  return rayTrace(m_Root, origin, direction, glm::vec3(0), m_Size);
+}
+
+bool inline intersectAABB(const glm::vec3 &rayOrigin, const glm::vec3 &rayDir,
+                          const glm::vec3 &min, const glm::vec3 &max,
+                          float &tMin, float &tMax) {
+  tMin = 0.0f;
+  tMax = 1e30f;
+
+  for (int i = 0; i < 3; i++)
+    if (rayDir[i] != 0.0f) {
+      float t1 = (min[i] - rayOrigin[i]) / rayDir[i];
+      float t2 = (max[i] - rayOrigin[i]) / rayDir[i];
+
+      if (t1 > t2)
+        std::swap(t1, t2);
+
+      tMin = std::max(tMin, t1);
+      tMax = std::min(tMax, t2);
+
+      if (tMin > tMax)
+        return false;
+    } else if (rayOrigin[i] < min[i] || rayOrigin[i] > max[i])
+      return false;
+
+  return true;
+}
+
+Voxel *SparseVoxelOctree::rayTrace(Node *node, const glm::vec3 &origin,
+                                   const glm::vec3 &direction,
+                                   glm::vec3 nodeMin, int size) {
+  float tMin, tMax;
+  if (!intersectAABB(origin, direction, nodeMin, nodeMin + glm::vec3(size),
+                     tMin, tMax))
+    return nullptr;
+
+  if (node->voxel)
+    return node->voxel;
+
+  if (!node->children)
+    return nullptr;
+
+  float half = size / 2.0f;
+
+  for (int i = 0; i < 8; i++) {
+    Node *child = node->children[i];
+    if (!child)
+      continue;
+
+    int x = (i & 4) ? 1 : 0;
+    int y = (i & 2) ? 1 : 0;
+    int z = (i & 1) ? 1 : 0;
+
+    glm::vec3 childMin = nodeMin + glm::vec3(x, y, z) * half;
+
+    if (Voxel *hit = rayTrace(child, origin, direction, childMin, half))
+      return hit;
+  }
+
+  return nullptr;
 }

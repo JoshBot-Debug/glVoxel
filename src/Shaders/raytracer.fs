@@ -17,5 +17,7 @@ in vec2 f_TexCoords;
 
 void main()
 {
-  FragColor = texture(u_Texture, f_TexCoords);
+  vec4 color=texture(u_Texture,f_TexCoords);
+  // if(color.a == 0.)discard;
+  FragColor=color;
 }

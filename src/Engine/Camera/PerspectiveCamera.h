@@ -45,4 +45,5 @@ public:
   const glm::mat4 getViewProjectionMatrix() const override;
   const glm::mat4 getProjectionMatrix() const override;
   const glm::mat4 getViewMatrix() const override;
+  const glm::vec3 getRayDirection(int pixelX, int pixelY) const;
 };

@@ -28,7 +28,7 @@ class VoxelManager {
 private:
   static constexpr int s_ChunkSize = 128;
   static constexpr double s_HeightMapStep = 1.0f;
-  static constexpr glm::ivec3 s_ChunkRadius = glm::ivec3{2, 0, 2};
+  static constexpr glm::ivec3 s_ChunkRadius = glm::ivec3{0, 0, 0};
 
 private:
   Registry *m_Registry = nullptr;
@@ -39,7 +39,7 @@ private:
 
   PerspectiveCamera *m_Camera = nullptr;
 
-  glm::ivec3 m_PlayerChunkPosition{0, 0, 0};
+  glm::vec3 m_LastPosition{0, 0, 0};
 
   std::vector<Voxel *> m_VoxelPalette = {
       new Voxel(45, 45, 45, 255), new Voxel(101, 67, 33, 255),
@@ -47,6 +47,7 @@ private:
 
   IVecMutex m_Mutex;
   std::mutex m_UpdateMutex;
+  std::shared_mutex m_SharedUpdateMutex;
   std::vector<std::future<void>> m_Futures;
   std::unordered_map<glm::ivec3, SparseVoxelOctree *> m_Chunks;
 
@@ -66,7 +67,7 @@ public:
 
   void generateChunk(const glm::ivec3 &coord);
 
-  void raytrace();
+  void raytrace(const glm::ivec3 &coord);
 
   const std::vector<glm::ivec3>
   getChunkPositionsInRadius(const glm::ivec3 &center) const;
