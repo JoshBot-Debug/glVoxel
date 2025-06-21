@@ -10,13 +10,23 @@ World::World() { m_Voxels.setHeightMap(&heightMap); }
 void World::initialize() {
   // m_Buffer.generate();
 
+  texture.generate();
+  texture.bind();
+  texture.setWidth(m_Camera->viewportWidth);
+  texture.setHeight(m_Camera->viewportHeight);
+  texture.setFilter(TextureFilter::NEAREST, TextureFilter::NEAREST);
+  texture.setTexture(GL_RGBA8);
+  texture.unbind();
+
   heightMap.initialize();
-  m_Voxels.initialize(m_Camera->position);
+  m_Voxels.initialize(m_Camera);
 }
 
 void World::draw() {
   // m_Buffer.bind();
+  texture.bind();
 
+  glDrawArrays(GL_TRIANGLES, 0, 6);
   // for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
   //   glDrawArrays(static_cast<GLenum>(drawMode), 0, voxelBuffer->getSize());
 
@@ -24,27 +34,19 @@ void World::draw() {
 }
 
 void World::update() {
-  m_Voxels.update(m_Camera->position);
+  m_Voxels.update();
 
-  // for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>()) {
-  //   if (voxelBuffer->isDirty() || m_Buffer.isDirty()) {
-  //     const std::vector<Vertex> verticies = voxelBuffer->getVertices();
-  //     auto [vao, vbo] = m_Buffer.get();
+  texture.resize(m_Camera->viewportWidth, m_Camera->viewportHeight);
 
-  //     vao->bind();
-  //     vbo->set(verticies);
-  //     vao->set(0, 3, VertexType::FLOAT, false, sizeof(Vertex),
-  //              (void *)(offsetof(Vertex, x)));
-  //     vao->set(1, 3, VertexType::FLOAT, false, sizeof(Vertex),
-  //              (void *)(offsetof(Vertex, nx)));
-  //     vao->set(2, 1, VertexType::INT, false, sizeof(Vertex),
-  //              (void *)(offsetof(Vertex, color)));
-  //     vao->set(3, 1, VertexType::INT, false, sizeof(Vertex),
-  //              (void *)(offsetof(Vertex, material)));
+  for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>()) {
+    if (voxelBuffer->isDirty()) {
+      const std::vector<uint32_t> &buffer = voxelBuffer->getBuffer();
 
-  //     voxelBuffer->clean();
-  //   }
-  // }
+      texture.update((unsigned char *)buffer.data());
+
+      voxelBuffer->clean();
+    }
+  }
 }
 
 void World::setRegistry(Registry *registry) {

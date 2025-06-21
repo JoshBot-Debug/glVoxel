@@ -60,9 +60,9 @@ public:
 
   void generateTerrain(const std::vector<glm::ivec3> &coords);
 
-  void meshChunk(const glm::ivec3 &coord);
-
   void generateChunk(const glm::ivec3 &coord);
+
+  void meshChunk(const glm::ivec3 &coord);
 
   const std::vector<glm::ivec3>
   getChunkPositionsInRadius(const glm::ivec3 &center) const;

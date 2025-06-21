@@ -6,6 +6,8 @@
 
 #include "ECS/Entity.h"
 
+#include "Engine/Camera/PerspectiveCamera.h"
+
 #include "Voxel/Common.h"
 #include "Voxel/HeightMap.h"
 #include "Voxel/SparseVoxelOctree.h"
@@ -35,6 +37,8 @@ private:
 
   CVoxelBuffer *m_VoxelBuffer = nullptr;
 
+  PerspectiveCamera *m_Camera = nullptr;
+
   glm::ivec3 m_PlayerChunkPosition{0, 0, 0};
 
   std::vector<Voxel *> m_VoxelPalette = {
@@ -54,13 +58,15 @@ public:
 
   void setRegistry(Registry *registry);
 
-  void initialize(const glm::vec3 &position);
+  void initialize(PerspectiveCamera *camera);
 
-  void update(const glm::vec3 &position);
+  void update();
 
   void generateTerrain(const std::vector<glm::ivec3> &coords);
 
   void generateChunk(const glm::ivec3 &coord);
+
+  void raytrace();
 
   const std::vector<glm::ivec3>
   getChunkPositionsInRadius(const glm::ivec3 &center) const;

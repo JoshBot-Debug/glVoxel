@@ -62,6 +62,7 @@ void App::onInitialize() {
   glCullFace(GL_BACK);
   glEnable(GL_CULL_FACE);
 
+  m_Camera.setViewportSize(Window::GetDimensions());
   m_World.initialize();
 }
 
@@ -87,9 +88,9 @@ void App::onDraw() {
    * Texture Image Shader
    */
   shader.bind("image");
-  shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
-  shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
-  shader.setUniform3f("u_CameraPosition", m_Camera.position);
+  // shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
+  // shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
+  shader.setUniform3f("u_Camera", m_Camera.position);
 
   /**
    * Light

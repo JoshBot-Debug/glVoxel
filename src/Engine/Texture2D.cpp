@@ -26,41 +26,49 @@ void Texture2D::loadFile(const char *filepath) {
 void Texture2D::freeFile() { stbi_image_free(m_Data); }
 
 void Texture2D::setTexture(int level, GLenum internalFormat, GLenum format) {
-  if (!m_Data) {
-    LOG("Error: You did not set and data. Use .setData() or .loadFile()");
-    return;
-  }
-  glTexImage2D(GL_TEXTURE_2D, level, internalFormat, m_Width, m_Height, 0, format,
-               GL_UNSIGNED_BYTE, m_Data);
+  m_InternalFormat = internalFormat;
+  glTexImage2D(GL_TEXTURE_2D, level, internalFormat, m_Width, m_Height, 0,
+               format, GL_UNSIGNED_BYTE, m_Data);
 }
 
 void Texture2D::setTexture(int level, GLenum internalFormat) {
-  if (!m_Data) {
-    LOG("Error: You did not set and data. Use .setData() or .loadFile()");
-    return;
-  }
-  glTexImage2D(GL_TEXTURE_2D, level, internalFormat, m_Width, m_Height, 0, m_Format,
-               GL_UNSIGNED_BYTE, m_Data);
+  m_InternalFormat = internalFormat;
+  glTexImage2D(GL_TEXTURE_2D, level, internalFormat, m_Width, m_Height, 0,
+               m_Format, GL_UNSIGNED_BYTE, m_Data);
 }
 
 void Texture2D::setTexture(GLenum internalFormat) {
-  if (!m_Data) {
-    LOG("Error: You did not set and data. Use .setData() or .loadFile()");
-    return;
-  }
+  m_InternalFormat = internalFormat;
   glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, m_Format,
                GL_UNSIGNED_BYTE, m_Data);
 }
 
 void Texture2D::setData(unsigned char *data) { m_Data = data; }
 
-void Texture2D::generateTexture() { glGenTextures(1, &m_Texture); }
+void Texture2D::update(unsigned char *data) {
+  bind();
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA,
+                  GL_UNSIGNED_BYTE, data);
+  unbind();
+}
+
+void Texture2D::generate() { glGenTextures(1, &m_Texture); }
 
 void Texture2D::generateMipmap() { glGenerateMipmap(GL_TEXTURE_2D); }
 
 void Texture2D::setWidth(int width) { m_Width = width; }
 
 void Texture2D::setHeight(int height) { m_Height = height; }
+
+void Texture2D::resize(int width, int height) {
+  if (m_Width == width || m_Height == height)
+    return;
+  bind();
+  m_Width = width;
+  m_Height = height;
+  setTexture(m_InternalFormat);
+  unbind();
+}
 
 void Texture2D::setWrap(TextureWrap s, TextureWrap t, TextureWrap r) const {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (unsigned int)s);

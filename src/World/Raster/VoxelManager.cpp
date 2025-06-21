@@ -64,35 +64,6 @@ void VoxelManager::update(const glm::vec3 &position) {
   }).detach();
 }
 
-void VoxelManager::setHeightMap(HeightMap *heightMap) {
-  m_HeightMap = heightMap;
-}
-void VoxelManager::setRegistry(Registry *registry) {
-  m_Registry = registry;
-  Entity *entity = m_Registry->createEntity("VoxelBuffer");
-  m_VoxelBuffer = entity->add<CVoxelBuffer>();
-}
-
-const std::vector<glm::ivec3>
-VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const {
-  std::vector<glm::ivec3> result;
-  for (int dz = -s_ChunkRadius.z; dz <= s_ChunkRadius.z; dz++)
-    for (int dx = -s_ChunkRadius.x; dx <= s_ChunkRadius.x; dx++)
-      for (int dy = -s_ChunkRadius.y; dy <= s_ChunkRadius.y; dy++)
-        result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
-  return result;
-}
-
-const glm::ivec3
-VoxelManager::getChunkPosition(const glm::vec3 &position) const {
-  return {static_cast<int>(
-              std::floor(position.x / static_cast<float>(s_ChunkSize))),
-          static_cast<int>(
-              std::floor(position.y / static_cast<float>(s_ChunkSize))),
-          static_cast<int>(
-              std::floor(position.z / static_cast<float>(s_ChunkSize)))};
-}
-
 void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
   std::thread([this, coords = coords,
                m_Futures = std::move(m_Futures)]() mutable {
@@ -216,4 +187,34 @@ void VoxelManager::meshChunk(const glm::ivec3 &coord) {
   }
 
   END_TIMER(t1);
+}
+
+
+void VoxelManager::setHeightMap(HeightMap *heightMap) {
+  m_HeightMap = heightMap;
+}
+void VoxelManager::setRegistry(Registry *registry) {
+  m_Registry = registry;
+  Entity *entity = m_Registry->createEntity("VoxelBuffer");
+  m_VoxelBuffer = entity->add<CVoxelBuffer>();
+}
+
+const std::vector<glm::ivec3>
+VoxelManager::getChunkPositionsInRadius(const glm::ivec3 &center) const {
+  std::vector<glm::ivec3> result;
+  for (int dz = -s_ChunkRadius.z; dz <= s_ChunkRadius.z; dz++)
+    for (int dx = -s_ChunkRadius.x; dx <= s_ChunkRadius.x; dx++)
+      for (int dy = -s_ChunkRadius.y; dy <= s_ChunkRadius.y; dy++)
+        result.emplace_back(center.x + dx, center.y + dy, center.z + dz);
+  return result;
+}
+
+const glm::ivec3
+VoxelManager::getChunkPosition(const glm::vec3 &position) const {
+  return {static_cast<int>(
+              std::floor(position.x / static_cast<float>(s_ChunkSize))),
+          static_cast<int>(
+              std::floor(position.y / static_cast<float>(s_ChunkSize))),
+          static_cast<int>(
+              std::floor(position.z / static_cast<float>(s_ChunkSize)))};
 }

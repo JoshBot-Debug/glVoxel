@@ -25,17 +25,17 @@ void PerspectiveCamera::update() {
   view = glm::lookAt(position, position + front, up);
 
   projection = glm::perspective(
-      glm::radians(fov), glm::max(width / height, 1.0f), nearPlane, farPlane);
+      glm::radians(fov), glm::max(viewportWidth / viewportHeight, 1.0f), nearPlane, farPlane);
 }
 
 void PerspectiveCamera::setViewportSize(const glm::vec2 &size) {
-  this->width = size.x;
-  this->height = size.y;
+  viewportWidth = size.x;
+  viewportHeight = size.y;
 }
 
 void PerspectiveCamera::setViewportSize(float width, float height) {
-  this->width = width;
-  this->height = height;
+  viewportWidth = width;
+  viewportHeight = height;
 }
 
 void PerspectiveCamera::setPosition(float x, float y, float z) {

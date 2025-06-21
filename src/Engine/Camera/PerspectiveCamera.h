@@ -16,8 +16,8 @@ private:
   glm::mat4 roll = glm::mat4(0.0f);
 
 public:
-  float width = 1.0f;
-  float height = 1.0f;
+  float viewportWidth = 1.0f;
+  float viewportHeight = 1.0f;
 
   glm::vec3 rotation = glm::vec3(0.0f);
   glm::vec3 position = glm::vec3(0.0f);

@@ -22,10 +22,11 @@ enum class TextureFilter {
 class Texture2D {
 private:
   unsigned int m_Texture = 0;
-  unsigned char *m_Data;
-  int m_Width;
-  int m_Height;
-  GLenum m_Format;
+  unsigned char *m_Data = nullptr;
+  int m_Width = 0;
+  int m_Height = 0;
+  GLenum m_Format = GL_RGBA;
+  GLenum m_InternalFormat = GL_RGBA8;
 
 public:
   /**
@@ -68,9 +69,14 @@ public:
   void setData(unsigned char *data);
 
   /**
+   * Sets the texture pixel data directly.
+   */
+  void update(unsigned char *data);
+
+  /**
    * Generates an OpenGL texture object.
    */
-  void generateTexture();
+  void generate();
 
   /**
    * Generates mipmaps for the currently bound texture.
@@ -86,6 +92,11 @@ public:
    * Sets the texture height.
    */
   void setHeight(int height);
+
+  /**
+   * Resizes the texture only if the height and width changed
+   */
+  void resize(int width, int height);
 
   /**
    * Sets texture wrapping modes for S, T, and R axes.

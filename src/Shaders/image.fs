@@ -10,10 +10,12 @@ struct Light{
 };
 
 uniform Light u_Light;
-uniform sampler2D u_Texture;
 uniform vec3 u_Camera;
+uniform sampler2D u_Texture;
+
+in vec2 f_TexCoords;
 
 void main()
 {
-  FragColor=vec4(1.,1.,1.,1.);
+  FragColor = texture(u_Texture, f_TexCoords);
 }
