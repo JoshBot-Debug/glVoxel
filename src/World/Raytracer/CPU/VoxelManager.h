@@ -13,7 +13,7 @@
 #include "Components.h"
 #include "Utility/IVecMutex.h"
 
-namespace Raster {
+namespace RaytracerCPU {
 
 class VoxelManager {
   enum VoxelPalette {
@@ -60,8 +60,6 @@ public:
 
   void generateTerrain(const std::vector<glm::ivec3> &coords);
 
-  void meshChunk(const glm::ivec3 &coord);
-
   void generateChunk(const glm::ivec3 &coord);
 
   const std::vector<glm::ivec3>
@@ -70,4 +68,4 @@ public:
   const glm::ivec3 getChunkPosition(const glm::vec3 &position) const;
 };
 
-}; // namespace Raster
+}; // namespace RaytracerCPU

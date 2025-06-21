@@ -3,6 +3,8 @@
 
 #include "Components.h"
 
+using namespace Raster;
+
 World::World() { m_Voxels.setHeightMap(&heightMap); }
 
 void World::initialize() {

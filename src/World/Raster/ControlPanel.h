@@ -14,6 +14,8 @@
 #include "Engine/ResourceManager.h"
 #include "World/Raster/World.h"
 
+namespace Raster {
+
 struct Material {
   glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
   glm::vec3 specular = glm::vec3(0.05f, 0.05f, 0.05f);
@@ -32,7 +34,7 @@ private:
   std::vector<Model *> m_Models;
   PerspectiveCamera *m_Camera;
   ResourceManager *m_Resource;
-  World *m_World;
+  Raster::World *m_World;
 
   glm::vec2 m_Mouse;
 
@@ -46,7 +48,7 @@ public:
 
   void setCamera(PerspectiveCamera *camera) { m_Camera = camera; }
 
-  void setWorld(World *world) { m_World = world; }
+  void setWorld(Raster::World *world) { m_World = world; }
 
   void setResourceManager(ResourceManager *resource) {
     this->m_Resource = resource;
@@ -64,11 +66,12 @@ public:
 
     if (ImGui::TreeNode("Draw mode")) {
       if (ImGui::Selectable("Draw Traingles",
-                            m_World->drawMode == DrawMode::TRIANGLES))
-        m_World->drawMode = DrawMode::TRIANGLES;
+                            m_World->drawMode == Raster::DrawMode::TRIANGLES))
+        m_World->drawMode = Raster::DrawMode::TRIANGLES;
 
-      if (ImGui::Selectable("Draw Lines", m_World->drawMode == DrawMode::LINES))
-        m_World->drawMode = DrawMode::LINES;
+      if (ImGui::Selectable("Draw Lines",
+                            m_World->drawMode == Raster::DrawMode::LINES))
+        m_World->drawMode = Raster::DrawMode::LINES;
       ImGui::TreePop();
     }
 
@@ -304,3 +307,5 @@ public:
     ImGui::End();
   }
 };
+
+} // namespace Raster

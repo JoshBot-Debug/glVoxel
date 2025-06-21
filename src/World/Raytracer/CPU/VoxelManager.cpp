@@ -9,7 +9,7 @@
 #include "Debug.h"
 #include "Voxel/GreedyMesh64.h"
 
-using namespace Raster;
+using namespace RaytracerCPU;
 
 VoxelManager::~VoxelManager() {
   for (Voxel *voxel : m_VoxelPalette)
@@ -110,17 +110,8 @@ void VoxelManager::generateTerrain(const std::vector<glm::ivec3> &coords) {
 
     m_Futures.clear();
 
-    for (const auto &coord : coords)
-      m_Futures.push_back(std::async(std::launch::async,
-                                     &VoxelManager::meshChunk, this, coord));
-
-    for (auto &f : m_Futures)
-      f.get();
-
     for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
       voxelBuffer->flush();
-
-    m_Futures.clear();
 
     LOG("Chunks", coords.size());
     END_TIMER(t1);
@@ -172,48 +163,6 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   generateBlockChunks(16, 24, m_VoxelPalette[VoxelPalette::DIRT]);
   generateBlockChunks(24, 64, m_VoxelPalette[VoxelPalette::GRASS]);
   generateBlockChunks(64, 128, m_VoxelPalette[VoxelPalette::SNOW]);
-
-  END_TIMER(t1);
-}
-
-void VoxelManager::meshChunk(const glm::ivec3 &coord) {
-  std::shared_lock lock(m_Mutex.get(coord));
-
-  auto it = m_Chunks.find(coord);
-
-  if (it == m_Chunks.end() || it->second == nullptr)
-    return;
-
-  auto t1 = START_TIMER;
-
-  it->second->setNeighbours(coord, m_Chunks);
-
-  for (size_t i = 0; i < m_VoxelPalette.size(); i++) {
-    std::vector<Vertex> vertices;
-
-    const int chunkSize = GreedyMesh64::CHUNK_SIZE;
-    const int chunksPerAxis = std::max(1, it->second->getSize() / chunkSize);
-
-    for (int cz = 0; cz < chunksPerAxis; cz++)
-      for (int cy = 0; cy < chunksPerAxis; cy++)
-        for (int cx = 0; cx < chunksPerAxis; cx++)
-          GreedyMesh64::Octree(it->second, vertices, cx * chunkSize,
-                               cy * chunkSize, cz * chunkSize,
-                               m_VoxelPalette[i]);
-
-    Voxel *filter = m_VoxelPalette[i];
-
-    for (size_t j = 0; j < vertices.size(); j++) {
-      vertices[j].x += static_cast<float>(coord.x * s_ChunkSize);
-      vertices[j].y += static_cast<float>(coord.y * s_ChunkSize);
-      vertices[j].z += static_cast<float>(coord.z * s_ChunkSize);
-      vertices[j].color = filter->color;
-      vertices[j].material = filter->material;
-    }
-
-    for (CVoxelBuffer *voxelBuffer : m_Registry->get<CVoxelBuffer>())
-      voxelBuffer->setVertices(coord, vertices);
-  }
 
   END_TIMER(t1);
 }

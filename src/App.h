@@ -13,6 +13,8 @@
 
 #include "Utility.h"
 
+using namespace Raster;
+
 const std::string EXE_DIRECTORY = getExecutableDir();
 
 class App : Window {

@@ -6,6 +6,8 @@
 #include <mutex>
 #include <vector>
 
+namespace Raster {
+
 class CVoxelBuffer {
 private:
   static constexpr uint8_t m_Next[2] = {1, 0};
@@ -24,8 +26,8 @@ public:
   void setVertices(const glm::ivec3 &coord, const std::vector<Vertex> &data) {
     std::unique_lock lock(m_Mutex);
     m_ChunkVertices[coord].insert(m_ChunkVertices[coord].begin(),
-                                std::make_move_iterator(data.begin()),
-                                std::make_move_iterator(data.end()));
+                                  std::make_move_iterator(data.begin()),
+                                  std::make_move_iterator(data.end()));
   }
 
   const std::vector<Vertex> &getVertices() {
@@ -54,8 +56,8 @@ public:
     m_Buffer[m_Next[m_Current]].clear();
 
     for (auto &[k, v] : m_ChunkVertices)
-      m_Buffer[m_Next[m_Current]].insert(m_Buffer[m_Next[m_Current]].end(), v.begin(),
-                                     v.end());
+      m_Buffer[m_Next[m_Current]].insert(m_Buffer[m_Next[m_Current]].end(),
+                                         v.begin(), v.end());
 
     m_Current = m_Next[m_Current];
 
@@ -64,3 +66,5 @@ public:
 
   bool isDirty() { return m_Dirty; }
 };
+
+} // namespace Raster

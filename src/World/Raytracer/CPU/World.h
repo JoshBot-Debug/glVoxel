@@ -17,18 +17,11 @@
 #include <noise/noise.h>
 #include <noise/noiseutils.h>
 
-namespace Raster {
-
-enum class DrawMode : GLenum {
-  TRIANGLES = GL_TRIANGLES,
-  LINES = GL_LINES,
-};
+namespace RaytracerCPU {
 
 class World {
 private:
   Registry *m_Registry = nullptr;
-
-  TripleBuffer<BufferTarget::ARRAY_BUFFER, VertexDraw::DYNAMIC> m_Buffer;
 
   VoxelManager m_Voxels;
 
@@ -36,7 +29,6 @@ private:
 
 public:
   HeightMap heightMap{128, 128};
-  DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:
   World();
@@ -52,4 +44,4 @@ public:
   void setCamera(PerspectiveCamera *camera);
 };
 
-} // namespace Raster
+}; // namespace RaytracerCPU
