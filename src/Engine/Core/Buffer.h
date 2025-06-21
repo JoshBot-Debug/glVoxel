@@ -25,15 +25,15 @@ struct BufferPartition {
 
 class Buffer {
 private:
-  unsigned int buffer = 0;
+  unsigned int m_Buffer = 0;
 
-  BufferTarget target;
+  BufferTarget m_Target;
 
-  VertexDraw draw;
+  VertexDraw m_Draw;
 
-  unsigned int resizeFactor = 0;
+  unsigned int m_ResizeFactor = 0;
 
-  std::vector<unsigned int> partitions;
+  std::vector<unsigned int> m_Partitions;
 
 public:
   /**
@@ -112,12 +112,12 @@ public:
     unsigned int size = data.size() * sizeof(T);
 
     if (partitions.size())
-      this->partitions = partitions;
+      m_Partitions = partitions;
     else
-      this->partitions.emplace_back(size);
+      m_Partitions.emplace_back(size);
 
-    glBindBuffer((unsigned int)target, buffer);
-    glBufferData((unsigned int)target, size, data.data(), (unsigned int)draw);
+    glBindBuffer((unsigned int)m_Target, m_Buffer);
+    glBufferData((unsigned int)m_Target, size, data.data(), (unsigned int)m_Draw);
   }
 
   /**
@@ -144,7 +144,7 @@ public:
   template <typename T>
   void update(const std::vector<T> &data, unsigned int offset = 0,
               unsigned int partition = 0) {
-    glBufferSubData((unsigned int)target,
+    glBufferSubData((unsigned int)m_Target,
                     offset * sizeof(T) +
                         getBufferPartitionOffsetSize(partition),
                     data.size() * sizeof(T), data.data());
@@ -181,16 +181,16 @@ public:
     // partition that does not exist? You need to add a partition first. And if
     // only partition 0 exists, you cannot try upserting to partition[2,3,4,...]
 
-    assert(partitions.size() > partition);
+    assert(m_Partitions.size() > partition);
 
     int dataSize = data.size() * sizeof(T);
     int offsetSize = offset * sizeof(T);
-    int expansionSize = (offsetSize + dataSize) - partitions[partition];
+    int expansionSize = (offsetSize + dataSize) - m_Partitions[partition];
 
     if (expansionSize > 0)
-      resize(partition, expansionSize + (dataSize * resizeFactor), offsetSize);
+      resize(partition, expansionSize + (dataSize * m_ResizeFactor), offsetSize);
 
-    glBufferSubData((unsigned int)target,
+    glBufferSubData((unsigned int)m_Target,
                     offsetSize + getBufferPartitionOffsetSize(partition),
                     dataSize, data.data());
   }
@@ -214,15 +214,15 @@ public:
     // Did you forget to call .addPartition(0) before trying to upsert to a
     // partition that does not exist? You need to add a partition first. And if
     // only partition 0 exists, you cannot try upserting to partition[2,3,4,...]
-    assert(partitions.size() > partition);
+    assert(m_Partitions.size() > partition);
 
     int offsetSize = offset * chunk;
-    int expansionSize = (offsetSize + size) - partitions[partition];
+    int expansionSize = (offsetSize + size) - m_Partitions[partition];
 
     if (expansionSize > 0)
-      resize(partition, expansionSize + (size * resizeFactor), offsetSize);
+      resize(partition, expansionSize + (size * m_ResizeFactor), offsetSize);
 
-    glBufferSubData((unsigned int)target,
+    glBufferSubData((unsigned int)m_Target,
                     offsetSize + getBufferPartitionOffsetSize(partition), size,
                     data);
   }
@@ -258,7 +258,7 @@ public:
 
     std::vector<T> data(items);
 
-    glGetBufferSubData((unsigned int)target, 0, size, data.data());
+    glGetBufferSubData((unsigned int)m_Target, 0, size, data.data());
 
     return data;
   };
@@ -269,12 +269,12 @@ public:
    */
   template <typename T> std::vector<T> getBufferData(unsigned int partition) {
     const unsigned int offset = getBufferPartitionOffsetSize(partition);
-    const int size = partitions[partition];
+    const int size = m_Partitions[partition];
     const int items = size / sizeof(T);
 
     std::vector<T> data(items);
 
-    glGetBufferSubData((unsigned int)target, offset, size, data.data());
+    glGetBufferSubData((unsigned int)m_Target, offset, size, data.data());
 
     return data;
   };
@@ -317,7 +317,7 @@ public:
     size_t size = 0;
 
     for (unsigned int i = 0; i < partitionIndex; i++)
-      size += partitions[i];
+      size += m_Partitions[i];
 
     return size;
   }
@@ -329,6 +329,6 @@ public:
     // partition[2,3,4,...]
     assert(partitionExists(partitionIndex));
 
-    return partitions[partitionIndex];
+    return m_Partitions[partitionIndex];
   }
 };

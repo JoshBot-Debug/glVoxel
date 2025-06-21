@@ -38,9 +38,9 @@ App::App()
   Shader &shader = m_Resource.getShader();
 
   shader.create({
-      .name = "voxel",
-      .vertex = (EXE_DIRECTORY + "/../src/Shaders/voxel.vs").c_str(),
-      .fragment = (EXE_DIRECTORY + "/../src/Shaders/voxel.fs").c_str(),
+      .name = "image",
+      .vertex = (EXE_DIRECTORY + "/../src/Shaders/image.vs").c_str(),
+      .fragment = (EXE_DIRECTORY + "/../src/Shaders/image.fs").c_str(),
   });
 
   shader.create({
@@ -84,25 +84,12 @@ void App::onDraw() {
   m_Skybox.draw(m_Camera, shader, "skybox");
 
   /**
-   * Voxels
+   * Texture Image Shader
    */
-  shader.bind("voxel");
+  shader.bind("image");
   shader.setUniformMatrix4fv("u_View", m_Camera.getViewMatrix());
   shader.setUniformMatrix4fv("u_Projection", m_Camera.getProjectionMatrix());
-
   shader.setUniform3f("u_CameraPosition", m_Camera.position);
-
-  /**
-   * Material (TODO: Remove this)
-   */
-  shader.setUniform3f("u_Material.diffuse", m_ControlPanel.material.diffuse.x,
-                      m_ControlPanel.material.diffuse.y,
-                      m_ControlPanel.material.diffuse.z);
-  shader.setUniform3f("u_Material.specular", m_ControlPanel.material.specular.x,
-                      m_ControlPanel.material.specular.y,
-                      m_ControlPanel.material.specular.z);
-  shader.setUniform1f("u_Material.shininess",
-                      m_ControlPanel.material.shininess);
 
   /**
    * Light

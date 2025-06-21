@@ -1,13 +1,13 @@
 #include "VertexArray.h"
 
 VertexArray::~VertexArray() {
-  if (vao)
-    glDeleteVertexArrays(1, &vao);
+  if (m_Vao)
+    glDeleteVertexArrays(1, &m_Vao);
 }
 
 void VertexArray::generate() {
-  if (!vao)
-    glGenVertexArrays(1, &vao);
+  if (!m_Vao)
+    glGenVertexArrays(1, &m_Vao);
 }
 
 void VertexArray::set(unsigned int index, unsigned int size, VertexType type,
@@ -33,8 +33,8 @@ void VertexArray::set(unsigned int index, unsigned int size, VertexType type,
   glVertexAttribDivisor(index, divisor);
 }
 
-void VertexArray::bind() const { glBindVertexArray(vao); }
+void VertexArray::bind() const { glBindVertexArray(m_Vao); }
 
 void VertexArray::unbind() const { glBindVertexArray(0); }
 
-unsigned int VertexArray::get() const { return vao; }
+unsigned int VertexArray::get() const { return m_Vao; }

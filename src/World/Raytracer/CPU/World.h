@@ -27,6 +27,8 @@ private:
 
   PerspectiveCamera *m_Camera = nullptr;
 
+  Texture2D texture;
+
 public:
   HeightMap heightMap{128, 128};
 

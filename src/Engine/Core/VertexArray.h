@@ -6,7 +6,7 @@
 
 class VertexArray {
 private:
-  unsigned int vao = 0;
+  unsigned int m_Vao = 0;
 
 public:
   VertexArray() = default;
