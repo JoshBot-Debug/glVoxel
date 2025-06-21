@@ -289,8 +289,9 @@ Voxel *SparseVoxelOctree::rayTrace(Node *node, const glm::vec3 &origin,
                                    const glm::vec3 &direction,
                                    glm::vec3 nodeMin, int size) {
   float tMin, tMax;
-  
-  if (!intersectAABB(origin, direction, nodeMin, nodeMin + glm::vec3(size), tMin, tMax))
+
+  if (!intersectAABB(origin, direction, nodeMin, nodeMin + glm::vec3(size),
+                     tMin, tMax))
     return nullptr;
 
   if (node->voxel)
