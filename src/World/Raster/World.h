@@ -33,7 +33,7 @@ private:
   PerspectiveCamera *m_Camera = nullptr;
 
 public:
-  HeightMap heightMap{256, 256};
+  HeightMap heightMap{128, 128};
   DrawMode drawMode = DrawMode::TRIANGLES;
 
 public:

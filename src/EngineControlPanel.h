@@ -12,7 +12,7 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/Model.h"
 #include "Engine/ResourceManager.h"
-#include "World/World.h"
+#include "World/Raster/World.h"
 
 struct Material {
   glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
