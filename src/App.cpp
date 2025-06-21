@@ -15,13 +15,6 @@
 
 #include "Voxel/GreedyMeshi256.h"
 
-inline void print_m256i(__m256i val) {
-  uint64_t *p = (uint64_t *)&val;
-  std::cout << std::bitset<64>(p[0]) << " " << std::bitset<64>(p[1]) << " "
-            << std::bitset<64>(p[2]) << " " << std::bitset<64>(p[3]) << "\n"
-            << std::endl;
-}
-
 App::App()
     : Window({.title = "glVoxel",
               .width = 800,
