@@ -12,9 +12,9 @@
 #include "Engine/Camera/PerspectiveCamera.h"
 #include "Engine/Model.h"
 #include "Engine/ResourceManager.h"
-#include "World/Raster/World.h"
+#include "World/Raytracer/CPU/World.h"
 
-namespace Raster {
+namespace RaytracerCPU {
 
 struct Material {
   glm::vec3 diffuse = glm::vec3(0.13f, 0.55f, 0.13f);
@@ -63,17 +63,6 @@ public:
       m_Resource->getShader().recompile();
 
     ImGui::SeparatorText("Terrain");
-
-    if (ImGui::TreeNode("Draw mode")) {
-      if (ImGui::Selectable("Draw Traingles",
-                            m_World->drawMode == DrawMode::TRIANGLES))
-        m_World->drawMode = DrawMode::TRIANGLES;
-
-      if (ImGui::Selectable("Draw Lines",
-                            m_World->drawMode == DrawMode::LINES))
-        m_World->drawMode = DrawMode::LINES;
-      ImGui::TreePop();
-    }
 
     ImGui::SeparatorText("Mesh Generator");
 

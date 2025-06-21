@@ -8,12 +8,12 @@
 #include "Engine/ResourceManager.h"
 #include "Engine/Skybox.h"
 
-#include "World/Raster/ControlPanel.h"
-#include "World/Raster/World.h"
+#include "World/Raytracer/CPU/ControlPanel.h"
+#include "World/Raytracer/CPU/World.h"
 
 #include "Utility.h"
 
-using namespace Raster;
+using namespace RaytracerCPU;
 
 const std::string EXE_DIRECTORY = getExecutableDir();
 
