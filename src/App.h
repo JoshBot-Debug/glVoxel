@@ -8,7 +8,7 @@
 #include "Engine/ResourceManager.h"
 #include "Engine/Skybox.h"
 
-#include "EngineControlPanel.h"
+#include "World/Raster/ControlPanel.h"
 #include "World/Raster/World.h"
 
 #include "Utility.h"
@@ -22,7 +22,7 @@ private:
   PerspectiveCamera m_Camera;
   ResourceManager m_Resource;
 
-  EngineControlPanel m_ControlPanel;
+  ControlPanel m_ControlPanel;
 
   Skybox m_Skybox{
       {EXE_DIRECTORY + "/../assets/skybox/plain/left-right-front-back.jpg",

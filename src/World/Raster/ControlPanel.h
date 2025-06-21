@@ -27,7 +27,7 @@ struct Light {
   glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 };
 
-class EngineControlPanel {
+class ControlPanel {
 private:
   std::vector<Model *> m_Models;
   PerspectiveCamera *m_Camera;
