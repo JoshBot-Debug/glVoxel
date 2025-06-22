@@ -122,9 +122,11 @@ void VoxelManager::generateChunk(const glm::ivec3 &coord) {
   //       tree->set(mask, voxel);
   //     });
 
-  auto &[voxel, from, to] = m_VoxelPalette[2];
+  auto &[voxel1, from1, to1] = m_VoxelPalette[2];
+  tree->set(1, 0, 0, voxel1, 16);
 
-  tree->set(1, 0, 0, voxel, 16);
+  auto &[voxel2, from2, to2] = m_VoxelPalette[3];
+  tree->set(32, 0, 0, voxel2, 16);
 
   END_TIMER(t1);
 }

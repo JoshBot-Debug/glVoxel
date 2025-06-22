@@ -244,7 +244,7 @@ size_t SparseVoxelOctree::getTotalMemoryUsage() {
 Voxel *SparseVoxelOctree::rayTrace(const glm::vec3 &origin,
                                    const glm::vec3 &direction) {
 
-  // glm::ivec3 coord = glm::floor(glm::vec3(origin / (float)m_Size));
+  glm::ivec3 coord = glm::floor(glm::vec3(origin / (float)m_Size));
 
   // if (coord != m_ChunkCoord) {
   //   glm::ivec3 relative = coord - m_ChunkCoord;
@@ -302,7 +302,21 @@ Voxel *SparseVoxelOctree::rayTrace(Node *node, const glm::vec3 &origin,
 
   float half = size / 2.0f;
 
-  for (int i = 0; i < 8; i++) {
+  int dirX = direction.x >= 0 ? 0 : 1;
+  int dirY = direction.y >= 0 ? 0 : 1;
+  int dirZ = direction.z >= 0 ? 0 : 1;
+
+  int order[8];
+  int index = 0;
+
+  for (int dx = 0; dx <= 1; dx++)
+    for (int dy = 0; dy <= 1; dy++)
+      for (int dz = 0; dz <= 1; dz++)
+        order[index++] = ((dx ^ dirX) << 2) | ((dy ^ dirY) << 1) | (dz ^ dirZ);
+
+  for (int j = 0; j < 8; j++) {
+    int i = order[j];
+
     Node *child = node->children[i];
     if (!child)
       continue;
